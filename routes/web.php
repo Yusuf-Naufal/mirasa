@@ -15,3 +15,6 @@ Route::get('dashboard/super-admin', [SuperAdminDashboardController::class, 'inde
 
 // CRUD PERUSAHAAN
 Route::resource('perusahaan', PerusahaanController::class);
+Route::patch('/referal/activate/{id}', [PerusahaanController::class, 'activate'])->name('perusahaan.activate');
+
+// 

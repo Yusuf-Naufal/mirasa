@@ -3,13 +3,13 @@
     <div class="space-y-2">
         <div class="flex flex-col gap-4 md:justify-between">
 
-              <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
+            <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
                 <div class="flex gap-2">
-                    <a href="#"
+                    <a href="{{ route('perusahaan.create') }}"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 16 16">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
                             <path fill="currentColor"
-                                d="M11.5 7a4.5 4.5 0 1 1 0 9a4.5 4.5 0 0 1 0-9m0 2a.5.5 0 0 0-.5.5V11H9.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V12h1.5a.5.5 0 0 0 0-1H12V9.5a.5.5 0 0 0-.5-.5M7.258 8A5.48 5.48 0 0 0 6 11.5c0 .485.062.955.18 1.402A7 7 0 0 1 5 13c-1.175 0-2.27-.272-3.089-.77C1.091 11.73.5 10.965.5 10a2 2 0 0 1 2-2zM5 1.5A2.75 2.75 0 1 1 5 7a2.75 2.75 0 0 1 0-5.5m6.502.997a2.25 2.25 0 0 1 2.252 2.251a2.24 2.24 0 0 1-.586 1.51A5.5 5.5 0 0 0 11.5 6a5.5 5.5 0 0 0-1.667.257a2.252 2.252 0 0 1 1.669-3.76" />
+                                d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
                         </svg>
                         <span class="hidden md:block md:ml-2">Tambah Perusahaan</span>
                     </a>
@@ -25,7 +25,7 @@
 
                 </div>
 
-                <form action="" method="GET" class="relative w-full md:w-64">
+                <form action="{{ route('perusahaan.index') }}" method="GET" class="relative w-full md:w-64">
                     <input type="text" name="search" value="{{ request('search') }}"
                         class="w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-10 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#FFC829]"
                         placeholder="Cari...">
@@ -37,6 +37,75 @@
                     </svg>
                 </form>
             </div>
+        </div>
+
+        {{-- TABLE DAN CARD --}}
+        <x-perusahaan.table :perusahaan="$perusahaan" />
+        <x-perusahaan.card :perusahaan="$perusahaan" />
+
+
+    </div>
+
+
+    {{-- Filter Modal --}}
+    <div id="filterModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog"
+        aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/60" onclick="closeModal('filterModal')"></div>
+
+        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl" id="modalContent">
+            <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                <h2 class="text-lg font-bold text-gray-800">Filter Lanjutan</h2>
+                <button onclick="closeModal('filterModal')" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 15 15">
+                        <path fill="currentColor"
+                            d="M10.969 3.219a.574.574 0 1 1 .812.812L8.313 7.5l3.468 3.469l.074.09a.575.575 0 0 1-.796.796l-.09-.074L7.5 8.312l-3.469 3.47a.574.574 0 1 1-.812-.813L6.688 7.5l-3.47-3.469l-.073-.09a.575.575 0 0 1 .796-.797l.09.075L7.5 6.687z" />
+                    </svg>
+                </button>
+            </div>
+
+            <form action="{{ route('perusahaan.index') }}" method="GET" class="p-6">
+                {{-- Simpan nilai search yang ada di luar agar tidak hilang saat filter diterapkan --}}
+                <input type="hidden" name="search" value="{{ request('search') }}">
+
+                <div class="space-y-5">
+                    <div>
+                        <label for="filter_status" class="block text-sm font-semibold text-gray-700 mb-1">Status
+                            Perusahaan</label>
+                        <select name="status" id="filter_status"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] focus:outline-none focus:ring-2 focus:ring-[#FFC829]/20 outline-none">
+                            <option value="">Semua Status</option>
+                            <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif (Tersedia)
+                            </option>
+                            <option value="tidak_aktif" {{ request('status') == 'tidak_aktif' ? 'selected' : '' }}>Tidak
+                                Aktif (Terhapus)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="filter_jenis_perusahaan"
+                            class="block text-sm font-semibold text-gray-700 mb-1">Jenis Perusahaan</label>
+                        <select name="jenis_perusahaan" id="filter_jenis_perusahaan"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] focus:outline-none focus:ring-2 focus:ring-[#FFC829]/20 outline-none">
+                            <option value="">Semua Kategori</option>
+                            <option value="Pusat" {{ request('jenis_perusahaan') == 'Pusat' ? 'selected' : '' }}>Kantor
+                                Pusat</option>
+                            <option value="Cabang" {{ request('jenis_perusahaan') == 'Cabang' ? 'selected' : '' }}>
+                                Kantor Cabang</option>
+                            <option value="Anak Perusahaan"
+                                {{ request('jenis_perusahaan') == 'Anak Perusahaan' ? 'selected' : '' }}>Anak Perusahaan
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex items-center gap-3">
+                    <a href="{{ route('perusahaan.index') }}"
+                        class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">Reset</a>
+                    <button type="submit"
+                        class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm">Terapkan
+                        Filter</button>
+                </div>
+            </form>
         </div>
     </div>
 

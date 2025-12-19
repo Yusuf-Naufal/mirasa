@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('jenis_perusahaan')->nullable();
             $table->string('alamat')->nullable();
             $table->string('kontak')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

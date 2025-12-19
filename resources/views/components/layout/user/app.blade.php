@@ -10,6 +10,10 @@
     @vite('resources/css/app.css')
 
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
         /* Hanya geser konten di layar Desktop (min-width 640px) */
         @media (min-width: 640px) {
             #logo-sidebar:hover~#main-content {
@@ -57,7 +61,11 @@
 </body>
 
 <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
+{{-- HANDLE SIDEBAR --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const sidebar = document.getElementById('logo-sidebar');
@@ -79,6 +87,70 @@
             overlay.addEventListener('click', toggleSidebar);
         }
     });
+</script>
+
+{{-- HANDLE MODAL --}}
+<script>
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return console.error(`Modal dengan id "${id}" tidak ditemukan.`);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex'); // pastikan tampil dengan flex centering
+    }
+
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    // Tutup modal saat klik di luar konten
+    window.addEventListener('click', (e) => {
+        const openModals = document.querySelectorAll('[id$="Modal"]:not(.hidden)');
+        openModals.forEach(modal => {
+            if (e.target === modal) {
+                closeModal(modal.id);
+            }
+        });
+    });
+</script>
+
+{{-- HANDLE DELETE & ACTIVE ALERT --}}
+<script>
+    function confirmDelete(id) {
+        Swal.fire({
+            title: 'Apakah kamu yakin?',
+            text: "Data ini akan dihapus!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hilang!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit form jika dikonfirmasi
+                document.getElementById('delete-form-' + id).submit();
+            }
+        });
+    }
+     function confirmActivate(id) {
+        Swal.fire({
+            title: 'Aktifkan Data ini?',
+            text: "Data akan diaktifkan kembali.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#16a34a', // Hijau
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Aktifkan!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('aktif-form-' + id).submit();
+            }
+        });
+    }
 </script>
 
 </html>
