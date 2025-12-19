@@ -100,7 +100,8 @@ class PerusahaanController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $perusahaan = Perusahaan::findOrFail($id);
+        return view('pages.perusahaan.show', compact('perusahaan'));
     }
 
     /**
@@ -123,8 +124,8 @@ class PerusahaanController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $perusahaan = Perusahaan::findOrFail($id);
-
+        $perusahaan = Perusahaan::withTrashed()->findOrFail($id);
+        
         $validated = $request->validate([
             'nama_perusahaan' => 'required|string|max:255',
             'jenis_perusahaan' => 'required',
@@ -161,7 +162,7 @@ class PerusahaanController extends Controller
 
     public function activate($id)
     {
-        $perusahaan = Perusahaan::findOrFail($id);
+        $perusahaan = Perusahaan::withTrashed()->findOrFail($id);
 
         $perusahaan->deleted_at = null;
         $perusahaan->save();

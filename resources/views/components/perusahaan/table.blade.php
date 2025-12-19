@@ -68,7 +68,7 @@
 
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex justify-center gap-3">
-                                <button
+                                <a href="{{ route('perusahaan.show', $i->id) }}"
                                     class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors"
                                     title="Edit Data">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24">
@@ -79,7 +79,7 @@
                                             <circle cx="12" cy="12" r="3" />
                                         </g>
                                     </svg>
-                                </button>
+                                </a>
                                 <a href="{{ route('perusahaan.edit', $i->id) }}"
                                     class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 hover:bg-yellow-100 p-2 rounded-lg transition-colors"
                                     title="Edit Data">
