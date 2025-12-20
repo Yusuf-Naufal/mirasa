@@ -18,4 +18,9 @@ class Perusahaan extends Model
         'alamat',
         'kontak',
     ];
+
+    public function Barang()
+    {
+        return $this->hasMany(Barang::class, 'id_perusahaan');
+    }
 }

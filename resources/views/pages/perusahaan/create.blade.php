@@ -69,11 +69,11 @@
             </div>
 
             <div
-                class="bg-gray-50 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100">
+                class="bg-gray-50 px-6 py-4 flex flex-col sm:flex-row justify-between gap-4 border-t border-gray-100">
                 <p class="text-xs text-gray-500 italic">* Wajib diisi</p>
                 <div class="flex items-center gap-3 w-full sm:w-auto">
                     <a href="{{ route('perusahaan.index') }}"
-                        class="flex-1 sm:flex-none text-center px-6 py-2.5 text-sm font-semibold text-gray-600 hover:text-gray-800 transition">
+                        class="flex-1 sm:flex-none text-center border border-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-600 rounded-xl hover:text-gray-800 transition">
                         Batal
                     </a>
                     <button type="submit"

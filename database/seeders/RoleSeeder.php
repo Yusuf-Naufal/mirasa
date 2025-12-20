@@ -13,10 +13,12 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        Role::firstOrCreate(['name' => 'admin']);
-        Role::firstOrCreate(['name' => 'supervisor']);
-        Role::firstOrCreate(['name' => 'manager']);
-        Role::firstOrCreate(['name' => 'owner']);
-        Role::firstOrCreate(['name' => 'kurir']);
+        Role::firstOrCreate(['name' => 'Super Admin']);
+        Role::firstOrCreate(['name' => 'KA Kupas']);
+        Role::firstOrCreate(['name' => 'QC']);
+        Role::firstOrCreate(['name' => 'Admin Gudang']);
+        Role::firstOrCreate(['name' => 'Admin Kantor']);
+        Role::firstOrCreate(['name' => 'Kepala Produksi']);
+        Role::firstOrCreate(['name' => 'Manager']);
     }
 }

@@ -33,7 +33,7 @@ class CostumerController extends Controller
 
             $q->where(function ($inner) use ($search) {
                 $inner->whereRaw('LOWER(nama_costumer) like ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(code) like ?', ["%{$search}%"]);
+                    ->orWhereRaw('LOWER(kode) like ?', ["%{$search}%"]);
             });
         });
 
