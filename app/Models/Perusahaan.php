@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Perusahaan extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'perusahaan';
 
@@ -17,4 +18,9 @@ class Perusahaan extends Model
         'alamat',
         'kontak',
     ];
+
+    public function Barang()
+    {
+        return $this->hasMany(Barang::class, 'id_perusahaan');
+    }
 }

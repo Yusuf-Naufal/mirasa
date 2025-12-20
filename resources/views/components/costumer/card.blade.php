@@ -1,7 +1,7 @@
-@props(['perusahaan'])
+@props(['costumer'])
 
 <div x-data="{ openCardId: null, openDropdownId: null }" class="space-y-4 md:hidden">
-    @forelse ($perusahaan as $index => $i)
+    @forelse ($costumer as $index => $i)
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 transition-all">
 
             <div class="flex justify-between items-start gap-3">
@@ -9,7 +9,6 @@
                 <div class="flex gap-3 cursor-pointer flex-1 min-w-0"
                     @click="openCardId = (openCardId === {{ $i->id }} ? null : {{ $i->id }})">
 
-                    {{-- Inisial Perusahaan sebagai pengganti Foto --}}
                     <div class="flex-shrink-0">
                         <div
                             class="h-12 w-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-bold text-lg border border-blue-100">
@@ -19,7 +18,7 @@
 
                     <div class="flex flex-col justify-center overflow-hidden">
                         <div class="flex items-center gap-2">
-                            <h2 class="text-sm font-bold text-gray-900 truncate">{{ $i->nama_perusahaan }}</h2>
+                            <h2 class="text-sm font-bold text-gray-900 truncate">{{ $i->nama_costumer }}</h2>
                             <svg class="w-3 h-3 text-gray-400 transition-transform duration-200"
                                 :class="openCardId === {{ $i->id }} ? 'rotate-180' : ''" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
@@ -27,16 +26,8 @@
                                     d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
-                        @php
-                            $colorClass = match ($i->jenis_perusahaan) {
-                                'Pusat' => 'text-blue-800',
-                                'Cabang' => 'text-amber-800',
-                                'Anak Perusahaan' => 'text-purple-800',
-                                default => 'text-gray-800',
-                            };
-                        @endphp
                         <p class="text-[10px] text-gray-400 uppercase tracking-wider">
-                            <span class="{{ $colorClass }} font-semibold">{{ $i->jenis_perusahaan }}</span>
+                            <span class="font-semibold">{{ $i->kode }}</span>
                         </p>
                     </div>
                 </div>
@@ -61,33 +52,19 @@
 
                             <ul class="flex flex-col text-xs font-medium">
                                 <li>
-                                    <a href="{{ route('perusahaan.show', $i->id) }}"
-                                        class="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24">
-                                            <g fill="none" stroke="currentColor" stroke-linecap="round"
-                                                stroke-linejoin="round" stroke-width="2">
-                                                <path
-                                                    d="M12 5c-6.307 0-9.367 5.683-9.91 6.808a.44.44 0 0 0 0 .384C2.632 13.317 5.692 19 12 19s9.367-5.683 9.91-6.808a.44.44 0 0 0 0-.384C21.368 10.683 18.308 5 12 5" />
-                                                <circle cx="12" cy="12" r="3" />
-                                            </g>
-                                        </svg>
-                                        Lihat Data
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="{{ route('perusahaan.edit', $i->id) }}"
+                                    <button type="button" onclick="openModal('editModal-{{ $i->id }}')"
                                         class="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                         </svg>
                                         Edit Data
-                                    </a>
+                                    </button>
                                 </li>
                                 @if ($i->deleted_at == null)
                                     <li>
                                         <form id="delete-form-{{ $i->id }}"
-                                            action="{{ route('perusahaan.destroy', $i->id) }}" method="POST">
+                                            action="{{ route('costumer.destroy', $i->id) }}" method="POST">
                                             @csrf
                                             @method('DELETE')
                                             <button type="button" onclick="confirmDelete({{ $i->id }})"
@@ -105,7 +82,7 @@
                                 @else
                                     <li>
                                         <form id="aktif-form-{{ $i->id }}"
-                                            action="{{ route('perusahaan.activate', $i->id) }}" method="POST">
+                                            action="{{ route('costumer.activate', $i->id) }}" method="POST">
                                             @csrf
                                             @method('PATCH')
                                             <button type="button" onclick="confirmActivate('{{ $i->id }}')"
@@ -126,7 +103,7 @@
                 </div>
             </div>
 
-            <div x-show="openCardId === {{ $i->id }}" x-collapse x-cloak
+            {{-- <div x-show="openCardId === {{ $i->id }}" x-collapse x-cloak
                 class="mt-3 pt-3 border-t border-gray-50 space-y-3">
 
                 <div class="flex flex-col gap-1">
@@ -151,16 +128,19 @@
                         +{{ $i->kontak ?? '-' }}
                     </div>
                 </div>
-            </div>
+            </div> --}}
 
         </div>
+
+        {{-- EDIT MODAL --}}
+        
     @empty
         <div class="text-center py-10 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-            <p class="text-sm text-gray-500 font-medium">Data perusahaan tidak ditemukan</p>
+            <p class="text-sm text-gray-500 font-medium">Data costumer tidak ditemukan</p>
         </div>
     @endforelse
 </div>
 
 <div class="md:hidden mt-6">
-    {{ $perusahaan->links('vendor.pagination.custom') }}
+    {{ $costumer->links('vendor.pagination.custom') }}
 </div>

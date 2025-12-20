@@ -5,14 +5,14 @@
 
             <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
                 <div class="flex gap-2">
-                    <a href="{{ route('perusahaan.create') }}"
+                    <button type="button" onclick="openModal('addModal')"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
                             <path fill="currentColor"
                                 d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
                         </svg>
-                        <span class="hidden md:block md:ml-2">Tambah Perusahaan</span>
-                    </a>
+                        <span class="hidden md:block md:ml-2">Tambah Costumer</span>
+                    </button>
 
                     <button onclick="openModal('filterModal')"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
@@ -20,12 +20,12 @@
                             <path fill="currentColor"
                                 d="M9 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2M6.17 5a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-7.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 0 1 0-2zM15 11a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2.83 0a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-1.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 1 1 0-2zM9 17a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2.83 0a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-7.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 1 1 0-2z" />
                         </svg>
-                        <span class="hidden md:block md:ml-2">Filter Perusahaan</span>
+                        <span class="hidden md:block md:ml-2">Filter Costumer</span>
                     </button>
 
                 </div>
 
-                <form action="{{ route('perusahaan.index') }}" method="GET" class="relative w-full md:w-64">
+                <form action="{{ route('costumer.index') }}" method="GET" class="relative w-full md:w-64">
                     <input type="text" name="search" value="{{ request('search') }}"
                         class="w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-10 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#FFC829]"
                         placeholder="Cari...">
@@ -40,9 +40,12 @@
         </div>
 
         {{-- TABLE DAN CARD --}}
-        <x-perusahaan.table :perusahaan="$perusahaan" />
-        <x-perusahaan.card :perusahaan="$perusahaan" />
+        <x-costumer.table :costumer="$costumer" />
+        <x-costumer.card :costumer="$costumer" />
 
+        @foreach ($costumer as $i)
+           <x-costumer.edit-modal :i="$i" />
+        @endforeach
 
     </div>
 
@@ -63,14 +66,14 @@
                 </button>
             </div>
 
-            <form action="{{ route('perusahaan.index') }}" method="GET" class="p-6">
+            <form action="{{ route('costumer.index') }}" method="GET" class="p-6">
                 {{-- Simpan nilai search yang ada di luar agar tidak hilang saat filter diterapkan --}}
                 <input type="hidden" name="search" value="{{ request('search') }}">
 
                 <div class="space-y-5">
                     <div>
                         <label for="filter_status" class="block text-sm font-semibold text-gray-700 mb-1">Status
-                            Perusahaan</label>
+                            Costumer</label>
                         <select name="status" id="filter_status"
                             class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] focus:outline-none focus:ring-2 focus:ring-[#FFC829]/20 outline-none">
                             <option value="">Semua Status</option>
@@ -80,30 +83,49 @@
                                 Aktif (Terhapus)</option>
                         </select>
                     </div>
-
-                    <div>
-                        <label for="filter_jenis_perusahaan"
-                            class="block text-sm font-semibold text-gray-700 mb-1">Jenis Perusahaan</label>
-                        <select name="jenis_perusahaan" id="filter_jenis_perusahaan"
-                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] focus:outline-none focus:ring-2 focus:ring-[#FFC829]/20 outline-none">
-                            <option value="">Semua Kategori</option>
-                            <option value="Pusat" {{ request('jenis_perusahaan') == 'Pusat' ? 'selected' : '' }}>Kantor
-                                Pusat</option>
-                            <option value="Cabang" {{ request('jenis_perusahaan') == 'Cabang' ? 'selected' : '' }}>
-                                Kantor Cabang</option>
-                            <option value="Anak Perusahaan"
-                                {{ request('jenis_perusahaan') == 'Anak Perusahaan' ? 'selected' : '' }}>Anak Perusahaan
-                            </option>
-                        </select>
-                    </div>
                 </div>
 
                 <div class="mt-8 flex items-center gap-3">
-                    <a href="{{ route('perusahaan.index') }}"
+                    <a href="{{ route('costumer.index') }}"
                         class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">Reset</a>
                     <button type="submit"
                         class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm">Terapkan
                         Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Modal Tambah --}}
+    <div id="addModal"
+        class="p-2 fixed inset-0 bg-black/50 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
+            <h2 class="text-lg font-semibold mb-4">Tambah Costumer</h2>
+            <form action="{{ route('costumer.store') }}" method="POST">
+                @csrf
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nama Costumer</label>
+                        <input type="text" name="nama_costumer" required
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Kode</label>
+                        <input type="text" name="kode" required
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-5">
+                    <button type="button" onclick="closeModal('addModal')"
+                        class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
+                        Batal
+                    </button>
+                    <button
+                        class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm"
+                        type="submit">
+                        Simpan
+                    </button>
                 </div>
             </form>
         </div>
