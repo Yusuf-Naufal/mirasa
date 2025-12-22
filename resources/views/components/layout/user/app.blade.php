@@ -137,7 +137,8 @@
             }
         });
     }
-     function confirmActivate(id) {
+
+    function confirmActivate(id) {
         Swal.fire({
             title: 'Aktifkan Data ini?',
             text: "Data akan diaktifkan kembali.",
@@ -153,6 +154,27 @@
             }
         });
     }
+</script>
+
+{{-- HANDLE NAV BUTTON --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userDropdown = document.getElementById('user-dropdown');
+
+        // Fungsi Toggle Dropdown
+        userMenuButton.addEventListener('click', function(event) {
+            event.stopPropagation(); // Mencegah klik menyebar ke window
+            userDropdown.classList.toggle('hidden');
+        });
+
+        // Tutup dropdown jika klik di luar area menu
+        window.addEventListener('click', function(event) {
+            if (!userMenuButton.contains(event.target) && !userDropdown.contains(event.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+    });
 </script>
 
 </html>
