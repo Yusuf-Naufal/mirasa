@@ -15,13 +15,13 @@ class JenisBarangSeeder extends Seeder
     {
         $jenis = [
             [
-                'nama_jenis' => 'First Grade',
+                'nama_jenis' => 'Finished Goods',
                 'kode'       => 'FG',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'nama_jenis' => 'Second Grade',
+                'nama_jenis' => 'Work In Progress',
                 'kode'       => 'WIP',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -33,7 +33,7 @@ class JenisBarangSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nama_jenis' => 'Bahan Produksi',
+                'nama_jenis' => 'Bahan Penolong',
                 'kode'       => 'BP',
                 'created_at' => now(),
                 'updated_at' => now(),
