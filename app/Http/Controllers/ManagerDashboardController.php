@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class SuperAdminDashboardController extends Controller
+class ManagerDashboardController extends Controller
 {
-    public function index (){
+    public function index()
+    {
         return view('pages.dashboard.superadmin');
     }
 }

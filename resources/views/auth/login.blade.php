@@ -7,7 +7,7 @@
                 class="mx-auto h-20 object-contain mb-2">
 
             <!-- Login Form -->
-            <form action="" method="POST" class="space-y-4">
+            <form action="{{ route('login') }}" method="POST" class="space-y-4">
                 @csrf
 
                 <!-- Username Field -->

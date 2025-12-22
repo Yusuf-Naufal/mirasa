@@ -22,11 +22,12 @@ class BarangController extends Controller
         // Query dasar dengan eager loading relasi
         $query = Barang::with(['perusahaan', 'jenisBarang']);
 
-        // Filter berdasarkan Search (Nama Barang atau Kode)
+        // Filter berdasarkan Search (Username atau Name)
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('nama_barang', 'like', '%' . $request->search . '%')
-                    ->orWhere('kode', 'like', '%' . $request->search . '%');
+            $search = strtolower($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(nama_barang) like ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(kode) like ?', ["%{$search}%"]);
             });
         }
 
@@ -75,12 +76,7 @@ class BarangController extends Controller
         $jenis = JenisBarang::findOrFail($request->id_jenis);
         $kodeFinal = strtoupper($jenis->kode . '-' . $request->kode);
 
-        // 2. Cek Unik Manual
-        if (Barang::where('kode', $kodeFinal)->exists()) {
-            return back()->withErrors(['kode' => 'Gabungan kode sudah terdaftar.'])->withInput();
-        }
-
-        // 3. Persiapkan Data
+        // 2. Persiapkan Data
         $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang']);
         $data['kode'] = $kodeFinal;
 
@@ -133,15 +129,11 @@ class BarangController extends Controller
         $jenis = JenisBarang::findOrFail($request->id_jenis);
         $kodeFinal = strtoupper($jenis->kode . '-' . $request->kode);
 
-        // 2. Cek Unik Kode (Kecuali milik barang ini sendiri)
-        if (Barang::where('kode', $kodeFinal)->where('id', '!=', $id)->exists()) {
-            return back()->withErrors(['kode' => 'Gabungan kode sudah terdaftar.'])->withInput();
-        }
 
         $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang']);
         $data['kode'] = $kodeFinal;
 
-        // 3. Logika Update Gambar (Prioritas Base64 Crop)
+        // 2. Logika Update Gambar (Prioritas Base64 Crop)
         if ($request->filled('cropped_image')) {
             // Hapus foto lama jika ada
             if ($barang->foto && Storage::disk('public')->exists($barang->foto)) {
