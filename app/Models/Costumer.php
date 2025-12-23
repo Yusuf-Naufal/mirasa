@@ -13,7 +13,13 @@ class Costumer extends Model
     protected $table = 'costumer';
 
     protected $fillable = [
+        'id_perusahaan',
         'nama_costumer',
         'kode',
     ];
+
+    public function Perusahaan()
+    {
+        return $this->belongsTo(Perusahaan::class, 'id_perusahaan');
+    }
 }

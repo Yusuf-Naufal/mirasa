@@ -62,7 +62,7 @@
 
             <ul class="space-y-2 font-medium">
                 <li>
-                    <a href="{{ route('barang.index.index') }}"
+                    <a href="{{ route('barang.index') }}"
                         class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
                         <div class="min-w-[32px] flex justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg"

@@ -5,7 +5,7 @@
 
             <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
                 <div class="flex gap-2">
-                    <a type="button" href="{{ route('barang.index.create') }}"
+                    <a type="button" href="{{ route('barang.create') }}"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
                             <path fill="currentColor"
@@ -34,7 +34,7 @@
 
                 </div>
 
-                <form action="{{ route('barang.index.index') }}" method="GET" class="relative w-full md:w-64">
+                <form action="{{ route('barang.index') }}" method="GET" class="relative w-full md:w-64">
                     <input type="text" name="search" value="{{ request('search') }}"
                         class="w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-10 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#FFC829]"
                         placeholder="Cari...">
@@ -75,7 +75,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('barang.index.index') }}" method="GET" class="p-6">
+            <form action="{{ route('barang.index') }}" method="GET" class="p-6">
                 {{-- Simpan nilai search agar tidak hilang saat filter diterapkan --}}
                 <input type="hidden" name="search" value="{{ request('search') }}">
 
@@ -114,7 +114,7 @@
                 </div>
 
                 <div class="mt-8 flex items-center gap-3">
-                    <a href="{{ route('barang.index.index') }}"
+                    <a href="{{ route('barang.index') }}"
                         class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">Reset</a>
                     <button type="submit"
                         class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm">Terapkan
@@ -123,40 +123,5 @@
             </form>
         </div>
     </div>
-
-    {{-- Modal Tambah --}}
-    {{-- <div id="addModal"
-        class="p-2 fixed inset-0 bg-black/50 bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
-            <h2 class="text-lg font-semibold mb-4">Tambah Costumer</h2>
-            <form action="{{ route('costumer.store') }}" method="POST">
-                @csrf
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nama Costumer</label>
-                        <input type="text" name="nama_costumer" required
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Kode</label>
-                        <input type="text" name="kode" required
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2 mt-5">
-                    <button type="button" onclick="closeModal('addModal')"
-                        class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-                        Batal
-                    </button>
-                    <button
-                        class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm"
-                        type="submit">
-                        Simpan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div> --}}
 
 </x-layout.user.app>

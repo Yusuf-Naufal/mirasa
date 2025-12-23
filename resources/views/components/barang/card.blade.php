@@ -65,7 +65,7 @@
 
                             <ul class="flex flex-col text-xs font-medium">
                                 <li>
-                                    <a type="button" href="{{ route('barang.index.edit', $i->id) }}"
+                                    <a type="button" href="{{ route('barang.edit', $i->id) }}"
                                         class="w-full flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition border-b border-gray-50">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -77,7 +77,7 @@
 
                                 <li>
                                     <form id="delete-form-{{ $i->id }}"
-                                        action="{{ route('barang.index.destroy', $i->id) }}" method="POST">
+                                        action="{{ route('barang.destroy', $i->id) }}" method="POST">
                                         @csrf
                                         @method('DELETE')
                                         <button type="button" onclick="confirmDelete({{ $i->id }})"

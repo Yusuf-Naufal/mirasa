@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Costumer;
+use App\Models\Perusahaan;
 use Illuminate\Http\Request;
 
 class CostumerController extends Controller
@@ -12,6 +13,8 @@ class CostumerController extends Controller
      */
     public function index(Request $request)
     {
+        $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+
         // Menggunakan withTrashed agar data yang 'deleted_at' tidak null bisa ikut terbaca
         $query = Costumer::withTrashed();
 
@@ -37,9 +40,14 @@ class CostumerController extends Controller
             });
         });
 
+        // Filter berdasarkan Perusahaan
+        if ($request->filled('id_perusahaan')) {
+            $query->where('id_perusahaan', $request->id_perusahaan);
+        }
+
         $costumer = $query->latest()->paginate(10)->withQueryString();
 
-        return view('pages.costumer.index', compact('costumer'));
+        return view('pages.costumer.index', compact('costumer', 'perusahaan'));
     }
 
     /**
@@ -56,6 +64,7 @@ class CostumerController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'id_perusahaan' => 'required|exists:perusahaan,id',
             'nama_costumer' => 'required|string',
             'kode'          => 'required',
         ]);
@@ -97,6 +106,7 @@ class CostumerController extends Controller
         $costumer = Costumer::withTrashed()->findOrFail($id);
 
         $validated = $request->validate([
+            'id_perusahaan' => 'required|exists:perusahaan,id',
             'nama_costumer' => 'required|string',
             'kode' => 'required',
         ]);

@@ -67,9 +67,10 @@ class BarangController extends Controller
         $request->validate([
             'id_perusahaan' => 'required|exists:perusahaan,id',
             'id_jenis'      => 'required|exists:jenis_barang,id',
-            'nama_barang'   => 'required|string|max:255',
-            'kode'          => 'required|string|max:50',
-            'cropped_image' => 'nullable|string', // Validasi input base64
+            'nama_barang'   => 'required|string',
+            'kode'          => 'required|string',
+            'satuan'        => 'required|string',
+            'cropped_image' => 'nullable|string',
         ]);
 
         // 1. Ambil data Jenis & Gabungkan Kode (UPPERCASE)
@@ -77,8 +78,9 @@ class BarangController extends Controller
         $kodeFinal = strtoupper($jenis->kode . '-' . $request->kode);
 
         // 2. Persiapkan Data
-        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang']);
+        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan']);
         $data['kode'] = $kodeFinal;
+        $data['satuan'] = strtoupper($request->satuan);
 
         // 4. Logika Simpan Gambar (Base64 Crop)
         if ($request->filled('cropped_image')) {
@@ -87,7 +89,7 @@ class BarangController extends Controller
 
         Barang::create($data);
 
-        return redirect()->route('barang.index.index')->with('success', 'Barang berhasil disimpan.');
+        return redirect()->route('barang.index')->with('success', 'Barang berhasil disimpan.');
     }
 
     /**
@@ -120,8 +122,9 @@ class BarangController extends Controller
         $request->validate([
             'id_perusahaan' => 'required|exists:perusahaan,id',
             'id_jenis'      => 'required|exists:jenis_barang,id',
-            'nama_barang'   => 'required|string|max:255',
-            'kode'          => 'required|string|max:50',
+            'nama_barang'   => 'required|string',
+            'kode'          => 'required|string',
+            'satuan'        => 'required|string',
             'cropped_image' => 'nullable|string',
         ]);
 
@@ -130,8 +133,9 @@ class BarangController extends Controller
         $kodeFinal = strtoupper($jenis->kode . '-' . $request->kode);
 
 
-        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang']);
+        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan']);
         $data['kode'] = $kodeFinal;
+        $data['satuan'] = strtoupper($request->satuan);
 
         // 2. Logika Update Gambar (Prioritas Base64 Crop)
         if ($request->filled('cropped_image')) {
@@ -144,7 +148,7 @@ class BarangController extends Controller
 
         $barang->update($data);
 
-        return redirect()->route('barang.index.index')->with('success', 'Barang berhasil diperbarui');
+        return redirect()->route('barang.index')->with('success', 'Barang berhasil diperbarui');
     }
 
     /**
@@ -155,7 +159,7 @@ class BarangController extends Controller
         $barang = Barang::findOrFail($id);
         $barang->delete();
 
-        return redirect()->route('barang.index.index')->with('success', 'Barang berhasil dipindahkan ke sampah');
+        return redirect()->route('barang.index')->with('success', 'Barang berhasil dipindahkan ke sampah');
     }
 
     private function processBase64Crop($base64String)
