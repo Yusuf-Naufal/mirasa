@@ -20,7 +20,7 @@ class BarangController extends Controller
         $jenis = JenisBarang::all();
 
         // Query dasar dengan eager loading relasi
-        $query = Barang::with(['perusahaan', 'jenisBarang']);
+        $query = Barang::withTrashed()->with(['perusahaan', 'jenisBarang']);
 
         // Filter berdasarkan Search (Username atau Name)
         if ($request->filled('search')) {

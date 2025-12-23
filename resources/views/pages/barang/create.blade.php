@@ -85,7 +85,7 @@
                                     ?
                                 </span>
                                 <input type="text" id="kode" name="kode" required placeholder="001"
-                                    class="w-full rounded-r-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border">
+                                    class="w-full rounded-r-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border uppercase">
                             </div>
                             <p class="text-[10px] text-gray-400 mt-1 italic">*Kode final akan tersimpan otomatis dengan
                                 format: KODE_JENIS-KODE_BARANG</p>

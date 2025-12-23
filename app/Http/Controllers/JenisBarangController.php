@@ -77,14 +77,14 @@ class JenisBarangController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $perusahaan = JenisBarang::findOrFail($id);
+        $jenis = JenisBarang::findOrFail($id);
 
         $validated = $request->validate([
             'nama_jenis'    => 'required',
             'kode'          => 'required',
         ]);
 
-        $perusahaan->update($validated);
+        $jenis->update($validated);
 
         return redirect()->route('barang.jenis.index')->with('success', 'Data jenis barang berhasil diperbarui');
     }
@@ -94,6 +94,9 @@ class JenisBarangController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $jenis = JenisBarang::findOrFail($id);
+
+        $jenis->delete();
+        return redirect()->route('barang.jenis.index')->with('success', 'Data jenis barang berhasil dihapus');
     }
 }

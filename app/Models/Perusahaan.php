@@ -28,4 +28,14 @@ class Perusahaan extends Model
     {
         return $this->hasMany(User::class, 'id_perusahaan');
     }
+
+    public function Proses()
+    {
+        return $this->hasMany(Proses::class, 'id_perusahaan');
+    }
+    
+    public function Suplier()
+    {
+        return $this->hasMany(Supplier::class, 'id_perusahaan');
+    }
 }

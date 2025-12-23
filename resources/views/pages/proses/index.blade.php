@@ -1,21 +1,21 @@
 <x-layout.user.app>
-    {{-- Mengubah space-y-2 menjadi space-y-8 agar jarak antar elemen besar lebih lega --}}
-    <div class="space-y-8 p-4"> 
-        
-        {{-- Header Section --}}
-        <div class="flex flex-col gap-4 md:justify-between mb-2"> {{-- Tambah mb-2 --}}
+
+    <div class="space-y-2">
+        <div class="flex flex-col gap-4 md:justify-between">
 
             <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
                 <div class="flex gap-2">
-                    <a href="{{ route('proses.create') }}"
+                    {{-- Tombol Tambah --}}
+                    <button type="button" onclick="openModal('addModal')"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 16 16">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
                             <path fill="currentColor"
-                                d="M11.5 7a4.5 4.5 0 1 1 0 9a4.5 4.5 0 0 1 0-9m0 2a.5.5 0 0 0-.5.5V11H9.5a.5.5 0 0 0 0 1H11v1.5a.5.5 0 0 0 1 0V12h1.5a.5.5 0 0 0 0-1H12V9.5a.5.5 0 0 0-.5-.5M7.258 8A5.48 5.48 0 0 0 6 11.5c0 .485.062.955.18 1.402A7 7 0 0 1 5 13c-1.175 0-2.27-.272-3.089-.77C1.091 11.73.5 10.965.5 10a2 2 0 0 1 2-2zM5 1.5A2.75 2.75 0 1 1 5 7a2.75 2.75 0 0 1 0-5.5m6.502.997a2.25 2.25 0 0 1 2.252 2.251a2.24 2.24 0 0 1-.586 1.51A5.5 5.5 0 0 0 11.5 6a5.5 5.5 0 0 0-1.667.257a2.252 2.252 0 0 1 1.669-3.76" />
+                                d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
                         </svg>
                         <span class="hidden md:block md:ml-2">Tambah Proses</span>
-                    </a>
+                    </button>
 
+                    {{-- Tombol Filter --}}
                     <button onclick="openModal('filterModal')"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
@@ -26,12 +26,13 @@
                     </button>
                 </div>
 
-                <form action="" method="GET" class="relative w-full md:w-64">
+                {{-- Form Pencarian --}}
+                <form action="{{ route('proses.index') }}" method="GET" class="relative w-full md:w-64">
                     <input type="text" name="search" value="{{ request('search') }}"
                         class="w-full rounded-lg border border-gray-300 bg-gray-50 py-2 pl-10 pr-3 text-sm text-gray-700 placeholder-gray-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#FFC829]"
                         placeholder="Cari...">
                     <svg xmlns="http://www.w3.org/2000/svg"
-                        class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" {{-- Top dirubah ke 1/2 --}}
+                        class="absolute left-3 top-5 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -40,63 +41,112 @@
             </div>
         </div>
 
-        {{-- CARD TABEL DAFTAR PROSES --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            {{-- Card Header --}}
-            <div class="bg-emerald-600 px-6 py-4 flex items-center justify-between">
-                <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        {{-- TABLE DAN CARD --}}
+        {{-- Pastikan komponen table menerima data $suppliers --}}
+        <x-proses.table :proses="$proses" />
+        <x-proses.card :proses="$proses" />
+
+        {{-- MODAL EDIT (Perbaikan di sini: Tambahkan $key => $i) --}}
+        @foreach ($proses as $i)
+            <x-proses.edit-modal :i="$i" :perusahaan="$perusahaan" />
+        @endforeach
+
+    </div>
+
+    {{-- Filter Modal --}}
+    <div id="filterModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" role="dialog"
+        aria-modal="true">
+        <div class="fixed inset-0 bg-gray-900/60" onclick="closeModal('filterModal')"></div>
+
+        <div class="relative w-full max-w-md rounded-2xl bg-white shadow-2xl" id="modalContent">
+            <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+                <h2 class="text-lg font-bold text-gray-800">Filter Lanjutan</h2>
+                <button onclick="closeModal('filterModal')" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 15 15">
+                        <path fill="currentColor"
+                            d="M10.969 3.219a.574.574 0 1 1 .812.812L8.313 7.5l3.468 3.469l.074.09a.575.575 0 0 1-.796.796l-.09-.074L7.5 8.312l-3.469 3.47a.574.574 0 1 1-.812-.813L6.688 7.5l-3.47-3.469l-.073-.09a.575.575 0 0 1 .796-.797l.09.075L7.5 6.687z" />
                     </svg>
-                    Daftar Proses Produksi
-                </h2>
-                <span class="bg-emerald-500 text-white text-xs px-2 py-1 rounded-md border border-emerald-400">
-                    {{ count($daftarProses) }} Item
-                </span>
+                </button>
             </div>
-            
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm border-separate border-spacing-0">
-                    <thead class="bg-gray-50 text-gray-600 uppercase text-xs font-bold">
-                        <tr>
-                            <th class="px-6 py-4 border-b border-gray-200">KODE</th>
-                            <th class="px-6 py-4 border-b border-gray-200">PROSES</th>
-                            <th class="px-6 py-4 border-b border-gray-200 text-center w-32">AKSI</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($daftarProses as $index => $p)
-                            <tr class="hover:bg-emerald-50/30 transition-colors">
-                                <td class="px-6 py-4 font-bold text-emerald-700">{{ $p['kode'] }}</td>
-                                <td class="px-6 py-4 font-medium text-gray-700 uppercase">{{ $p['proses'] }}</td>
-                                <td class="px-6 py-4">
-                                    <div class="flex justify-center gap-2">
-                                        <a href="{{ route('proses.edit', $index) }}" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all" title="Edit">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                        </a>
-                                        <form action="{{ route('proses.destroy', $index) }}" method="POST" onsubmit="return confirm('Hapus proses ini?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Hapus">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="px-6 py-12 text-center text-gray-400 italic bg-gray-50/50">
-                                    Belum ada data proses produksi.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+
+            <form action="{{ route('proses.index') }}" method="GET" class="p-6">
+                <input type="hidden" name="search" value="{{ request('search') }}">
+
+                <div class="space-y-5">
+                    {{-- Filter Berdasarkan Perusahaan --}}
+                    <div>
+                        <label for="id_perusahaan"
+                            class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
+                        <select name="id_perusahaan" id="id_perusahaan"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
+                            <option value="">Semua Perusahaan</option>
+                            @foreach ($perusahaan as $p)
+                                <option value="{{ $p->id }}"
+                                    {{ request('id_perusahaan') == $p->id ? 'selected' : '' }}>
+                                    {{ $p->nama_perusahaan }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex items-center gap-3">
+                    <a href="{{ route('proses.index') }}"
+                        class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50">Reset</a>
+                    <button type="submit"
+                        class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm">Terapkan
+                        Filter</button>
+                </div>
+            </form>
         </div>
     </div>
+
+    {{-- Modal Tambah --}}
+    <div id="addModal"
+        class="p-2 fixed inset-0 bg-black/50 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
+            <h2 class="text-lg font-semibold mb-4">Tambah Jenis Barang</h2>
+            <form action="{{ route('proses.store') }}" method="POST">
+                @csrf
+                <div class="space-y-3">
+                    {{-- Filter Berdasarkan Perusahaan --}}
+                    <div>
+                        <label for="id_perusahaan"
+                            class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
+                        <select name="id_perusahaan" id="id_perusahaan"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
+                            @foreach ($perusahaan as $p)
+                                <option value="{{ $p->id }}">
+                                    {{ $p->nama_perusahaan }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nama Proses</label>
+                        <input type="text" name="nama_proses" required
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Kode</label>
+                        <input type="text" name="kode" required
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500 uppercase">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-5">
+                    <button type="button" onclick="closeModal('addModal')"
+                        class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
+                        Batal
+                    </button>
+                    <button
+                        class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm"
+                        type="submit">
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </x-layout.user.app>

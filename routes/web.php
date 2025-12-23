@@ -35,22 +35,19 @@ Route::patch('/costumer/activate/{id}', [CostumerController::class, 'activate'])
 Route::resource('costumer', CostumerController::class);
 
 // CRUD BARANG DAN JENIS BARANG
-Route::resource('barang/jenis', JenisBarangController::class)->names('barang.jenis');
-Route::resource('barang', BarangController::class)->names('barang');
+Route::prefix('barang')->name('barang.')->group(function () {
+    // CRUD JENIS BARANG
+    Route::resource('jenis', JenisBarangController::class);
+
+    // CRUD BARANG
+    Route::resource('/', BarangController::class)->except(['show'])->names('index');
+});
 
 // CRUD USER
 Route::resource('user', UserController::class);
 
-// CRUD SUPPLIER 
-Route::prefix('supplier')->name('supplier.')->group(function () {
-    Route::get('/', [SupplierController::class, 'index'])->name('index');
-    Route::get('/create', [SupplierController::class, 'create'])->name('create');
-    Route::post('/store', [SupplierController::class, 'store'])->name('store');
-    Route::get('/edit/{index}', [SupplierController::class, 'edit'])->name('edit');
-    Route::put('/update/{index}', [SupplierController::class, 'update'])->name('update');
-    Route::delete('/destroy/{index}', [SupplierController::class, 'destroy'])->name('destroy');
-    Route::delete('/destroy-all', [SupplierController::class, 'destroyAll'])->name('destroyAll');
-});
+// CRUD SUPLIER
+Route::resource('supplier', SupplierController::class)->names('supplier')->except(['show']);
 
 // CRUD PROSES
-Route::resource('proses', ProsesController::class)->names('proses')->except(['show']);
+Route::resource('proses', ProsesController::class)->names('proses')->except(['show', 'create', 'edit']);

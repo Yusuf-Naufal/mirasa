@@ -6,14 +6,14 @@
             <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
                 <div class="flex gap-2">
                     {{-- Tombol Tambah --}}
-                    <button type="button" onclick="openModal('addModal')"
+                    <a type="button" href="{{ route('supplier.create') }}"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
                             <path fill="currentColor"
                                 d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
                         </svg>
                         <span class="hidden md:block md:ml-2">Tambah Supplier</span>
-                    </button>
+                    </a>
 
                     {{-- Tombol Filter --}}
                     <button onclick="openModal('filterModal')"
@@ -43,13 +43,8 @@
 
         {{-- TABLE DAN CARD --}}
         {{-- Pastikan komponen table menerima data $suppliers --}}
-        <x-supplier.table :supplier="$suppliers" />
-        <x-supplier.card :supplier="$suppliers" />
-
-        {{-- MODAL EDIT (Perbaikan di sini: Tambahkan $key => $i) --}}
-        @foreach ($suppliers as $key => $i)
-           <x-supplier.edit-modal :index="$key" :i="$i" />
-        @endforeach
+        <x-supplier.table :supplier="$supplier" />
+        <x-supplier.card :supplier="$supplier" />
 
     </div>
 
@@ -71,14 +66,33 @@
 
             <form action="{{ route('supplier.index') }}" method="GET" class="p-6">
                 <input type="hidden" name="search" value="{{ request('search') }}">
+
                 <div class="space-y-5">
+                    {{-- Filter Berdasarkan Perusahaan --}}
                     <div>
-                        <label for="filter_status" class="block text-sm font-semibold text-gray-700 mb-1">Status Supplier</label>
-                        <select name="status" id="filter_status"
+                        <label for="id_perusahaan"
+                            class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
+                        <select name="id_perusahaan" id="id_perusahaan"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
+                            <option value="">Semua Perusahaan</option>
+                            @foreach ($perusahaan as $p)
+                                <option value="{{ $p->id }}"
+                                    {{ request('id_perusahaan') == $p->id ? 'selected' : '' }}>
+                                    {{ $p->nama_perusahaan }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="filter_jenis_supplier" class="block text-sm font-semibold text-gray-700 mb-1">Jenis
+                            Supplier</label>
+                        <select name="jenis_supplier" id="filter_jenis_supplier"
                             class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] focus:outline-none focus:ring-2 focus:ring-[#FFC829]/20">
-                            <option value="">Semua Status</option>
-                            <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif (Tersedia)</option>
-                            <option value="tidak_aktif" {{ request('status') == 'tidak_aktif' ? 'selected' : '' }}>Tidak Aktif (Terhapus)</option>
+                            <option value="">Semua Jenis</option>
+                            <option value="Barang" {{ request('jenis_supplier') == 'Barang' ? 'selected' : '' }}>Barang
+                            </option>
+                            <option value="Singkong" {{ request('jenis_supplier') == 'Singkong' ? 'selected' : '' }}>Singkong</option>
                         </select>
                     </div>
                 </div>
@@ -87,67 +101,11 @@
                     <a href="{{ route('supplier.index') }}"
                         class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50">Reset</a>
                     <button type="submit"
-                        class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm">Terapkan Filter</button>
+                        class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm">Terapkan
+                        Filter</button>
                 </div>
             </form>
         </div>
     </div>
-
-    {{-- Modal Tambah --}}
-    <div id="addModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
-            <h2 class="text-lg font-semibold mb-4 text-gray-800">Tambah Supplier</h2>
-            
-            <form action="{{ route('supplier.store') }}" method="POST">
-                @csrf
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nama Supplier</label>
-                        <input type="text" name="nama" required class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 uppercase">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Kode</label>
-                        <input type="text" name="kode" required class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 uppercase">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Kategori</label>
-                        <input type="text" name="kategori" required class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 uppercase">
-                    </div>
-                </div>
-
-                <div class="flex justify-end gap-2 mt-5">
-                    <button type="button" onclick="closeModal('addModal')"
-                        class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-                        Batal
-                    </button>
-                    <button type="submit"
-                        class="flex-1 rounded-xl bg-[#0D1630] py-3 text-sm font-bold text-white hover:bg-black transition-colors shadow-sm">
-                        Simpan
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    {{-- SCRIPT UNTUK MODAL --}}
-    <script>
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-            document.getElementById(id).classList.add('flex');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-            document.getElementById(id).classList.remove('flex');
-        }
-
-        // Tutup modal saat klik di luar area modal
-        window.onclick = function(event) {
-            if (event.target.classList.contains('fixed')) {
-                event.target.classList.add('hidden');
-                event.target.classList.remove('flex');
-            }
-        }
-    </script>
 
 </x-layout.user.app>
