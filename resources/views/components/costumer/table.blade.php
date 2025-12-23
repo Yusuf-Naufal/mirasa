@@ -8,7 +8,7 @@
                     <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">No</th>
                     <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Nama Costumer
                     </th>
-                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Kode</th>
+                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Perusahaan</th>
                     <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-center">Aksi</th>
                 </tr>
             </thead>
@@ -20,14 +20,26 @@
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="text-sm font-semibold text-gray-900">{{ $i->nama_costumer }}</div>
+                            <div class="flex flex-col gap-1.5">
+                                <div class="text-sm font-bold text-gray-800 tracking-tight leading-none">
+                                    {{ $i->nama_costumer }}
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="flex items-center bg-gray-50 text-gray-700 px-2 py-0.5 rounded-md border border-gray-100 shadow-sm">
+                                        <span class="text-[10px] font-mono font-bold tracking-wider uppercase">
+                                            {{ $i->kode }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                <div class="text-sm font-semibold text-gray-700">{{ $i->kode }}</div>
+                                <div class="text-sm font-semibold text-gray-700">
+                                    {{ $i->perusahaan->nama_perusahaan ?? 'No' }}</div>
                             </div>
                         </td>
 
@@ -73,7 +85,7 @@
                                     </form>
                                 @endif
 
-                                
+
                             </div>
                         </td>
                     </tr>

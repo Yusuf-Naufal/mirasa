@@ -38,12 +38,23 @@
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex flex-col">
-                                <div class="text-sm font-semibold text-gray-900">{{ $i->nama_barang }}</div>
-                                {{-- KODE BARANG DI BAWAH NAMA --}}
-                                <div
-                                    class="text-xs font-mono text-gray-500 mt-0.5 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 w-fit">
-                                    {{ $i->kode }}
+                            <div class="flex flex-col gap-1.5">
+                                <div class="text-sm font-bold text-gray-800 tracking-tight leading-none">
+                                    {{ $i->nama_barang }}
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="flex items-center bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md border border-indigo-100 shadow-sm">
+                                        <span class="text-[10px] font-mono font-bold tracking-wider uppercase">
+                                            {{ $i->kode }}
+                                        </span>
+                                    </div>
+
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                                        {{ $i->satuan }}
+                                    </span>
                                 </div>
                             </div>
                         </td>
@@ -58,7 +69,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex justify-center gap-3">
                                 {{-- TOMBOL EDIT --}}
-                                <a type="button" href="{{ route('barang.index.edit', $i->id) }}"
+                                <a type="button" href="{{ route('barang.edit', $i->id) }}"
                                     class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 hover:bg-yellow-100 p-2 rounded-lg transition-colors"
                                     title="Edit Data">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,7 +80,7 @@
 
                                 {{-- LOGIKA DELETE --}}
                                 <form id="delete-form-{{ $i->id }}"
-                                    action="{{ route('barang.index.destroy', $i->id) }}" method="POST">
+                                    action="{{ route('barang.destroy', $i->id) }}" method="POST">
                                     @csrf
                                     @method('DELETE')
                                     <button type="button" onclick="confirmDelete({{ $i->id }})"

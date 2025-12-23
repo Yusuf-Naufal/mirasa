@@ -18,6 +18,7 @@ class Barang extends Model
         'foto',
         'nama_barang',
         'kode',
+        'satuan',
     ];
 
     public function Perusahaan()
