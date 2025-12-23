@@ -90,7 +90,7 @@
                                 </span>
                                 <input type="text" id="kode" name="kode" required placeholder="001"
                                     value="{{ old('kode', $kodeMurni) }}"
-                                    class="w-full rounded-r-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border">
+                                    class="w-full rounded-r-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border uppercase">
                             </div>
                         </div>
                     </div>

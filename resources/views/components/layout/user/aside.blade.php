@@ -5,7 +5,6 @@
     aria-label="Sidebar">
 
     <div class="h-full px-4 pb-4 overflow-y-auto overflow-x-hidden bg-white scrollbar-hide">
-<<<<<<< HEAD
         @if (auth()->user()->hasRole('Super Admin'))
             <ul class="space-y-2 font-medium">
                 <li>
@@ -42,73 +41,6 @@
                     </a>
                 </li>
             </ul>
-=======
-        <ul class="space-y-2 font-medium">
-            {{-- Menu Dashboard --}}
-            <li>
-                <a href="{{ route('super-admin.dashboard') }}"
-                    class="flex items-center p-3 {{ request()->routeIs('super-admin.dashboard') ? 'bg-blue-50 text-blue-600' : 'text-gray-600' }} rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                    <div class="min-w-[32px] flex justify-center">
-                        <svg class="w-6 h-6 {{ request()->routeIs('super-admin.dashboard') ? 'text-blue-600' : 'text-gray-400' }} group-hover/item:text-blue-600 transition-colors" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                            </path>
-                        </svg>
-                    </div>
-                    <span class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Dashboard</span>
-                </a>
-            </li>
-
-            {{-- Menu Perusahaan --}}
-            <li>
-                <a href="{{ route('perusahaan.index') }}"
-                    class="flex items-center p-3 {{ request()->routeIs('perusahaan.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-600' }} rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                    <div class="min-w-[32px] flex justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="w-6 h-6 {{ request()->routeIs('perusahaan.*') ? 'text-blue-600' : 'text-gray-400' }} group-hover/item:text-blue-600 transition-colors"
-                            viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M21 19h2v2H1v-2h2V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v15h2V9h3a1 1 0 0 1 1 1zM7 11v2h4v-2zm0-4v2h4V7z" />
-                        </svg>
-                    </div>
-                    <span class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Perusahaan</span>
-                </a>
-            </li>
-
-            {{-- Menu Supplier --}}
-            <li>
-                <a href="{{ route('supplier.index') }}"
-                    class="flex items-center p-3 {{ request()->routeIs('supplier.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-600' }} rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                    <div class="min-w-[32px] flex justify-center">
-                        <svg class="w-6 h-6 {{ request()->routeIs('supplier.*') ? 'text-blue-600' : 'text-gray-400' }} group-hover/item:text-blue-600 transition-colors" fill="none" 
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                            </path>
-                        </svg>
-                    </div>
-                    <span class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Supplier</span>
-                </a>
-            </li>
-
-            {{-- Menu Proses --}}
-            <li>
-                <a href="{{ route('proses.index') }}"
-                    class="flex items-center p-3 {{ request()->routeIs('proses.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-600' }} rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                    <div class="min-w-[32px] flex justify-center">
-                        <svg class="w-6 h-6 {{ request()->routeIs('proses.*') ? 'text-blue-600' : 'text-gray-400' }} group-hover/item:text-blue-600 transition-colors" 
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
-                            </path>
-                        </svg>
-                    </div>
-                    <span class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Proses</span>
-                </a>
-            </li>
-        </ul>
->>>>>>> 874d395 (tampilan supplier dan proses)
 
             <ul class="space-y-2 font-medium">
                 <li>
@@ -142,6 +74,42 @@
                         </div>
                         <span
                             class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Barang</span>
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="space-y-2 font-medium">
+                <li>
+                    <a href="{{ route('supplier.index') }}"
+                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M19.15 8a2 2 0 0 0-1.72-1H15V5a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v10a2 2 0 0 0 1 1.73a3.49 3.49 0 0 0 7 .27h3.1a3.48 3.48 0 0 0 6.9 0a2 2 0 0 0 2-2v-3a1.1 1.1 0 0 0-.14-.52zM15 9h2.43l1.8 3H15zM6.5 19A1.5 1.5 0 1 1 8 17.5A1.5 1.5 0 0 1 6.5 19m10 0a1.5 1.5 0 1 1 1.5-1.5a1.5 1.5 0 0 1-1.5 1.5" />
+                            </svg>
+                        </div>
+                        <span
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Suplier</span>
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="space-y-2 font-medium">
+                <li>
+                    <a href="{{ route('proses.index') }}"
+                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M19.5 12c0-.23-.01-.45-.03-.68l1.86-1.41c.4-.3.51-.86.26-1.3l-1.87-3.23a.987.987 0 0 0-1.25-.42l-2.15.91c-.37-.26-.76-.49-1.17-.68l-.29-2.31c-.06-.5-.49-.88-.99-.88h-3.73c-.51 0-.94.38-1 .88l-.29 2.31c-.41.19-.8.42-1.17.68l-2.15-.91c-.46-.2-1-.02-1.25.42L2.41 8.62c-.25.44-.14.99.26 1.3l1.86 1.41a7.3 7.3 0 0 0 0 1.35l-1.86 1.41c-.4.3-.51.86-.26 1.3l1.87 3.23c.25.44.79.62 1.25.42l2.15-.91c.37.26.76.49 1.17.68l.29 2.31c.06.5.49.88.99.88h3.73c.5 0 .93-.38.99-.88l.29-2.31c.41-.19.8-.42 1.17-.68l2.15.91c.46.2 1 .02 1.25-.42l1.87-3.23c.25-.44.14-.99-.26-1.3l-1.86-1.41c.03-.23.04-.45.04-.68m-7.46 3.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5s-1.57 3.5-3.5 3.5" />
+                            </svg>
+                        </div>
+                        <span
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Proses</span>
                     </a>
                 </li>
             </ul>
