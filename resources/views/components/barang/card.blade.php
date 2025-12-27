@@ -118,7 +118,7 @@
     @empty
         <div class="text-center py-10 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
             <p class="text-sm text-gray-500 font-medium">Data barang tidak ditemukan</p>
-            <a href="{{ route('barang.index.create') }}"
+            <a href="{{ route('barang.create') }}"
                 class="mt-3 inline-block text-blue-600 text-xs font-bold hover:underline">TAMBAH SEKARANG</a>
         </div>
     @endforelse

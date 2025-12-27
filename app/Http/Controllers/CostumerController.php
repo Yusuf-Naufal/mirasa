@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Costumer;
 use App\Models\Perusahaan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CostumerController extends Controller
 {
@@ -13,12 +14,27 @@ class CostumerController extends Controller
      */
     public function index(Request $request)
     {
-        $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+        $user = Auth::user();
 
-        // Menggunakan withTrashed agar data yang 'deleted_at' tidak null bisa ikut terbaca
+        // 1. Filter Dropdown Perusahaan (Untuk Super Admin tampil semua, untuk yang lain hanya miliknya)
+        if ($user->hasRole('Super Admin')) {
+            $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+        } else {
+            $perusahaan = Perusahaan::where('id', $user->id_perusahaan)->whereNull('deleted_at')->get();
+        }
+
         $query = Costumer::withTrashed();
 
-        // 1. Filter Status (Aktif / Tidak Aktif)
+        // 2. PROTEKSI ROLE: Jika bukan Super Admin, WAJIB filter berdasarkan id_perusahaan user
+        if (!$user->hasRole('Super Admin')) {
+            $query->where('id_perusahaan', $user->id_perusahaan);
+        }
+        // Jika Super Admin dan sedang memilih filter perusahaan tertentu
+        elseif ($request->filled('id_perusahaan')) {
+            $query->where('id_perusahaan', $request->id_perusahaan);
+        }
+
+        // 3. Filter Status (Aktif / Tidak Aktif)
         if ($request->filled('status')) {
             if ($request->status == 'aktif') {
                 $query->whereNull('deleted_at');
@@ -26,24 +42,17 @@ class CostumerController extends Controller
                 $query->onlyTrashed();
             }
         } else {
-            // Default: hanya tampilkan yang aktif jika filter tidak dipilih
             $query->whereNull('deleted_at');
         }
 
-        // 2. Fitur Search (Nama atau Alamat)
+        // 4. Fitur Search
         $query->when($request->search, function ($q) use ($request) {
             $search = strtolower($request->search);
-
             $q->where(function ($inner) use ($search) {
                 $inner->whereRaw('LOWER(nama_costumer) like ?', ["%{$search}%"])
                     ->orWhereRaw('LOWER(kode) like ?', ["%{$search}%"]);
             });
         });
-
-        // Filter berdasarkan Perusahaan
-        if ($request->filled('id_perusahaan')) {
-            $query->where('id_perusahaan', $request->id_perusahaan);
-        }
 
         $costumer = $query->latest()->paginate(10)->withQueryString();
 

@@ -4,7 +4,7 @@
         
         <div class="relative overflow-hidden bg-white border border-gray-100 rounded-2xl shadow-sm p-8">
             <div class="relative z-10">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome back, Admin! 👋</h1>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome back, {{ auth()->user()->name ?? 'No Name' }}! 👋</h1>
                 <p class="text-gray-500 max-w-md">Here's what's happening with Mirasa Food today. Check your daily
                     sales and update products below.</p>
             </div>

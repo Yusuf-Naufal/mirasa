@@ -81,20 +81,22 @@
 
                 <div class="space-y-5">
                     {{-- Filter Berdasarkan Perusahaan --}}
-                    <div>
-                        <label for="id_perusahaan"
-                            class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
-                        <select name="id_perusahaan" id="id_perusahaan"
-                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
-                            <option value="">Semua Perusahaan</option>
-                            @foreach ($perusahaan as $p)
-                                <option value="{{ $p->id }}"
-                                    {{ request('id_perusahaan') == $p->id ? 'selected' : '' }}>
-                                    {{ $p->nama_perusahaan }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    @if (auth()->user()->hasRole('Super Admin'))
+                        <div>
+                            <label for="id_perusahaan"
+                                class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
+                            <select name="id_perusahaan" id="id_perusahaan"
+                                class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
+                                <option value="">Semua Perusahaan</option>
+                                @foreach ($perusahaan as $p)
+                                    <option value="{{ $p->id }}"
+                                        {{ request('id_perusahaan') == $p->id ? 'selected' : '' }}>
+                                        {{ $p->nama_perusahaan }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
                     {{-- Filter Berdasarkan Jenis Barang --}}
                     <div>

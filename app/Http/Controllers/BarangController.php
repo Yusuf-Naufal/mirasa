@@ -6,7 +6,9 @@ use App\Models\Barang;
 use App\Models\Perusahaan;
 use App\Models\JenisBarang;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\Validation\Rule;
 
 class BarangController extends Controller
 {
@@ -15,14 +17,31 @@ class BarangController extends Controller
      */
     public function index(Request $request)
     {
-        // Mengambil data perusahaan dan jenis untuk isi dropdown filter di view
-        $perusahaan = Perusahaan::all();
+        $user = Auth::user();
+
+        // 1. Dropdown Perusahaan: Jika bukan Super Admin, hanya ambil perusahaan miliknya
+        if ($user->hasRole('Super Admin')) {
+            $perusahaan = Perusahaan::all();
+        } else {
+            $perusahaan = Perusahaan::where('id', $user->id_perusahaan)->get();
+        }
+
+        // Dropdown Jenis Barang tetap tampil semua
         $jenis = JenisBarang::all();
 
-        // Query dasar dengan eager loading relasi
-        $query = Barang::withTrashed()->with(['perusahaan', 'jenisBarang']);
+        // 2. Query dasar dengan eager loading
+        $query = Barang::whereNull('deleted_at')->with(['perusahaan', 'jenisBarang']);
 
-        // Filter berdasarkan Search (Username atau Name)
+        // 3. PROTEKSI DATA: Jika selain Super Admin, kunci ke perusahaan sendiri
+        if (!$user->hasRole('Super Admin')) {
+            $query->where('id_perusahaan', $user->id_perusahaan);
+        }
+        // Jika Super Admin dan filter perusahaan dipilih
+        elseif ($request->filled('id_perusahaan')) {
+            $query->where('id_perusahaan', $request->id_perusahaan);
+        }
+
+        // 4. Filter berdasarkan Search (Nama Barang atau Kode)
         if ($request->filled('search')) {
             $search = strtolower($request->search);
             $query->where(function ($q) use ($search) {
@@ -31,19 +50,15 @@ class BarangController extends Controller
             });
         }
 
-        // Filter berdasarkan Perusahaan
-        if ($request->filled('id_perusahaan')) {
-            $query->where('id_perusahaan', $request->id_perusahaan);
-        }
-
-        // Filter berdasarkan Jenis Barang
+        // 5. Filter berdasarkan Jenis Barang
         if ($request->filled('id_jenis')) {
             $query->where('id_jenis', $request->id_jenis);
         }
 
-        // Order by id_jenis (Sesuai permintaan) dan paginate
-        // appends(request()->query()) memastikan filter tidak hilang saat ganti halaman
-        $barang = $query->orderBy('id_jenis', 'asc')->paginate(10)->withQueryString();
+        // 6. Eksekusi Query
+        $barang = $query->orderBy('id_jenis', 'asc')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('pages.barang.index', compact('barang', 'perusahaan', 'jenis'));
     }
@@ -64,13 +79,21 @@ class BarangController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth()->user();
+
+        // Tentukan ID Perusahaan yang akan digunakan
+        $idPerusahaan = $user->hasRole('Super Admin') ? $request->id_perusahaan : $user->id_perusahaan;
+
         $request->validate([
             'id_perusahaan' => 'required|exists:perusahaan,id',
             'id_jenis'      => 'required|exists:jenis_barang,id',
-            'nama_barang'   => 'required|string',
-            'kode'          => 'required|string',
+            'nama_barang'   => "required|string|unique:barang,nama_barang,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+            'kode'          => "required|string|unique:barang,kode,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
             'satuan'        => 'required|string',
             'cropped_image' => 'nullable|string',
+        ], [
+            'nama_barang.unique' => 'Nama barang sudah ada di perusahaan ini.',
+            'kode.unique'        => 'Kode barang sudah ada di perusahaan ini.',
         ]);
 
         // 1. Ambil data Jenis & Gabungkan Kode (UPPERCASE)
@@ -118,28 +141,40 @@ class BarangController extends Controller
     public function update(Request $request, $id)
     {
         $barang = Barang::findOrFail($id);
+        $user = auth()->user();
+
+        $idPerusahaan = $user->hasRole('Super Admin') ? $request->id_perusahaan : $user->id_perusahaan;
+        $jenis = JenisBarang::findOrFail($request->id_jenis);
+
+        // 2. BUAT KODE FINAL TERLEBIH DAHULU UNTUK DIVALIDASI
+        $kodeFinal = strtoupper($jenis->kode . '-' . $request->kode);
+
+        // Masukkan kodeFinal ke dalam request agar bisa divalidasi oleh validator Laravel
+        $request->merge(['kode_gabungan' => $kodeFinal]);
 
         $request->validate([
             'id_perusahaan' => 'required|exists:perusahaan,id',
             'id_jenis'      => 'required|exists:jenis_barang,id',
-            'nama_barang'   => 'required|string',
-            'kode'          => 'required|string',
+            'nama_barang'   => "required|string|unique:barang,nama_barang,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+            'kode_gabungan' => "required|string|unique:barang,kode,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+
             'satuan'        => 'required|string',
             'cropped_image' => 'nullable|string',
+        ], [
+            'nama_barang.unique' => 'Nama barang sudah ada di perusahaan ini.',
+            'kode_gabungan.unique' => 'Kode barang sudah ada di perusahaan ini.',
         ]);
 
-        // 1. Ambil data Jenis & Gabungkan Kode (UPPERCASE) sesuai format store
-        $jenis = JenisBarang::findOrFail($request->id_jenis);
-        $kodeFinal = strtoupper($jenis->kode . '-' . $request->kode);
+        $data = [
+            'id_perusahaan' => $idPerusahaan,
+            'id_jenis'      => $request->id_jenis,
+            'nama_barang'   => $request->nama_barang,
+            'kode'          => $kodeFinal, // Simpan hasil gabungan
+            'satuan'        => strtoupper($request->satuan),
+        ];
 
-
-        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan']);
-        $data['kode'] = $kodeFinal;
-        $data['satuan'] = strtoupper($request->satuan);
-
-        // 2. Logika Update Gambar (Prioritas Base64 Crop)
+        // 3. Logika Update Gambar
         if ($request->filled('cropped_image')) {
-            // Hapus foto lama jika ada
             if ($barang->foto && Storage::disk('public')->exists($barang->foto)) {
                 Storage::disk('public')->delete($barang->foto);
             }

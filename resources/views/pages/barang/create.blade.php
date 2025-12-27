@@ -54,22 +54,25 @@
                         <div class="space-y-1">
                             <label for="satuan" class="block text-sm font-semibold text-gray-700">Satuan Barang <span
                                     class="text-red-500">*</span></label>
-                            <input type="text" id="satuan" name="satuan" required
-                                placeholder="KG/ROLL/PAX"
+                            <input type="text" id="satuan" name="satuan" required placeholder="KG/ROLL/PAX"
                                 class="w-full rounded-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border uppercase">
                         </div>
 
-                        <div class="md:col-span-2 space-y-1">
-                            <label for="id_perusahaan" class="block text-sm font-semibold text-gray-700">Perusahaan
-                                <span class="text-red-500">*</span></label>
-                            <select id="id_perusahaan" name="id_perusahaan" required
-                                class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
-                                <option value="" disabled selected>-- Pilih Perusahaan --</option>
-                                @foreach ($perusahaan as $p)
-                                    <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        @if (auth()->user()->hasRole('Super Admin'))
+                            <div class="md:col-span-2 space-y-1">
+                                <label for="id_perusahaan" class="block text-sm font-semibold text-gray-700">Perusahaan
+                                    <span class="text-red-500">*</span></label>
+                                <select id="id_perusahaan" name="id_perusahaan" required
+                                    class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
+                                    <option value="" disabled selected>-- Pilih Perusahaan --</option>
+                                    @foreach ($perusahaan as $p)
+                                        <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @else
+                            <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
+                        @endif
 
                         <div class="space-y-1">
                             <label for="id_jenis" class="block text-sm font-semibold text-gray-700">Jenis Barang <span

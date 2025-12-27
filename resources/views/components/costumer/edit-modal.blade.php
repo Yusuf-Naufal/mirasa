@@ -8,20 +8,24 @@
             @method('PUT')
 
             <div class="space-y-4 mb-6 text-left">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Perusahaan</label>
-                    <select name="id_perusahaan" required
-                        class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500">
-                        <option value="">-- Pilih Perusahaan --</option>
-                        @foreach($perusahaan as $p)
-                            <option value="{{ $p->id }}" 
-                                {{ old('id_perusahaan', $i->id_perusahaan) == $p->id ? 'selected' : '' }}>
-                                {{ $p->nama_perusahaan }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                
+                @if (auth()->user()->hasRole('Super Admin'))
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Perusahaan</label>
+                        <select name="id_perusahaan" required
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500">
+                            <option value="">-- Pilih Perusahaan --</option>
+                            @foreach ($perusahaan as $p)
+                                <option value="{{ $p->id }}"
+                                    {{ old('id_perusahaan', $i->id_perusahaan) == $p->id ? 'selected' : '' }}>
+                                    {{ $p->nama_perusahaan }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                @else
+                    <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
+                @endif
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nama Costumer</label>
                     <input type="text" name="nama_costumer" required
@@ -31,8 +35,7 @@
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Kode</label>
-                    <input type="text" name="kode" required
-                        value="{{ old('kode', $i->kode) }}"
+                    <input type="text" name="kode" required value="{{ old('kode', $i->kode) }}"
                         class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 uppercase">
                 </div>
             </div>

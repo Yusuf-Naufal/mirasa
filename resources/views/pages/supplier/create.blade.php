@@ -28,17 +28,28 @@
                                 class="w-full rounded-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border">
                         </div>
 
-                        <div class="space-y-1">
-                            <label for="id_perusahaan" class="block text-sm font-semibold text-gray-700">Perusahaan
-                                <span class="text-red-500">*</span></label>
-                            <select id="id_perusahaan" name="id_perusahaan" required
-                                class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
-                                <option value="" disabled selected>-- Pilih Perusahaan --</option>
-                                @foreach ($perusahaan as $p)
-                                    <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        @if (auth()->user()->hasRole('Super Admin'))
+                            <div class="space-y-1">
+                                <label for="id_perusahaan" class="block text-sm font-semibold text-gray-700">Perusahaan
+                                    <span class="text-red-500">*</span></label>
+                                <select id="id_perusahaan" name="id_perusahaan" required
+                                    class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
+                                    <option value="" disabled selected>-- Pilih Perusahaan --</option>
+                                    @foreach ($perusahaan as $p)
+                                        <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @else
+                            <div class="space-y-1">
+                                <label for="id_perusahaan" class="block text-sm font-semibold text-gray-700">Perusahaan
+                                    <span class="text-red-500">*</span></label>
+                                <input type="text"
+                                    class="w-full rounded-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border" disabled
+                                    value="{{ auth()->user()->perusahaan->nama_perusahaan }}">
+                                <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
+                            </div>
+                        @endif
 
                         <div class="space-y-1 md:col-span-2 lg:col-span-1">
                             <label for="jenis_supplier" class="block text-sm font-semibold text-gray-700">

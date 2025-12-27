@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminGudangDashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BarangController;
@@ -16,15 +17,21 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+
+Route::get('/beranda', function () {
+    return view('pages.beranda');
+})->name('beranda');
+
 // AUTH
 Route::get('/internal/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/internal/login', [AuthController::class, 'login']);
-Route::post('/admin/logout', [AuthController::class, 'logout'])->name('logout');
-Route::get('/admin/logout', [AuthController::class, 'logout'])->name('logout.get');
+Route::post('/internal/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/internal/logout', [AuthController::class, 'logout'])->name('logout.get');
 
 // DASHBOARD
 Route::get('dashboard/super-admin', [SuperAdminDashboardController::class, 'index'])->name('super-admin.dashboard');
 Route::get('dashboard/manager', [ManagerDashboardController::class, 'index'])->name('manager.dashboard');
+Route::get('dashboard/admin-gudang', [AdminGudangDashboardController::class, 'index'])->name('admin-gudang.dashboard');
 
 // CRUD PERUSAHAAN
 Route::patch('/perusahaan/activate/{id}', [PerusahaanController::class, 'activate'])->name('perusahaan.activate');

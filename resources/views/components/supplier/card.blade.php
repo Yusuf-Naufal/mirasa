@@ -13,7 +13,7 @@
                     <div class="flex-shrink-0">
                         <div
                             class="h-12 w-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-bold text-lg border border-blue-100">
-                            {{ $index + 1 }}
+                            {{ $supplier->firstItem() + $index }}
                         </div>
                     </div>
 
