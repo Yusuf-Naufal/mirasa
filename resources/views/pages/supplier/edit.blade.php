@@ -57,9 +57,9 @@
                                 <option value="Barang"
                                     {{ old('jenis_supplier', $supplier->jenis_supplier) == 'Barang' ? 'selected' : '' }}>
                                     Supplier Barang</option>
-                                <option value="Singkong"
-                                    {{ old('jenis_supplier', $supplier->jenis_supplier) == 'Singkong' ? 'selected' : '' }}>
-                                    Supplier Singkong</option>
+                                <option value="Bahan Baku"
+                                    {{ old('jenis_supplier', $supplier->jenis_supplier) == 'Bahan Baku' ? 'selected' : '' }}>
+                                    Supplier Bahan Baku</option>
                             </select>
                         </div>
 

@@ -1,0 +1,405 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Barang;
+use App\Models\Inventory;
+use App\Models\JenisBarang;
+use Illuminate\Http\Request;
+use App\Models\DetailInventory;
+use App\Models\Supplier;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
+class InventoryController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $user = auth()->user();
+
+        $jenisBarang = JenisBarang::all();
+
+        // 1. Query dasar dengan Eager Loading
+        // Kita panggil 'Barang.JenisBarang' agar bisa melakukan GroupBy di View nanti
+        $query = Inventory::with(['Barang.jenisBarang', 'Perusahaan']);
+
+        // 2. Proteksi Data: Hanya ambil data milik perusahaan user login
+        if (!$user->hasRole('Super Admin')) {
+            $query->where('id_perusahaan', $user->id_perusahaan);
+        } elseif ($request->filled('id_perusahaan')) {
+            $query->where('id_perusahaan', $request->id_perusahaan);
+        }
+
+        // 3. Fitur Search
+        if ($request->filled('search')) {
+            $search = strtolower($request->search);
+            $query->whereHas('Barang', function ($q) use ($search) {
+                $q->whereRaw('LOWER(nama_barang) like ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(kode) like ?', ["%{$search}%"]);
+            });
+        }
+
+        // Filter berdasarkan Jenis Barang
+        if ($request->filled('id_jenis')) {
+            $query->whereHas('Barang', function ($q) use ($request) {
+                $q->where('id_jenis', $request->id_jenis);
+            });
+        }
+
+        // 4. Ambil data dengan Pagination
+        $inventory = $query->latest()->paginate(15)->withQueryString();
+
+        return view('pages.gudang.index', compact('inventory', 'jenisBarang'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(Request $request)
+    {
+        $user = auth()->user();
+        $kategori = $request->query('kategori', 'produksi');
+
+        // Ambil data barang berdasarkan perusahaan user
+        $barang = Barang::where('id_perusahaan', $user->id_perusahaan)->get();
+
+        return view('pages.gudang.create', compact('barang', 'kategori'));
+    }
+
+    public function createProduksi()
+    {
+        $user = auth()->user();
+
+        $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
+            ->whereHas('jenisBarang', function ($query) {
+                $query->whereIn('kode', ['FG', 'WIP', 'EC']);
+            })
+            ->get();
+
+        return view('pages.gudang.create-produksi', compact('barang'));
+    }
+
+    public function createBb()
+    {
+        $user = auth()->user();
+
+        $supplier = Supplier::where('jenis_supplier', 'Bahan Baku')
+            ->whereNull('deleted_at')
+            ->get();
+
+        $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
+            ->whereHas('jenisBarang', function ($query) {
+                $query->whereIn('kode', ['BB']);
+            })
+            ->get();
+
+        return view('pages.gudang.create-bb', compact('barang', 'supplier'));
+    }
+
+    public function createBp()
+    {
+        $user = auth()->user();
+
+        $supplier = Supplier::where('jenis_supplier', 'Barang')
+            ->whereNull('deleted_at')
+            ->get();
+
+        $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
+            ->whereHas('jenisBarang', function ($query) {
+                $query->whereIn('kode', ['BP']);
+            })
+            ->get();
+
+        return view('pages.gudang.create-bp', compact('barang', 'supplier'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    public function storeProduksi(Request $request)
+    {
+        // 1. Validasi Input
+        $request->validate([
+            'id_perusahaan'      => 'required|exists:perusahaan,id',
+            'id_barang'          => 'required|exists:barang,id',
+            'tanggal_masuk'      => 'required|date',
+            'tanggal_exp'        => 'nullable|date|after_or_equal:tanggal_masuk',
+            'jumlah_diterima'    => 'required|numeric|min:0.01',
+            'harga'              => 'required|numeric|min:0',
+            'tempat_penyimpanan' => 'nullable|string|max:255',
+            'total_harga'        => 'required|numeric',
+        ], [
+            'id_barang.required'      => 'Silahkan pilih barang terlebih dahulu.',
+            'jumlah_diterima.required' => 'Jumlah barang tidak boleh kosong.',
+            'harga.required'          => 'Harga satuan harus diisi.',
+        ]);
+
+        try {
+            // Mulai Transaksi Database
+            DB::beginTransaction();
+
+            // 2. Update atau Buat data di tabel Inventory (Master Stok)
+            // Kita gunakan updateOrCreate agar jika barang & perusahaan sudah ada, stoknya ditambah
+            $inventory = Inventory::where('id_perusahaan', $request->id_perusahaan)
+                ->where('id_barang', $request->id_barang)
+                ->first();
+
+            if ($inventory) {
+                // Jika sudah ada, tambahkan stoknya
+                $inventory->stok += $request->jumlah_diterima;
+                $inventory->save();
+            } else {
+                // Jika belum ada, buat record baru
+                $inventory = Inventory::create([
+                    'id_perusahaan' => $request->id_perusahaan,
+                    'id_barang'     => $request->id_barang,
+                    'stok'          => $request->jumlah_diterima,
+                    'tanggal_masuk' => $request->tanggal_masuk,
+                    'minimum_stok'  => 0,
+                ]);
+            }
+
+            // 3. Simpan Riwayat ke tabel DetailInventory
+            // Anggap saja tabel detail_inventory menampung info spesifik per batch masuk
+            DB::table('detail_inventory')->insert([
+                'id_inventory'       => $inventory->id,
+                'tanggal_masuk'      => $request->tanggal_masuk,
+                'tanggal_exp'        => $request->tanggal_exp,
+                'stok'               => $request->jumlah_diterima,
+                'jumlah_diterima'    => $request->jumlah_diterima,
+                'harga'              => $request->harga,
+                'total_harga'        => $request->total_harga,
+                'tempat_penyimpanan' => $request->tempat_penyimpanan,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ]);
+
+            // Commit jika semua berhasil
+            DB::commit();
+
+            return redirect()->route('inventory.index')
+                ->with('success', 'Data produksi berhasil disimpan dan stok telah diperbarui.');
+        } catch (\Exception $e) {
+            // Batalkan jika ada error
+            DB::rollBack();
+
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
+        }
+    }
+
+    public function storeBahan(Request $request)
+    {
+        // 1. Validasi Input (Disesuaikan dengan field baru di Blade)
+        $request->validate([
+            'id_perusahaan'      => 'required|exists:perusahaan,id',
+            'id_barang'          => 'required|exists:barang,id',
+            'tanggal_masuk'      => 'required|date',
+            'tempat_penyimpanan' => 'nullable|string|max:255',
+            'kondisi_barang'     => 'nullable|string',
+            'kondisi_kendaraan'  => 'nullable|string',
+            'jumlah_diterima'    => 'nullable|numeric|min:0',
+            'jumlah_rusak'       => 'nullable|numeric|min:0',
+            'stok'               => 'nullable|numeric|min:0',
+            'harga'              => 'nullable|numeric|min:0',
+            'total_harga'        => 'nullable|numeric|min:0',
+        ], [
+            'id_barang.required' => 'Silahkan pilih barang terlebih dahulu.',
+            'stok.min'           => 'Stok bersih tidak boleh kurang dari 0.',
+        ]);
+
+        try {
+            // Mulai Transaksi Database
+            DB::beginTransaction();
+
+            // 2. Update atau Buat data di tabel Inventory (Master Stok)
+            $inventory = Inventory::where('id_perusahaan', $request->id_perusahaan)
+                ->where('id_barang', $request->id_barang)
+                ->first();
+
+            if ($inventory) {
+                // Update master stok (Tambah dengan stok bersih)
+                $inventory->stok += $request->stok;
+                $inventory->save();
+            } else {
+                // Buat record master stok baru
+                $inventory = Inventory::create([
+                    'id_perusahaan' => $request->id_perusahaan,
+                    'id_barang'     => $request->id_barang,
+                    'stok'          => $request->stok,
+                    'tanggal_masuk' => $request->tanggal_masuk,
+                    'minimum_stok'  => 0,
+                ]);
+            }
+
+            // 3. Simpan Riwayat Detail (Record Per Batch Kedatangan)
+            DB::table('detail_inventory')->insert([
+                'id_inventory'       => $inventory->id,
+                'tanggal_masuk'      => $request->tanggal_masuk,
+                'jumlah_diterima'    => $request->jumlah_diterima,
+                'jumlah_rusak'       => $request->jumlah_rusak,
+                'stok'               => $request->stok,
+                'harga'              => $request->harga,
+                'total_harga'        => $request->total_harga,
+                'kondisi_barang'     => $request->kondisi_barang,
+                'kondisi_kendaraan'  => $request->kondisi_kendaraan,
+                'tempat_penyimpanan' => $request->tempat_penyimpanan ?? null,
+                'created_at'         => now(),
+                'updated_at'         => now(),
+            ]);
+
+            // Commit jika semua query berhasil
+            DB::commit();
+
+            return redirect()->route('inventory.index')
+                ->with('success', 'Data Bahan Penolong berhasil masuk gudang dan stok diperbarui.');
+        } catch (\Exception $e) {
+            // Batalkan semua perubahan jika ada error
+            DB::rollBack();
+
+            return back()
+                ->withInput()
+                ->with('error', 'Gagal menyimpan data BP: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(string $id)
+    {
+        // Mengambil data inventory beserta barangnya
+        $inventory = Inventory::with('barang')->findOrFail($id);
+
+        // Mengambil details dengan filter: stok > 0 dan urutan paling lama (oldest)
+        $details = $inventory->DetailInventory()
+            ->where('stok', '>', 0)
+            ->orderBy('tanggal_masuk', 'asc')
+            ->get();
+
+        return view('pages.gudang.show', [
+            'inventory' => $inventory,
+            'details'   => $details
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        //
+    }
+
+    public function updateMinimum(Request $request, $id)
+    {
+        // 1. Validasi input (gunakan numeric agar titik/koma desimal diterima)
+        $request->validate([
+            'minimum_stok' => 'required|numeric|min:0',
+        ], [
+            'minimum_stok.required' => 'Angka stok minimum wajib diisi.',
+            'minimum_stok.numeric'  => 'Input harus berupa angka desimal atau bulat.',
+            'minimum_stok.min'      => 'Stok minimum tidak boleh kurang dari 0.',
+        ]);
+
+        try {
+            // 2. Cari data inventory
+            $inventory = Inventory::findOrFail($id);
+
+            // 3. Gunakan floatval() untuk menghapus nol di depan dan mendukung desimal
+            $newMinimum = floatval($request->minimum_stok);
+
+            // 4. Update data
+            $inventory->update([
+                'minimum_stok' => $newMinimum
+            ]);
+
+            // 5. Logika Peringatan Stok Kritis
+            if ($inventory->stok <= $newMinimum) {
+                return redirect()->back()->with('warning', "Ambang batas diperbarui. Stok saat ini ({$inventory->stok}) sudah mencapai batas minimum!");
+            }
+
+            return redirect()->back()->with('success', 'Ambang batas stok berhasil diperbarui!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
+        }
+    }
+
+    public function updateDetail(Request $request, $id)
+    {
+        // 1. Validasi Input (Sesuaikan dengan field modal edit)
+        $request->validate([
+            'tanggal_masuk'      => 'required|date',
+            'tanggal_exp'        => 'nullable|date',
+            'jumlah_diterima'    => 'nullable|numeric|min:0',
+            'jumlah_rusak'       => 'nullable|numeric|min:0',
+            'stok'               => 'nullable|numeric|min:0',
+            'harga'              => 'required|numeric|min:0',
+            'total_harga'        => 'nullable|numeric|min:0',
+            'kondisi_barang'     => 'nullable|string',
+            'kondisi_kendaraan'  => 'nullable|string',
+            'tempat_penyimpanan' => 'nullable|string|max:255',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // 2. Cari data detail
+            $detail = DetailInventory::findOrFail($id);
+            $inventoryId = $detail->id_inventory;
+
+            // 3. Update data detail dengan penanganan nilai null
+            $detail->update([
+                'tanggal_masuk'      => $request->tanggal_masuk,
+                'tanggal_exp'        => $request->tanggal_exp ?? null,
+                'jumlah_diterima'    => $request->jumlah_diterima,
+                'jumlah_rusak'       => $request->jumlah_rusak,
+                'stok'               => $request->stok ?? $request->jumlah_diterima,
+                'harga'              => $request->harga,
+                'total_harga'        => $request->total_harga ?? ($request->stok * $request->harga),
+                'kondisi_barang'     => $request->kondisi_barang ?? null,
+                'kondisi_kendaraan'  => $request->kondisi_kendaraan ?? null,
+                'tempat_penyimpanan' => $request->tempat_penyimpanan ?? null,
+            ]);
+
+            // 4. Sinkronisasi Total Stok di tabel Master Inventory
+            // Menghitung ulang total stok dari seluruh detail yang terkait dengan master ini
+            $totalStokBaru = DetailInventory::where('id_inventory', $inventoryId)->sum('stok');
+
+            Inventory::where('id', $inventoryId)->update([
+                'stok' => $totalStokBaru
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Riwayat batch berhasil diperbarui dan stok master disinkronkan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
+    }
+}

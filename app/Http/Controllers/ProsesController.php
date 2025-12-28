@@ -14,13 +14,30 @@ class ProsesController extends Controller
      */
     public function index(Request $request)
     {
-        // Mengambil data
-        $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+        $user = auth()->user();
 
-        // Query dasar dengan eager loading relasi
+        // 1. Dropdown Perusahaan: Hanya tampilkan perusahaan milik user jika bukan Super Admin
+        if ($user->hasRole('Super Admin')) {
+            $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+        } else {
+            $perusahaan = Perusahaan::where('id', $user->id_perusahaan)
+                ->whereNull('deleted_at')
+                ->get();
+        }
+
+        // 2. Query dasar
         $query = Proses::whereNull('deleted_at');
 
-        // Filter berdasarkan Search (Username atau Name)
+        // 3. PROTEKSI DATA: Batasi akses data berdasarkan Role
+        if (!$user->hasRole('Super Admin')) {
+            // Paksa filter ke id_perusahaan milik user yang login
+            $query->where('id_perusahaan', $user->id_perusahaan);
+        } elseif ($request->filled('id_perusahaan')) {
+            // Jika Super Admin, gunakan filter dari request jika ada
+            $query->where('id_perusahaan', $request->id_perusahaan);
+        }
+
+        // 4. Filter berdasarkan Search (Nama Proses atau Kode)
         if ($request->filled('search')) {
             $search = strtolower($request->search);
             $query->where(function ($q) use ($search) {
@@ -29,12 +46,8 @@ class ProsesController extends Controller
             });
         }
 
-        // Filter berdasarkan Perusahaan
-        if ($request->filled('id_perusahaan')) {
-            $query->where('id_perusahaan', $request->id_perusahaan);
-        }
-
-        $proses = $query->paginate(10)->withQueryString();
+        // 5. Eksekusi Paginate
+        $proses = $query->latest()->paginate(10)->withQueryString();
 
         return view('pages.proses.index', compact('proses', 'perusahaan'));
     }

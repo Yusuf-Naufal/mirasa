@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\AdminGudangDashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\CostumerController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\JenisBarangController;
 use App\Http\Controllers\ManagerDashboardController;
 use App\Http\Controllers\PerusahaanController;
@@ -16,15 +18,21 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+
+Route::get('/beranda', function () {
+    return view('pages.beranda');
+})->name('beranda');
+
 // AUTH
 Route::get('/internal/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/internal/login', [AuthController::class, 'login']);
-Route::post('/admin/logout', [AuthController::class, 'logout'])->name('logout');
-Route::get('/admin/logout', [AuthController::class, 'logout'])->name('logout.get');
+Route::post('/internal/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/internal/logout', [AuthController::class, 'logout'])->name('logout.get');
 
 // DASHBOARD
 Route::get('dashboard/super-admin', [SuperAdminDashboardController::class, 'index'])->name('super-admin.dashboard');
 Route::get('dashboard/manager', [ManagerDashboardController::class, 'index'])->name('manager.dashboard');
+Route::get('dashboard/admin-gudang', [AdminGudangDashboardController::class, 'index'])->name('admin-gudang.dashboard');
 
 // CRUD PERUSAHAAN
 Route::patch('/perusahaan/activate/{id}', [PerusahaanController::class, 'activate'])->name('perusahaan.activate');
@@ -40,7 +48,12 @@ Route::prefix('barang')->name('barang.')->group(function () {
     Route::resource('jenis', JenisBarangController::class);
 
     // CRUD BARANG
-    Route::resource('/', BarangController::class)->except(['show'])->names('index');
+    Route::get('/', [BarangController::class, 'index'])->name('index');
+    Route::get('/create', [BarangController::class, 'create'])->name('create');
+    Route::post('/', [BarangController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [BarangController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [BarangController::class, 'update'])->name('update');
+    Route::delete('/{id}', [BarangController::class, 'destroy'])->name('destroy');
 });
 
 // CRUD USER
@@ -51,3 +64,13 @@ Route::resource('supplier', SupplierController::class)->names('supplier')->excep
 
 // CRUD PROSES
 Route::resource('proses', ProsesController::class)->names('proses')->except(['show', 'create', 'edit']);
+
+// CRUD INVENTORY
+Route::get('inventory/create-produksi', [InventoryController::class, 'createProduksi'])->name('inventory.create-produksi');
+Route::get('inventory/create-bp', [InventoryController::class, 'createBp'])->name('inventory.create-bp');
+Route::get('inventory/create-bb', [InventoryController::class, 'createBb'])->name('inventory.create-bb');
+Route::post('inventory/create-produksi', [InventoryController::class, 'storeProduksi'])->name('inventory.store-produksi');
+Route::post('inventory/create-bahan', [InventoryController::class, 'storeBahan'])->name('inventory.store-bahan');
+Route::patch('/inventory/{id}/update-minimum', [InventoryController::class, 'updateMinimum'])->name('inventory.update-minimum');
+Route::patch('/inventory-details/{id}', [InventoryController::class, 'updateDetail'])->name('inventory-details.update');
+Route::resource('inventory', InventoryController::class);

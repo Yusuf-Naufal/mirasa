@@ -38,12 +38,23 @@
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex flex-col">
-                                <div class="text-sm font-semibold text-gray-900">{{ $i->nama_barang }}</div>
-                                {{-- KODE BARANG DI BAWAH NAMA --}}
-                                <div
-                                    class="text-xs font-mono text-gray-500 mt-0.5 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 w-fit">
-                                    {{ $i->kode }}
+                            <div class="flex flex-col gap-1.5">
+                                <div class="text-sm font-bold text-gray-800 tracking-tight leading-none">
+                                    {{ $i->nama_barang }}
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="flex items-center bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md border border-indigo-100 shadow-sm">
+                                        <span class="text-[10px] font-mono font-bold tracking-wider uppercase">
+                                            {{ $i->kode }}
+                                        </span>
+                                    </div>
+
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                                        {{ $i->satuan }}
+                                    </span>
                                 </div>
                             </div>
                         </td>
@@ -58,7 +69,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex justify-center gap-3">
                                 {{-- TOMBOL EDIT --}}
-                                <a type="button" href="{{ route('barang.index.edit', $i->id) }}"
+                                <a type="button" href="{{ route('barang.edit', $i->id) }}"
                                     class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 hover:bg-yellow-100 p-2 rounded-lg transition-colors"
                                     title="Edit Data">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,7 +80,7 @@
 
                                 {{-- LOGIKA DELETE --}}
                                 <form id="delete-form-{{ $i->id }}"
-                                    action="{{ route('barang.index.destroy', $i->id) }}" method="POST">
+                                    action="{{ route('barang.destroy', $i->id) }}" method="POST">
                                     @csrf
                                     @method('DELETE')
                                     <button type="button" onclick="confirmDelete({{ $i->id }})"
@@ -93,7 +104,7 @@
                                         d="m17.578 4.432l-2-1.05C13.822 2.461 12.944 2 12 2s-1.822.46-3.578 1.382l-.321.169l8.923 5.099l4.016-2.01c-.646-.732-1.688-1.279-3.462-2.21m4.17 3.534l-3.998 2V13a.75.75 0 0 1-1.5 0v-2.286l-3.5 1.75v9.44c.718-.179 1.535-.607 2.828-1.286l2-1.05c2.151-1.129 3.227-1.693 3.825-2.708c.597-1.014.597-2.277.597-4.8v-.117c0-1.893 0-3.076-.252-3.978M11.25 21.904v-9.44l-8.998-4.5C2 8.866 2 10.05 2 11.941v.117c0 2.525 0 3.788.597 4.802c.598 1.015 1.674 1.58 3.825 2.709l2 1.049c1.293.679 2.11 1.107 2.828 1.286M2.96 6.641l9.04 4.52l3.411-1.705l-8.886-5.078l-.103.054c-1.773.93-2.816 1.477-3.462 2.21" />
                                 </svg>
                                 <p class="text-gray-500 text-sm font-medium">Data barang belum tersedia</p>
-                                <a href="{{ route('barang.index.create') }}"
+                                <a href="{{ route('barang.create') }}"
                                     class="mt-4 text-blue-500 text-xs font-bold uppercase tracking-wider hover:underline">Tambah
                                     Sekarang</a>
                             </div>

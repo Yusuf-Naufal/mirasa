@@ -1,7 +1,7 @@
 <x-layout.user.app>
     <div class="py-2">
 
-        <form action="{{ route('barang.index.store') }}" method="POST" enctype="multipart/form-data"
+        <form action="{{ route('barang.store') }}" method="POST" enctype="multipart/form-data"
             class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
             @csrf
 
@@ -43,7 +43,7 @@
                             </div>
                         </div>
 
-                        <div class="md:col-span-2 space-y-1">
+                        <div class="space-y-1">
                             <label for="nama_barang" class="block text-sm font-semibold text-gray-700">Nama Barang <span
                                     class="text-red-500">*</span></label>
                             <input type="text" id="nama_barang" name="nama_barang" required
@@ -51,17 +51,28 @@
                                 class="w-full rounded-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border">
                         </div>
 
-                        <div class="md:col-span-2 space-y-1">
-                            <label for="id_perusahaan" class="block text-sm font-semibold text-gray-700">Perusahaan
-                                <span class="text-red-500">*</span></label>
-                            <select id="id_perusahaan" name="id_perusahaan" required
-                                class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
-                                <option value="" disabled selected>-- Pilih Perusahaan --</option>
-                                @foreach ($perusahaan as $p)
-                                    <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
-                                @endforeach
-                            </select>
+                        <div class="space-y-1">
+                            <label for="satuan" class="block text-sm font-semibold text-gray-700">Satuan Barang <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" id="satuan" name="satuan" required placeholder="KG/ROLL/PAX"
+                                class="w-full rounded-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border uppercase">
                         </div>
+
+                        @if (auth()->user()->hasRole('Super Admin'))
+                            <div class="md:col-span-2 space-y-1">
+                                <label for="id_perusahaan" class="block text-sm font-semibold text-gray-700">Perusahaan
+                                    <span class="text-red-500">*</span></label>
+                                <select id="id_perusahaan" name="id_perusahaan" required
+                                    class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
+                                    <option value="" disabled selected>-- Pilih Perusahaan --</option>
+                                    @foreach ($perusahaan as $p)
+                                        <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @else
+                            <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
+                        @endif
 
                         <div class="space-y-1">
                             <label for="id_jenis" class="block text-sm font-semibold text-gray-700">Jenis Barang <span
@@ -97,7 +108,7 @@
             <div class="bg-gray-50 px-6 py-4 flex flex-col sm:flex-row justify-between gap-4 border-t border-gray-100">
                 <p class="text-xs text-gray-500 italic text-start">* Wajib diisi</p>
                 <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <a href="{{ route('barang.index.index') }}"
+                    <a href="{{ route('barang.index') }}"
                         class="flex-1 sm:flex-none text-center border border-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-600 rounded-xl hover:text-gray-800 transition">
                         Batal
                     </a>

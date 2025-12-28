@@ -44,7 +44,7 @@
         <x-costumer.card :costumer="$costumer" />
 
         @foreach ($costumer as $i)
-           <x-costumer.edit-modal :i="$i" />
+            <x-costumer.edit-modal :i="$i" :perusahaan="$perusahaan" />
         @endforeach
 
     </div>
@@ -71,6 +71,23 @@
                 <input type="hidden" name="search" value="{{ request('search') }}">
 
                 <div class="space-y-5">
+                    {{-- Filter Berdasarkan Perusahaan --}}
+                    @if (auth()->user()->hasRole('Super Admin'))
+                        <div>
+                            <label for="id_perusahaan"
+                                class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
+                            <select name="id_perusahaan" id="id_perusahaan"
+                                class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
+                                <option value="">Semua Perusahaan</option>
+                                @foreach ($perusahaan as $p)
+                                    <option value="{{ $p->id }}"
+                                        {{ request('id_perusahaan') == $p->id ? 'selected' : '' }}>
+                                        {{ $p->nama_perusahaan }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
                     <div>
                         <label for="filter_status" class="block text-sm font-semibold text-gray-700 mb-1">Status
                             Costumer</label>
@@ -104,6 +121,22 @@
             <form action="{{ route('costumer.store') }}" method="POST">
                 @csrf
                 <div class="space-y-3">
+                    @if (auth()->user()->hasRole('Super Admin'))
+                        <div>
+                            <label for="id_perusahaan"
+                                class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
+                            <select name="id_perusahaan" id="id_perusahaan"
+                                class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
+                                @foreach ($perusahaan as $p)
+                                    <option value="{{ $p->id }}">
+                                        {{ $p->nama_perusahaan }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @else
+                        <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
+                    @endif
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nama Costumer</label>
                         <input type="text" name="nama_costumer" required

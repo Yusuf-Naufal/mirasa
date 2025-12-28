@@ -15,15 +15,17 @@
                         <span class="hidden md:block md:ml-2">Tambah Proses</span>
                     </button>
 
-                    {{-- Tombol Filter --}}
-                    <button onclick="openModal('filterModal')"
-                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M9 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2M6.17 5a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-7.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 0 1 0-2zM15 11a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2.83 0a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-1.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 1 1 0-2zM9 17a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2.83 0a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-7.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 1 1 0-2z" />
-                        </svg>
-                        <span class="hidden md:block md:ml-2">Filter Proses</span>
-                    </button>
+                    @if (auth()->user()->hasRole('Super Admin'))
+                        {{-- Tombol Filter --}}
+                        <button onclick="openModal('filterModal')"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M9 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2M6.17 5a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-7.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 0 1 0-2zM15 11a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2.83 0a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-1.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 1 1 0-2zM9 17a1 1 0 1 0 0 2a1 1 0 0 0 0-2m-2.83 0a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-7.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 1 1 0-2z" />
+                            </svg>
+                            <span class="hidden md:block md:ml-2">Filter Proses</span>
+                        </button>
+                    @endif
                 </div>
 
                 {{-- Form Pencarian --}}
@@ -110,18 +112,22 @@
                 @csrf
                 <div class="space-y-3">
                     {{-- Filter Berdasarkan Perusahaan --}}
-                    <div>
-                        <label for="id_perusahaan"
-                            class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
-                        <select name="id_perusahaan" id="id_perusahaan"
-                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
-                            @foreach ($perusahaan as $p)
-                                <option value="{{ $p->id }}">
-                                    {{ $p->nama_perusahaan }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    @if (auth()->user()->hasRole('Super Admin'))
+                        <div>
+                            <label for="id_perusahaan"
+                                class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
+                            <select name="id_perusahaan" id="id_perusahaan"
+                                class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
+                                @foreach ($perusahaan as $p)
+                                    <option value="{{ $p->id }}">
+                                        {{ $p->nama_perusahaan }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @else
+                        <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
+                    @endif
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Nama Proses</label>
                         <input type="text" name="nama_proses" required
