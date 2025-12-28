@@ -41,6 +41,8 @@ class AuthController extends Controller
                 return redirect()->route('super-admin.dashboard')->with('success', 'Login berhasil!');
             } elseif ($user->hasRole('Manager')) {
                 return redirect()->route('manager.dashboard')->with('success', 'Login berhasil!');
+            } elseif ($user->hasRole('Admin Gudang')){
+                return redirect()->route('admin-gudang.dashboard')->with('success', 'Login berhasil!');
             } else {
                 Auth::logout();
                 return redirect()->route('login')->withErrors(['username' => 'Akun anda tidak memiliki akses.']);
@@ -59,6 +61,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('Formlogin')->with('success', 'Logout berhasil!');
+        return redirect()->route('login')->with('success', 'Logout berhasil!');
     }
 }

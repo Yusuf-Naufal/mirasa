@@ -13,13 +13,31 @@ class SupplierController extends Controller
      */
     public function index(Request $request)
     {
-        // Mengambil data perusahaan dan jenis untuk isi dropdown filter di view
-        $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+        $user = auth()->user();
 
-        // Query dasar dengan eager loading relasi
+        // 1. Filter Dropdown Perusahaan
+        // Super Admin bisa melihat semua perusahaan, role lain hanya perusahaan sendiri
+        if ($user->hasRole('Super Admin')) {
+            $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+        } else {
+            $perusahaan = Perusahaan::where('id', $user->id_perusahaan)
+                ->whereNull('deleted_at')
+                ->get();
+        }
+
+        // 2. Query dasar dengan eager loading relasi perusahaan
         $query = Supplier::whereNull('deleted_at')->with('perusahaan');
 
-        // Filter berdasarkan Search (Username atau Name)
+        // 3. PROTEKSI DATA: Batasi akses berdasarkan role
+        if (!$user->hasRole('Super Admin')) {
+            // Jika bukan Super Admin, paksa filter ke perusahaan milik user login
+            $query->where('id_perusahaan', $user->id_perusahaan);
+        } elseif ($request->filled('id_perusahaan')) {
+            // Jika Super Admin memilih filter perusahaan tertentu
+            $query->where('id_perusahaan', $request->id_perusahaan);
+        }
+
+        // 4. Filter berdasarkan Search (Nama Supplier atau Kode)
         if ($request->filled('search')) {
             $search = strtolower($request->search);
             $query->where(function ($q) use ($search) {
@@ -28,17 +46,13 @@ class SupplierController extends Controller
             });
         }
 
-        // Filter berdasarkan Perusahaan
-        if ($request->filled('id_perusahaan')) {
-            $query->where('id_perusahaan', $request->id_perusahaan);
-        }
-
-        // Filter berdasarkan Jenis
+        // 5. Filter berdasarkan Jenis Supplier
         if ($request->filled('jenis_supplier')) {
             $query->where('jenis_supplier', $request->jenis_supplier);
         }
 
-        $supplier = $query->paginate(10)->withQueryString();
+        // 6. Eksekusi Paginate
+        $supplier = $query->latest()->paginate(10)->withQueryString();
 
         return view('pages.supplier.index', compact('supplier', 'perusahaan'));
     }
@@ -133,5 +147,4 @@ class SupplierController extends Controller
 
         return redirect()->route('supplier.index')->with('success', 'Supplier berhasil dihapus');
     }
-
 }
