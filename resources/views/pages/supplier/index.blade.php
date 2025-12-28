@@ -94,8 +94,8 @@
                             <option value="">Semua Jenis</option>
                             <option value="Barang" {{ request('jenis_supplier') == 'Barang' ? 'selected' : '' }}>Barang
                             </option>
-                            <option value="Singkong" {{ request('jenis_supplier') == 'Singkong' ? 'selected' : '' }}>
-                                Singkong</option>
+                            <option value="Bahan Baku" {{ request('jenis_supplier') == 'Bahan Baku' ? 'selected' : '' }}>
+                                Bahan Baku</option>
                         </select>
                     </div>
                 </div>

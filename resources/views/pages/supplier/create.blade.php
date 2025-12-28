@@ -59,7 +59,7 @@
                                 class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white appearance-none cursor-pointer">
                                 <option value="" disabled selected>-- Pilih Jenis --</option>
                                 <option value="Barang">Supplier Barang</option>
-                                <option value="Singkong">Supplier Singkong</option>
+                                <option value="Bahan Baku">Supplier Bahan Baku</option>
                             </select>
                         </div>
 

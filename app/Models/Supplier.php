@@ -22,4 +22,9 @@ class Supplier extends Model
     {
         return $this->belongsTo(Perusahaan::class, 'id_perusahaan');
     }
+
+    public function DetailInventory()
+    {
+        return $this->hasMany(DetailInventory::class, 'id_supplier');
+    }
 }

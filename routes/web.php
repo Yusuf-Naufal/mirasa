@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\CostumerController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\JenisBarangController;
 use App\Http\Controllers\ManagerDashboardController;
 use App\Http\Controllers\PerusahaanController;
@@ -63,3 +64,13 @@ Route::resource('supplier', SupplierController::class)->names('supplier')->excep
 
 // CRUD PROSES
 Route::resource('proses', ProsesController::class)->names('proses')->except(['show', 'create', 'edit']);
+
+// CRUD INVENTORY
+Route::get('inventory/create-produksi', [InventoryController::class, 'createProduksi'])->name('inventory.create-produksi');
+Route::get('inventory/create-bp', [InventoryController::class, 'createBp'])->name('inventory.create-bp');
+Route::get('inventory/create-bb', [InventoryController::class, 'createBb'])->name('inventory.create-bb');
+Route::post('inventory/create-produksi', [InventoryController::class, 'storeProduksi'])->name('inventory.store-produksi');
+Route::post('inventory/create-bahan', [InventoryController::class, 'storeBahan'])->name('inventory.store-bahan');
+Route::patch('/inventory/{id}/update-minimum', [InventoryController::class, 'updateMinimum'])->name('inventory.update-minimum');
+Route::patch('/inventory-details/{id}', [InventoryController::class, 'updateDetail'])->name('inventory-details.update');
+Route::resource('inventory', InventoryController::class);

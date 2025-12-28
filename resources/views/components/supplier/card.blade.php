@@ -30,7 +30,7 @@
                         @php
                             $colorClass = match ($i->jenis_supplier) {
                                 'Barang' => 'text-blue-800',
-                                'Singkong' => 'text-amber-800',
+                                'Bahan Baku' => 'text-amber-800',
                                 default => 'text-gray-800',
                             };
                         @endphp

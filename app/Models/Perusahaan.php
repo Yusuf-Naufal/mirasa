@@ -19,6 +19,11 @@ class Perusahaan extends Model
         'kontak',
     ];
 
+    public function Inventory()
+    {
+        return $this->hasMany(Inventory::class, 'id_perusahaan');
+    }
+
     public function Barang()
     {
         return $this->hasMany(Barang::class, 'id_perusahaan');

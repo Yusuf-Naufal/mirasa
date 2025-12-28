@@ -18,7 +18,7 @@
                     <span class="text-sm font-medium text-gray-700 group-hover:text-blue-700">Dashboard</span>
                 </a>
 
-                <a href=""
+                <a href="{{ route('inventory.index') }}"
                     class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-yellow-50">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-yellow-600" viewBox="0 0 16 16">
                         <path fill="currentColor"

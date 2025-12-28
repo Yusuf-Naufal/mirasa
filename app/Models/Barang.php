@@ -31,5 +31,10 @@ class Barang extends Model
         return $this->belongsTo(JenisBarang::class, 'id_jenis');
     }
 
+    public function Inventory()
+    {
+        return $this->hasMany(Inventory::class, 'id_barang');
+    }
+
 
 }
