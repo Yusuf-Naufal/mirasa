@@ -11,6 +11,7 @@ class DetailInventory extends Model
     protected $fillable = [
         'id_inventory',
         'id_supplier',
+        'nomor_batch',
         'tanggal_masuk',
         'tanggal_exp',
         'stok',
@@ -21,6 +22,7 @@ class DetailInventory extends Model
         'kondisi_barang',
         'kondisi_kendaraan',
         'tempat_penyimpanan',
+        'status',
     ];
 
     public function Inventory()

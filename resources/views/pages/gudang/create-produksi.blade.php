@@ -214,6 +214,12 @@
                                             class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                             placeholder="Contoh: Rak A1, Gudang Dingin B, dsb.">
                                     </div>
+                                    <div class="md:col-span-2 space-y-1.5">
+                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Nomor Batch</label>
+                                        <input type="text" name="nomor_batch"
+                                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                            placeholder="Contoh: 25 11 2025 A, A1073-A2096">
+                                    </div>
                                 </div>
                             </div>
 

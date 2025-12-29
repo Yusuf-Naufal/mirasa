@@ -20,11 +20,14 @@ class InventoryController extends Controller
     {
         $user = auth()->user();
 
-        $jenisBarang = JenisBarang::all();
+        // Ambil semua jenis barang untuk dropdown filter di view, 
+        $jenisBarang = JenisBarang::where('kode', '!=', 'BB')->get();
 
-        // 1. Query dasar dengan Eager Loading
-        // Kita panggil 'Barang.JenisBarang' agar bisa melakukan GroupBy di View nanti
-        $query = Inventory::with(['Barang.jenisBarang', 'Perusahaan']);
+        // 1. Query dasar
+        $query = Inventory::with(['Barang.jenisBarang', 'Perusahaan'])
+            ->whereHas('Barang.jenisBarang', function ($q) {
+                $q->where('kode', '!=', 'BB');
+            });
 
         // 2. Proteksi Data: Hanya ambil data milik perusahaan user login
         if (!$user->hasRole('Super Admin')) {
@@ -42,7 +45,7 @@ class InventoryController extends Controller
             });
         }
 
-        // Filter berdasarkan Jenis Barang
+        // Filter berdasarkan Jenis Barang (pilihan user dari dropdown)
         if ($request->filled('id_jenis')) {
             $query->whereHas('Barang', function ($q) use ($request) {
                 $q->where('id_jenis', $request->id_jenis);
@@ -135,6 +138,7 @@ class InventoryController extends Controller
             'jumlah_diterima'    => 'required|numeric|min:0.01',
             'harga'              => 'required|numeric|min:0',
             'tempat_penyimpanan' => 'nullable|string|max:255',
+            'nomor_batch'        => 'nullable|string|max:255',
             'total_harga'        => 'required|numeric',
         ], [
             'id_barang.required'      => 'Silahkan pilih barang terlebih dahulu.',
@@ -168,7 +172,6 @@ class InventoryController extends Controller
             }
 
             // 3. Simpan Riwayat ke tabel DetailInventory
-            // Anggap saja tabel detail_inventory menampung info spesifik per batch masuk
             DB::table('detail_inventory')->insert([
                 'id_inventory'       => $inventory->id,
                 'tanggal_masuk'      => $request->tanggal_masuk,
@@ -178,6 +181,8 @@ class InventoryController extends Controller
                 'harga'              => $request->harga,
                 'total_harga'        => $request->total_harga,
                 'tempat_penyimpanan' => $request->tempat_penyimpanan,
+                'nomor_batch'        => $request->nomor_batch,
+                'status'             => 'Tersedia',
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ]);
@@ -203,6 +208,7 @@ class InventoryController extends Controller
         $request->validate([
             'id_perusahaan'      => 'required|exists:perusahaan,id',
             'id_barang'          => 'required|exists:barang,id',
+            'id_supplier'        => 'required|exists:supplier,id',
             'tanggal_masuk'      => 'required|date',
             'tempat_penyimpanan' => 'nullable|string|max:255',
             'kondisi_barang'     => 'nullable|string',
@@ -244,6 +250,7 @@ class InventoryController extends Controller
             // 3. Simpan Riwayat Detail (Record Per Batch Kedatangan)
             DB::table('detail_inventory')->insert([
                 'id_inventory'       => $inventory->id,
+                'id_supplier'        => $request->id_supplier,
                 'tanggal_masuk'      => $request->tanggal_masuk,
                 'jumlah_diterima'    => $request->jumlah_diterima,
                 'jumlah_rusak'       => $request->jumlah_rusak,
@@ -253,6 +260,7 @@ class InventoryController extends Controller
                 'kondisi_barang'     => $request->kondisi_barang,
                 'kondisi_kendaraan'  => $request->kondisi_kendaraan,
                 'tempat_penyimpanan' => $request->tempat_penyimpanan ?? null,
+                'status'             => 'Tersedia',
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ]);
@@ -361,6 +369,7 @@ class InventoryController extends Controller
             'stok'               => 'nullable|numeric|min:0',
             'harga'              => 'required|numeric|min:0',
             'total_harga'        => 'nullable|numeric|min:0',
+            'nomor_batch'        => 'nullable|string',
             'kondisi_barang'     => 'nullable|string',
             'kondisi_kendaraan'  => 'nullable|string',
             'tempat_penyimpanan' => 'nullable|string|max:255',
@@ -379,6 +388,7 @@ class InventoryController extends Controller
                 'tanggal_exp'        => $request->tanggal_exp ?? null,
                 'jumlah_diterima'    => $request->jumlah_diterima,
                 'jumlah_rusak'       => $request->jumlah_rusak,
+                'nomor_batch'        => $request->nomor_batch ?? null,
                 'stok'               => $request->stok ?? $request->jumlah_diterima,
                 'harga'              => $request->harga,
                 'total_harga'        => $request->total_harga ?? ($request->stok * $request->harga),
@@ -388,7 +398,6 @@ class InventoryController extends Controller
             ]);
 
             // 4. Sinkronisasi Total Stok di tabel Master Inventory
-            // Menghitung ulang total stok dari seluruh detail yang terkait dengan master ini
             $totalStokBaru = DetailInventory::where('id_inventory', $inventoryId)->sum('stok');
 
             Inventory::where('id', $inventoryId)->update([

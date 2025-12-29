@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('id_inventory');
             $table->unsignedBigInteger('id_supplier')->nullable();
+            $table->string('nomor_batch')->nullable();
             $table->date('tanggal_masuk')->nullable();
             $table->date('tanggal_exp')->nullable();
             $table->double('stok')->nullable();
@@ -25,6 +26,7 @@ return new class extends Migration
             $table->string('kondisi_barang')->nullable();
             $table->string('kondisi_kendaraan')->nullable();
             $table->string('tempat_penyimpanan')->nullable();
+            $table->string('status')->nullable();
             $table->timestamps();
         });
     }

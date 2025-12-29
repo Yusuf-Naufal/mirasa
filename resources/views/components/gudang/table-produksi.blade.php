@@ -3,7 +3,7 @@
 <div class="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden mx-4 md:mx-0"
     x-data="{
         editModalOpen: false,
-        editData: { id: '', stok: '', harga: '', tgl_masuk: '', tgl_exp: '' },
+        editData: { id: '', stok: '', harga: '', tgl_masuk: '', tgl_exp: '', no_batch: '', tempat: '' },
         openEdit(item) {
             this.editData = item;
             this.editModalOpen = true;
@@ -43,6 +43,7 @@
                         No</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider">Tgl Masuk</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider">Tgl Expired</th>
+                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider">No Batch</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider">Tempat</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-right">Stok
                     </th>
@@ -67,6 +68,9 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-sm font-semibold text-slate-700">
+                            {{ $i->nomor_batch }}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-semibold text-slate-700">
                             {{ $i->tempat_penyimpanan }}
                         </td>
                         <td class="px-6 py-4 text-right font-bold text-slate-700">
@@ -81,20 +85,24 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <button type="button"
-                                @click="openEdit({ 
+                            @if ($i->status == 'Tersedia')
+                                <button type="button"
+                                    @click="openEdit({ 
                                     id: '{{ $i->id }}', 
                                     stok: '{{ $i->stok }}', 
                                     harga: '{{ $i->harga }}', 
                                     tgl_masuk: '{{ $i->tanggal_masuk }}', 
+                                    no_batch: '{{ $i->nomor_batch }}', 
+                                    tempat: '{{ $i->tempat_penyimpanan }}', 
                                     tgl_exp: '{{ $i->tanggal_exp }}' 
                                 })"
-                                class="p-2 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-transparent hover:border-slate-100 transition-all">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
+                                    class="p-2 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-transparent hover:border-slate-100 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -133,7 +141,7 @@
                 <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <div>
                         <h3 class="text-xl font-bold text-slate-800">Edit Riwayat Stok</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">ID Transaksi: <span x-text="editData.id"></span></p>
+                        {{-- <p class="text-xs text-slate-500 mt-0.5">ID Transaksi: <span x-text="editData.id"></span></p> --}}
                     </div>
                     <button @click="editModalOpen = false"
                         class="p-2 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 transition-colors shadow-sm">
@@ -174,6 +182,18 @@
                             <input type="date" name="tanggal_exp" x-model="editData.tgl_exp"
                                 class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-slate-600 transition-all text-sm">
                         </div>
+                        <div class="col-span-1">
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">No
+                                Batch</label>
+                            <input type="text" name="nomor_batch" x-model="editData.no_batch"
+                                class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-slate-600 transition-all text-sm">
+                        </div>
+                        <div class="col-span-1">
+                            <label
+                                class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tempat</label>
+                            <input type="text" name="tempat_penyimpanan" x-model="editData.tempat"
+                                class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-slate-600 transition-all text-sm">
+                        </div>
                     </div>
 
                     <div class="flex gap-4">
@@ -182,7 +202,7 @@
                             Batalkan
                         </button>
                         <button type="submit"
-                            class="flex-1 px-4 py-3.5 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all text-sm">
+                            class="flex-1 px-4 py-3.5 rounded-2xl bg-yellow-600 text-white font-bold hover:bg-yellow-700 shadow-lg shadow-yellow-200 transition-all text-sm">
                             Simpan Perubahan
                         </button>
                     </div>
