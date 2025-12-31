@@ -3,12 +3,15 @@
 use App\Http\Controllers\AdminGudangDashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BahanBakuController;
 use App\Http\Controllers\BarangController;
+use App\Http\Controllers\BarangKeluarController;
 use App\Http\Controllers\CostumerController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\JenisBarangController;
 use App\Http\Controllers\ManagerDashboardController;
 use App\Http\Controllers\PerusahaanController;
+use App\Http\Controllers\ProduksiController;
 use App\Http\Controllers\SuperAdminDashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SupplierController;
@@ -74,3 +77,14 @@ Route::post('inventory/create-bahan', [InventoryController::class, 'storeBahan']
 Route::patch('/inventory/{id}/update-minimum', [InventoryController::class, 'updateMinimum'])->name('inventory.update-minimum');
 Route::patch('/inventory-details/{id}', [InventoryController::class, 'updateDetail'])->name('inventory-details.update');
 Route::resource('inventory', InventoryController::class);
+
+// CRUD BAHAN BAKU
+Route::resource('bahan-baku', BahanBakuController::class);
+
+// CRUD PRODUKSI
+Route::resource('produksi', ProduksiController::class);
+
+// CRUD BARANG KELUAR
+Route::get('barang-keluar/create-produksi', [BarangKeluarController::class, 'createProduksi'])->name('barang-keluar.create-produksi');
+Route::get('barang-keluar/create-penjualan', [BarangKeluarController::class, 'createPenjualan'])->name('barang-keluar.create-penjualan');
+Route::resource('barang-keluar', BarangKeluarController::class)->except(['create']);

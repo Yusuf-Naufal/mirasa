@@ -107,6 +107,7 @@ class InventoryController extends Controller
         $user = auth()->user();
 
         $supplier = Supplier::where('jenis_supplier', 'Barang')
+            ->where('id_perusahaan', $user->id_perusahaan)
             ->whereNull('deleted_at')
             ->get();
 

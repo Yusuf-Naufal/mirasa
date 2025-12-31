@@ -42,4 +42,9 @@ class DetailInventory extends Model
     {
         return $this->belongsTo(Supplier::class, 'id_supplier');
     }
+
+    public function BarangKeluar()
+    {
+        return $this->hasMany(BarangKeluar::class, 'id_detail_inventory');
+    }
 }

@@ -21,4 +21,9 @@ class Proses extends Model
     {
         return $this->belongsTo(Perusahaan::class, 'id_perusahaan');
     }
+
+    public function BarangKeluar()
+    {
+        return $this->hasMany(BarangKeluar::class, 'id_proses');
+    }
 }

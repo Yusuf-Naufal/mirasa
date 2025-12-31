@@ -28,7 +28,17 @@
                     <span class="text-sm font-medium text-gray-700 group-hover:text-yellow-700">Gudang</span>
                 </a>
 
-                <a href=""
+                <a href="{{ route('produksi.index') }}"
+                    class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-gray-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-gray-600" viewBox="0 0 48 48">
+                        <path fill="currentColor" fill-rule="evenodd"
+                            d="M24 1.5q-1.847 0-3.47.019c.056 2.59.186 5.094.294 6.863l2.104-1.335a2 2 0 0 1 2.144 0l2.104 1.335c.108-1.77.238-4.273.295-6.863A313 313 0 0 0 24 1.5m-12.788.308c1.557-.089 3.647-.18 6.318-.24c.068 3.12.24 6.104.356 7.876c.125 1.903 2.235 2.939 3.82 1.932L24 9.92l2.295 1.457c1.585 1.006 3.694-.03 3.82-1.933a188 188 0 0 0 .355-7.876c2.67.06 4.76.151 6.318.24c2.793.16 5.106 2.213 5.377 5.089c.179 1.895.335 4.564.335 8.103s-.156 6.208-.335 8.103c-.271 2.876-2.584 4.93-5.377 5.089c-2.646.15-6.832.308-12.788.308s-10.142-.157-12.788-.308c-2.793-.16-5.106-2.213-5.377-5.089C5.656 21.208 5.5 18.54 5.5 15s.156-6.208.335-8.103c.271-2.876 2.584-4.93 5.377-5.089M27 20.5a1.5 1.5 0 0 0 0 3h8a1.5 1.5 0 0 0 0-3zm1.5-4.5a1.5 1.5 0 0 1 1.5-1.5h5a1.5 1.5 0 0 1 0 3h-5a1.5 1.5 0 0 1-1.5-1.5M24 46.5a735 735 0 0 1-14.19-.12C5.704 46.3 1.5 43.776 1.5 39s4.203-7.3 8.31-7.38c3.251-.063 7.921-.12 14.19-.12s10.939.057 14.189.12c4.108.08 8.311 2.603 8.311 7.38s-4.203 7.3-8.31 7.38c-3.251.063-7.921.12-14.19.12M9 39a3 3 0 1 0 6 0a3 3 0 0 0-6 0m15 3a3 3 0 1 1 0-6a3 3 0 0 1 0 6m9-3a3 3 0 1 0 6 0a3 3 0 0 0-6 0"
+                            clip-rule="evenodd" />
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700 group-hover:text-gray-700">Produksi</span>
+                </a>
+
+                <a href="{{ route('bahan-baku.index') }}"
                     class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-green-50">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-green-600" viewBox="0 0 24 24">
                         <path fill="currentColor"
@@ -36,6 +46,17 @@
                     </svg>
                     <span class="text-sm font-medium text-gray-700 group-hover:text-green-700">Bahan Baku</span>
                 </a>
+
+                <a href="{{ route('barang-keluar.index') }}"
+                    class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-red-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-red-600" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="m21.706 5.292l-2.999-2.999A1 1 0 0 0 18 2H6a1 1 0 0 0-.707.293L2.294 5.292A1 1 0 0 0 2 6v13c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V6a1 1 0 0 0-.294-.708M6.414 4h11.172l1 1H5.414zM14 14v3h-4v-3H7l5-5l5 5z" />
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700 group-hover:text-red-700">Barang Keluar</span>
+                </a>
+
+
             </div>
         </div>
     </div>
