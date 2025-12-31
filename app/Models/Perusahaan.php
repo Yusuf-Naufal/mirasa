@@ -43,9 +43,24 @@ class Perusahaan extends Model
     {
         return $this->hasMany(Proses::class, 'id_perusahaan');
     }
+
+    public function BarangKeluar()
+    {
+        return $this->hasMany(BarangKeluar::class, 'id_perusahaan');
+    }
     
-    public function Suplier()
+    public function Supplier()
     {
         return $this->hasMany(Supplier::class, 'id_perusahaan');
+    }
+
+    public function Produksi()
+    {
+        return $this->hasMany(Produksi::class, 'id_perusahaan');
+    }
+
+    public function BahanBaku()
+    {
+        return $this->hasMany(BahanBaku::class, 'id_perusahaan');
     }
 }

@@ -27,4 +27,9 @@ class Supplier extends Model
     {
         return $this->hasMany(DetailInventory::class, 'id_supplier');
     }
+
+    public function BahanBaku()
+    {
+        return $this->hasMany(BahanBaku::class, 'id_supplier');
+    }
 }

@@ -11,6 +11,7 @@ class DetailInventory extends Model
     protected $fillable = [
         'id_inventory',
         'id_supplier',
+        'nomor_batch',
         'tanggal_masuk',
         'tanggal_exp',
         'stok',
@@ -21,6 +22,7 @@ class DetailInventory extends Model
         'kondisi_barang',
         'kondisi_kendaraan',
         'tempat_penyimpanan',
+        'status',
     ];
 
     public function Inventory()
@@ -39,5 +41,10 @@ class DetailInventory extends Model
     public function Supplier()
     {
         return $this->belongsTo(Supplier::class, 'id_supplier');
+    }
+
+    public function BarangKeluar()
+    {
+        return $this->hasMany(BarangKeluar::class, 'id_detail_inventory');
     }
 }

@@ -11,21 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('detail_inventory', function (Blueprint $table) {
+        Schema::create('bahan_baku', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('id_inventory');
-            $table->unsignedBigInteger('id_supplier')->nullable();
-            $table->string('nomor_batch')->nullable();
+            $table->unsignedBigInteger('id_perusahaan');
+            $table->unsignedBigInteger('id_supplier');
+            $table->unsignedBigInteger('id_barang');
+            $table->unsignedBigInteger('id_produksi');
             $table->date('tanggal_masuk')->nullable();
-            $table->date('tanggal_exp')->nullable();
-            $table->double('stok')->nullable();
             $table->double('jumlah_diterima')->nullable();
-            $table->double('jumlah_rusak')->nullable();
             $table->double('harga')->nullable();
             $table->double('total_harga')->nullable();
             $table->string('kondisi_barang')->nullable();
             $table->string('kondisi_kendaraan')->nullable();
-            $table->string('tempat_penyimpanan')->nullable();
             $table->string('status')->nullable();
             $table->timestamps();
         });
@@ -36,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('detail_inventory');
+        Schema::dropIfExists('bahan_baku');
     }
 };
