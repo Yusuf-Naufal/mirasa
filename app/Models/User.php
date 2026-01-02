@@ -49,7 +49,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function perusahaan()
+    public function Perusahaan()
     {
         return $this->belongsTo(Perusahaan::class, 'id_perusahaan');
     }
