@@ -139,25 +139,6 @@
                 </li>
             @endif
 
-            @if (auth()->user()->hasRole('Super Admin'))
-                <li>
-                    <a href="{{ route('user.index') }}"
-                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                        <div class="min-w-[32px] flex justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
-                                viewBox="0 0 24 24">
-                                <path fill="currentColor"
-                                    d="M12 14v8H4a8 8 0 0 1 8-8m0-1c-3.315 0-6-2.685-6-6s2.685-6 6-6s6 2.685 6 6s-2.685 6-6 6m9 4h1v5h-8v-5h1v-1a3 3 0 1 1 6 0zm-2 0v-1a1 1 0 1 0-2 0v1z" />
-                            </svg>
-                        </div>
-                        <span
-                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">User</span>
-                    </a>
-                </li>
-            @endif
-
-
         </ul>
     </div>
 </aside>
