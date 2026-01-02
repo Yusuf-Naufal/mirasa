@@ -82,6 +82,7 @@ Route::resource('inventory', InventoryController::class);
 Route::resource('bahan-baku', BahanBakuController::class);
 
 // CRUD PRODUKSI
+Route::put('/produksi/detail/{id}', [ProduksiController::class, 'updateDetail'])->name('produksi.update_detail');
 Route::resource('produksi', ProduksiController::class);
 
 // CRUD BARANG KELUAR
