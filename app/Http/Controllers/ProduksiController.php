@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Produksi;
 use Illuminate\Http\Request;
+use App\Models\DetailProduksi;
 
 class ProduksiController extends Controller
 {
@@ -85,5 +86,37 @@ class ProduksiController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function updateDetail(Request $request, $id)
+    {
+        // 1. Validasi Input
+        $validated = $request->validate([
+            'total_kupas' => 'required|numeric|min:0',
+            'total_a'     => 'required|numeric|min:0',
+            'total_s'     => 'required|numeric|min:0',
+            'total_j'     => 'required|numeric|min:0',
+        ]);
+
+        try {
+            // 2. Cari data detail produksi berdasarkan ID
+            $detail = DetailProduksi::findOrFail($id);
+
+            // 3. Update data
+            $detail->update([
+                'total_kupas' => $request->total_kupas,
+                'total_a'     => $request->total_a,
+                'total_s'     => $request->total_s,
+                'total_j'     => $request->total_j,
+            ]);
+
+            // 4. Redirect kembali dengan pesan sukses
+            return redirect()->back()->with('success', 'Data hasil produksi berhasil diperbarui!');
+        } catch (\Exception $e) {
+            // Log error jika terjadi kegagalan sistem
+            Log::error("Gagal update detail produksi ID {$id}: " . $e->getMessage());
+
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
+        }
     }
 }
