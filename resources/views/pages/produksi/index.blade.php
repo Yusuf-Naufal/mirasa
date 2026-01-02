@@ -15,7 +15,9 @@
                 </a>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mt-2">Daftar Produksi Harian</h1>
                 <p class="text-sm text-gray-500 font-medium">Monitoring aktivitas produksi
-                    {{ auth()->user()->perusahaan->nama_perusahaan }}</p>
+                    {{-- PERBAIKAN: Menggunakan null safe operator (?->) dan fallback string --}}
+                    {{ auth()->user()->perusahaan?->nama_perusahaan ?? 'Tanpa Perusahaan' }}
+                </p>
             </div>
 
             {{-- 2. SEARCH & BUTTON --}}
