@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('id_inventory');
             $table->unsignedBigInteger('id_supplier')->nullable();
+            $table->unsignedBigInteger('id_produksi')->nullable();
             $table->string('nomor_batch')->nullable();
             $table->date('tanggal_masuk')->nullable();
             $table->date('tanggal_exp')->nullable();

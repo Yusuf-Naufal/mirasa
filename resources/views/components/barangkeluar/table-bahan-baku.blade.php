@@ -14,18 +14,10 @@
                     </th>
                     <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">
                         Jenis Transaksi</th>
-                    <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">
-                        No Faktur</th>
-                    <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">
-                        No S.Jalan</th>
-                    <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
-                        Total
+                    <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Total
                         Qty</th>
-                    <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
-                        Total
+                    <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Total
                         Nilai</th>
-                    <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Aksi
-                    </th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
@@ -70,12 +62,6 @@
                                 @endforeach
                             </div>
                         </td>
-                        <td class="px-4 py-5 text-center text-gray-700 text-sm">
-                            {{ $firstItem->no_faktur }}
-                        </td>
-                        <td class="px-4 py-5 text-center text-gray-700 text-sm">
-                            {{ $firstItem->no_jalan }}
-                        </td>
                         <td class="px-4 py-5 text-right font-black text-gray-700 text-sm">
                             {{ number_format($totalGroup, 0) }} <span
                                 class="text-[10px] text-gray-400 font-bold uppercase ml-1">{{ $barang->satuan }}</span>
@@ -83,23 +69,7 @@
                         <td class="px-4 py-5 text-right font-black text-emerald-600 text-sm">
                             Rp {{ number_format($totalNilai, 0, ',', '.') }}
                         </td>
-                        <td class="px-4 py-5 text-right">
-                            <div class="flex justify-end items-center">
-                                <button type="button"
-                                    class="group/btn inline-flex items-center justify-center w-10 h-10 bg-white text-gray-600 border border-gray-100 rounded-xl shadow-sm hover:bg-gray-600 hover:text-white hover:shadow-gray-200 transition-all duration-300">
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                        class="w-4 h-4 group-hover/btn:scale-110 transition-transform duration-300"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                                        <path
-                                            d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2">
-                                        </path>
-                                        <rect x="6" y="14" width="12" height="8"></rect>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
+
                     </tr>
 
                     <tr x-show="expandedGroup === '{{ $groupId }}'" x-collapse x-cloak class="bg-gray-50/50">

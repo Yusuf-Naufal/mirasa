@@ -6,7 +6,9 @@ use App\Models\Barang;
 use App\Models\Produksi;
 use App\Models\Supplier;
 use App\Models\BahanBaku;
+use App\Models\Inventory;
 use Illuminate\Http\Request;
+use App\Models\DetailInventory;
 use Illuminate\Support\Facades\DB;
 
 class BahanBakuController extends Controller
@@ -16,8 +18,25 @@ class BahanBakuController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BahanBaku::with(['Supplier', 'Barang'])
-            ->where('id_perusahaan', auth()->user()->id_perusahaan);
+        $user = auth()->user();
+
+        // 1. Query dasar
+        $query = DetailInventory::with(['Inventory.Barang.jenisBarang', 'Inventory.Perusahaan'])
+            ->whereHas('Inventory.Barang.jenisBarang', function ($q) {
+                $q->where('kode', 'BB');
+            });
+
+        // 2. Proteksi Data: Filter id_perusahaan yang ada di tabel Inventory
+        if (!$user->hasRole('Super Admin')) {
+            // Gunakan whereHas karena id_perusahaan milik tabel Inventory
+            $query->whereHas('Inventory', function ($q) use ($user) {
+                $q->where('id_perusahaan', $user->id_perusahaan);
+            });
+        } elseif ($request->filled('id_perusahaan')) {
+            $query->whereHas('Inventory', function ($q) use ($request) {
+                $q->where('id_perusahaan', $request->id_perusahaan);
+            });
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -69,14 +88,12 @@ class BahanBakuController extends Controller
             'tanggal_masuk'     => 'required|date',
             'jumlah_diterima'   => 'required|numeric|min:0.01',
             'harga'             => 'required|numeric|min:0',
-            'kondisi_barang'    => 'required|string',
-            'kondisi_kendaraan' => 'required|string',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // 1. Cari atau Buat Produksi berdasarkan tanggal masuk
+            // 1. Cari atau Buat Sesi Produksi otomatis berdasarkan tanggal masuk
             $produksi = Produksi::firstOrCreate(
                 [
                     'id_perusahaan'    => $request->id_perusahaan,
@@ -84,28 +101,40 @@ class BahanBakuController extends Controller
                 ]
             );
 
-            // 2. Siapkan data Bahan Baku
-            $dataBahanBaku = [
-                'id_perusahaan'     => $request->id_perusahaan,
-                'id_supplier'       => $request->id_supplier,
-                'id_barang'         => $request->id_barang,
-                'id_produksi'       => $produksi->id,
-                'tanggal_masuk'     => $request->tanggal_masuk,
-                'jumlah_diterima'   => $request->jumlah_diterima,
-                'harga'             => $request->harga,
-                'total_harga'       => $request->jumlah_diterima * $request->harga,
-                'kondisi_barang'    => $request->kondisi_barang,
-                'kondisi_kendaraan' => $request->kondisi_kendaraan,
-                'status'            => 'Diterima',
-            ];
+            // 2. Update atau Buat data Master Stok di tabel Inventory
+            $inventory = Inventory::where('id_perusahaan', $request->id_perusahaan)
+                ->where('id_barang', $request->id_barang)
+                ->first();
 
-            // 3. Simpan Bahan Baku
-            BahanBaku::create($dataBahanBaku);
+            if ($inventory) {
+                $inventory->stok += $request->jumlah_diterima;
+                $inventory->save();
+            } else {
+                $inventory = Inventory::create([
+                    'id_perusahaan' => $request->id_perusahaan,
+                    'id_barang'     => $request->id_barang,
+                    'stok'          => $request->jumlah_diterima,
+                    'minimum_stok'  => 0,
+                ]);
+            }
+
+            // 3. Simpan Riwayat ke Detail Inventory
+            DetailInventory::create([
+                'id_inventory'       => $inventory->id,
+                'id_supplier'        => $request->id_supplier,
+                'id_produksi'        => $produksi->id,
+                'tanggal_masuk'      => $request->tanggal_masuk,
+                'jumlah_diterima'    => $request->jumlah_diterima,
+                'stok'               => $request->jumlah_diterima,
+                'harga'              => $request->harga,
+                'total_harga'        => $request->jumlah_diterima * $request->harga,
+                'status'             => 'Tersedia',
+            ]);
 
             DB::commit();
 
             return redirect()->route('bahan-baku.index')
-                ->with('success', 'Data berhasil disimpan. Sesi produksi dan detail rekap otomatis diperbarui.');
+                ->with('success', 'Bahan baku berhasil masuk gudang, stok inventory diperbarui, dan sesi produksi telah disiapkan.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
@@ -127,7 +156,7 @@ class BahanBakuController extends Controller
     {
         $user = auth()->user();
 
-        $bahanBaku = BahanBaku::findOrFail($id);
+        $bahanBaku = DetailInventory::findOrFail($id);
 
         $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
             ->whereHas('jenisBarang', function ($query) {
@@ -148,38 +177,73 @@ class BahanBakuController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $bahanBaku = BahanBaku::findOrFail($id);
-
-        $validated = $request->validate([
-            'id_supplier'       => 'required|exists:supplier,id',
-            'id_barang'         => 'required|exists:barang,id',
-            'tanggal_masuk'     => 'required|date',
-            'jumlah_diterima'   => 'required|numeric|min:0',
-            'harga'             => 'required|numeric|min:0',
-            'kondisi_barang'    => 'required|string',
-            'kondisi_kendaraan' => 'required|string',
+        $request->validate([
+            'id_supplier'      => 'required|exists:supplier,id',
+            'id_barang'        => 'required|exists:barang,id',
+            'tanggal_masuk'    => 'required|date',
+            'jumlah_diterima'  => 'required|numeric|min:0.01',
+            'harga'            => 'required|numeric|min:0',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // Cek jika tanggal berubah, maka id_produksi juga harus disesuaikan
-            if ($bahanBaku->tanggal_masuk != $request->tanggal_masuk) {
-                $produksi = Produksi::firstOrCreate([
-                    'id_perusahaan'    => auth()->user()->id_perusahaan,
-                    'tanggal_produksi' => $request->tanggal_masuk,
-                ]);
-                $bahanBaku->id_produksi = $produksi->id;
+            $bahanBaku = DetailInventory::findOrFail($id);
+
+            // SIMPAN STATE LAMA
+            $idProduksiLama = $bahanBaku->id_produksi;
+            $idInventoryLama = $bahanBaku->id_inventory;
+
+            // 1. Cari atau Buat Produksi BARU berdasarkan tanggal input
+            $produksiBaru = Produksi::firstOrCreate([
+                'id_perusahaan'    => auth()->user()->id_perusahaan,
+                'tanggal_produksi' => $request->tanggal_masuk,
+            ]);
+
+            // 2. Cari atau Buat Inventory Master BARU (jika barang diganti)
+            $inventoryBaru = Inventory::firstOrCreate([
+                'id_perusahaan' => auth()->user()->id_perusahaan,
+                'id_barang'     => $request->id_barang,
+            ], ['stok' => 0, 'minimum_stok' => 0]);
+
+            // 3. Update Data DetailInventory
+            $bahanBaku->update([
+                'id_inventory'    => $inventoryBaru->id,
+                'id_supplier'     => $request->id_supplier,
+                'id_produksi'     => $produksiBaru->id, // Pindah ke produksi/tanggal baru
+                'tanggal_masuk'   => $request->tanggal_masuk,
+                'jumlah_diterima' => $request->jumlah_diterima,
+                'stok'            => $request->jumlah_diterima, // Pastikan logika stok sesuai kebutuhan bisnis Anda
+                'harga'           => $request->harga,
+                'total_harga'     => $request->jumlah_diterima * $request->harga,
+            ]);
+
+            // 4. SINKRONISASI PRODUKSI
+            // Refresh Produksi Baru (Tambah Qty)
+            $produksiBaru->syncTotals();
+
+            // Refresh Produksi Lama (Hapus/Kurangi Qty)
+            if ($idProduksiLama && $idProduksiLama != $produksiBaru->id) {
+                $oldProd = Produksi::find($idProduksiLama);
+                if ($oldProd) {
+                    $oldProd->syncTotals();
+                }
             }
 
-            $bahanBaku->total_harga = $request->jumlah_diterima * $request->harga;
-            $bahanBaku->update($validated);
+            // 5. SINKRONISASI STOK MASTER (Jika barang berubah)
+            $inventoryBaru->syncTotalStock();
+            if ($idInventoryLama && $idInventoryLama != $inventoryBaru->id) {
+                $oldInv = Inventory::find($idInventoryLama);
+                if ($oldInv) {
+                    $oldInv->syncTotalStock();
+                }
+            }
 
             DB::commit();
-            return redirect()->route('bahan-baku.index')->with('success', 'Data berhasil diperbarui.');
+            return redirect()->route('bahan-baku.index')->with('success', 'Data berhasil diperbarui dan dipindahkan ke tanggal baru.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
+            return back()->with('error', 'Gagal Update: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -188,8 +252,8 @@ class BahanBakuController extends Controller
      */
     public function destroy($id)
     {
-        $bahanBaku = BahanBaku::findOrFail($id);
-        $bahanBaku->delete(); 
+        $bahanBaku = DetailInventory::findOrFail($id);
+        $bahanBaku->delete();
 
         return redirect()->route('bahan-baku.index')->with('success', 'Data berhasil dihapus.');
     }

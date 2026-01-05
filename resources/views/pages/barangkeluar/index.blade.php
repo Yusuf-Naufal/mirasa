@@ -59,7 +59,7 @@
                                         clip-rule="evenodd" />
                                 </svg>
                             </div>
-                            <div class="flex flex-col"><span class="text-sm font-bold">Internal Produksi</span><span
+                            <div class="flex flex-col"><span class="text-sm font-bold">Barang Produksi</span><span
                                     class="text-[10px] text-gray-400">Bahan Penolong</span></div>
                         </a>
                         <a href="{{ route('barang-keluar.create-penjualan') }}"
@@ -73,6 +73,18 @@
                                     Transfer</span><span class="text-[10px] text-gray-400">Produk Jadi
                                     (FG/WIP/EC)</span></div>
                         </a>
+                        <a href="{{ route('barang-keluar.create-bahan-baku') }}"
+                            class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 text-gray-700 transition-colors border-t border-gray-50">
+                            <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 2048 2048">
+                                    <path fill="currentColor"
+                                        d="m1344 2l704 352v785l-128-64V497l-512 256v258l-128 64V753L768 497v227l-128-64V354zm0 640l177-89l-463-265l-211 106zm315-157l182-91l-497-249l-149 75zm-507 654l-128 64v-1l-384 192v455l384-193v144l-448 224L0 1735v-676l576-288l576 288zm-640 710v-455l-384-192v454zm64-566l369-184l-369-185l-369 185zm576-1l448-224l448 224v527l-448 224l-448-224zm384 576v-305l-256-128v305zm384-128v-305l-256 128v305zm-320-288l241-121l-241-120l-241 120z" />
+                                </svg>
+                            </div>
+                            <div class="flex flex-col"><span class="text-sm font-bold">Bahan Baku</span>
+                                <span class="text-[10px] text-gray-400">Bahan baku</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -81,12 +93,17 @@
             <div class="flex gap-4 border-b border-gray-100 mb-6">
                 <a href="{{ route('barang-keluar.index', ['tab' => 'produksi', 'search' => request('search')]) }}"
                     class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'produksi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
-                    Internal Produksi
+                    Barang Produksi
                 </a>
 
                 <a href="{{ route('barang-keluar.index', ['tab' => 'distribusi', 'search' => request('search')]) }}"
                     class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'distribusi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
                     Distribusi
+                </a>
+
+                <a href="{{ route('barang-keluar.index', ['tab' => 'bahan baku', 'search' => request('search')]) }}"
+                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'bahan baku' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
+                    Bahan Baku
                 </a>
             </div>
 
@@ -94,6 +111,8 @@
             <div class="mt-4">
                 @if ($activeTab === 'produksi')
                     <x-barangkeluar.table-produksi :data="$data" />
+                @elseif ($activeTab === 'bahan baku')
+                    <x-barangkeluar.table-bahan-baku :data="$data" />
                 @else
                     <x-barangkeluar.table-distribusi :data="$data" />
                 @endif

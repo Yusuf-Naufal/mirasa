@@ -24,7 +24,8 @@ return new class extends Migration
             $table->double('jumlah_keluar')->nullable();
             $table->double('harga')->nullable();
             $table->double('total_harga')->nullable();
-            $table->string('keterangan')->nullable();
+            $table->string('no_jalan')->nullable();
+            $table->string('no_faktur')->nullable();
             $table->timestamps();
         });
     }

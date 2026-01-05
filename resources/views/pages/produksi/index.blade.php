@@ -87,7 +87,7 @@
                                     <div class="flex items-center gap-2">
                                         <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
                                         <span
-                                            class="text-[10px] font-bold text-gray-600">{{ $item->bahanBaku->count() }}
+                                            class="text-[10px] font-bold text-gray-600">{{ $item->BahanBakuMasuk }}
                                             Bahan Baku Masuk</span>
                                     </div>
                                     {{-- Indikator Barang Keluar --}}

@@ -88,6 +88,7 @@ Route::resource('produksi', ProduksiController::class);
 
 // CRUD BARANG KELUAR
 Route::get('barang-keluar/create-produksi', [BarangKeluarController::class, 'createProduksi'])->name('barang-keluar.create-produksi');
+Route::get('barang-keluar/create-bahan-baku', [BarangKeluarController::class, 'createBahanBaku'])->name('barang-keluar.create-bahan-baku');
 Route::get('barang-keluar/create-penjualan', [BarangKeluarController::class, 'createPenjualan'])->name('barang-keluar.create-penjualan');
 Route::resource('barang-keluar', BarangKeluarController::class)->except(['create']);
 

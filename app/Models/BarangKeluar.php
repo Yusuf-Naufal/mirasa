@@ -20,7 +20,8 @@ class BarangKeluar extends Model
         'jumlah_keluar',
         'harga',
         'total_harga',
-        'keterangan',
+        'no_jalan',
+        'no_faktur',
     ];
 
     public function Proses()
@@ -56,7 +57,6 @@ class BarangKeluar extends Model
             if ($detail) {
                 $detail->stok -= $keluar->jumlah_keluar;
                 $detail->save();
-                // Ini akan otomatis memicu syncTotalStock di model Inventory
             }
         });
 
