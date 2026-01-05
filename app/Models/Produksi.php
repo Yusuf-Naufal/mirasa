@@ -13,26 +13,29 @@ class Produksi extends Model
         'tanggal_produksi',
     ];
 
-    public function BahanBaku()
-    {
-        return $this->hasMany(BahanBaku::class, 'id_produksi');
-    }
-
     public function syncTotals()
     {
-        $rekap = $this->BahanBaku()
-            ->select('id_barang')
-            ->selectRaw('SUM(jumlah_diterima) as total_qty')
-            ->selectRaw('SUM(total_harga) as total_nilai')
-            ->groupBy('id_barang')
+        // 1. Paksa refresh relasi agar data detail_inventory yang baru pindah terbaca
+        $this->unsetRelation('DetailInventory');
+
+        $rekap = $this->DetailInventory()
+            ->whereHas('Inventory.Barang.jenisBarang', function ($q) {
+                $q->where('kode', 'BB');
+            })
+            // Menggunakan join untuk memastikan kita menjumlahkan id_barang yang benar
+            ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
+            ->select('inventory.id_barang')
+            ->selectRaw('SUM(detail_inventory.jumlah_diterima) as total_qty')
+            ->selectRaw('SUM(detail_inventory.total_harga) as total_nilai')
+            ->groupBy('inventory.id_barang')
             ->get();
 
-        // Ambil ID barang yang masih aktif dalam rekap
         $activeBarangIds = $rekap->pluck('id_barang')->toArray();
 
-        // Hapus detail produksi untuk barang yang sudah tidak ada di catatan bahan baku
+        // 2. Hapus detail_produksi yang barangnya sudah tidak ada di produksi ini
         $this->DetailProduksi()->whereNotIn('id_barang', $activeBarangIds)->delete();
 
+        // 3. Update atau buat baru untuk barang yang tersisa/baru masuk
         foreach ($rekap as $data) {
             $this->DetailProduksi()->updateOrCreate(
                 ['id_barang' => $data->id_barang],
@@ -49,16 +52,9 @@ class Produksi extends Model
         return $this->hasMany(DetailProduksi::class, 'id_produksi');
     }
 
-    public function getRekapBahanBakuAttribute()
+    public function DetailInventory()
     {
-        // Mengelompokkan bahan baku yang masuk berdasarkan barangnya
-        return $this->BahanBaku()
-            ->select('id_barang')
-            ->selectRaw('SUM(jumlah_diterima) as total_qty')
-            ->selectRaw('SUM(total_harga) as total_nilai')
-            ->groupBy('id_barang')
-            ->with('Barang')
-            ->get();
+        return $this->hasMany(DetailInventory::class, 'id_produksi');
     }
 
     public function Perusahaan()

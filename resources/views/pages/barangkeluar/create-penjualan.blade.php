@@ -196,18 +196,22 @@
                                     </div>
                                 </div>
 
-                                <div class="space-y-1.5">
+                                <div class="space-y-1.5 md:col-span-2">
                                     <label class="text-xs font-bold text-gray-500 uppercase ml-1">Tanggal Keluar</label>
                                     <input type="date" name="tanggal_keluar" value="{{ date('Y-m-d') }}" required 
-                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-medium"
-                                        :class="jenisKeluar === 'PENJUALAN' ? 'focus:ring-emerald-500' : 'focus:ring-blue-500'">
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-medium">
                                 </div>
 
                                 <div class="space-y-1.5">
-                                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Keterangan / Ref</label>
-                                    <input type="text" name="keterangan" placeholder="Contoh: No. Surat Jalan..." 
-                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-medium"
-                                        :class="jenisKeluar === 'PENJUALAN' ? 'focus:ring-emerald-500' : 'focus:ring-blue-500'">
+                                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">No Faktur</label>
+                                    <input type="text" name="no_faktur" placeholder="Nomor Faktur" 
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-medium">
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">No Surat Jalan</label>
+                                    <input type="text" name="no_jalan" placeholder="Nomor Surat Jalan / PO" 
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl outline-none font-medium">
                                 </div>
 
                                 {{-- Input Jumlah (Max Stok sesuai Total Stok Barang) --}}

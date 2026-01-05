@@ -22,10 +22,11 @@ class BarangKeluarController extends Controller
         // 1. Ambil parameter filter
         $activeTab = $request->get('tab', 'produksi');
         $search = $request->get('search');
-        $perPage = 15; // Anda bisa menambah jumlah per halaman karena data akan dikelompokkan
+        $perPage = 15;
 
         // 2. Bangun Query Utama
         $query = BarangKeluar::where('id_perusahaan', auth()->user()->id_perusahaan)
+            ->whereHas('DetailInventory')
             ->with(['DetailInventory.Inventory.Barang', 'Produksi', 'Costumer', 'Proses'])
             ->when($search, function ($q) use ($search) {
                 $q->whereHas('DetailInventory.Inventory.Barang', function ($sq) use ($search) {
@@ -36,24 +37,27 @@ class BarangKeluarController extends Controller
         // 3. Filter berdasarkan Tab
         if ($activeTab === 'produksi') {
             $query->where('jenis_keluar', 'PRODUKSI');
+        } else if ($activeTab === 'bahan baku') {
+            $query->where('jenis_keluar', 'BAHAN BAKU');
         } else {
             $query->whereIn('jenis_keluar', ['PENJUALAN', 'TRANSFER']);
         }
 
-        // 4. Ambil data dengan Pagination (Urutkan berdasarkan tanggal terbaru dan ID barang)
+        // 4. Ambil data dengan Pagination
         $dataPaginated = $query->orderBy('tanggal_keluar', 'desc')
-            ->orderBy('id_produksi', 'desc') // Tambahan untuk konsistensi grup produksi
+            ->orderBy('id_produksi', 'desc')
             ->paginate($perPage)
             ->withQueryString();
 
         // 5. Transformasi Data: Kelompokkan data hasil paginasi
-        // Kita mengelompokkan hasil per halaman agar tampilan rapi, namun pagination tetap berfungsi normal
+        // Menggunakan optional chaining (?->) atau null coalescing (??) sebagai pengaman tambahan
         $groupedData = $dataPaginated->getCollection()->groupBy(function ($item) {
-            // Kelompokkan berdasarkan tanggal dan ID Inventory (Master Barang)
-            return $item->tanggal_keluar . '-' . $item->DetailInventory->id_inventory;
+            $inventoryId = $item->DetailInventory->id_inventory ?? 'no-inv';
+            $tanggal = $item->tanggal_keluar ?? 'no-date';
+            return $tanggal . '-' . $inventoryId;
         });
 
-        // 6. Masukkan kembali data yang sudah dikelompokkan ke objek paginator
+        // 6. Masukkan kembali koleksi yang sudah dikelompokkan
         $dataPaginated->setCollection($groupedData);
 
         return view('pages.barangkeluar.index', [
@@ -111,6 +115,23 @@ class BarangKeluarController extends Controller
     }
 
     /**
+     * Form Pengeluaran untuk Internal BahanBaku (Bahan Baku - BB)
+     */
+    public function createBahanBaku()
+    {
+        $id_perusahaan = auth()->user()->id_perusahaan;
+
+        // Ambil Master Inventory (Barang) yang memiliki stok > 0 dan jenis BP
+        $inventory = Inventory::with(['Barang'])
+            ->where('id_perusahaan', $id_perusahaan)
+            ->whereHas('Barang.JenisBarang', fn($q) => $q->where('kode', 'BB'))
+            ->where('stok', '>', 0)
+            ->get();
+
+        return view('pages.barangkeluar.create-bahan-baku', compact('inventory'));
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -119,8 +140,7 @@ class BarangKeluarController extends Controller
         $request->validate([
             'id_inventory' => 'required|exists:inventory,id',
             'tanggal_keluar' => 'required|date',
-            // 'jenis_keluar' harus 'required' karena menentukan logika selanjutnya
-            'jenis_keluar' => 'required|in:PRODUKSI,PENJUALAN,TRANSFER',
+            'jenis_keluar' => 'required|in:PRODUKSI,PENJUALAN,TRANSFER,BAHAN BAKU',
             'jumlah_keluar' => 'required|numeric|min:0.001',
             'keterangan' => 'nullable|string',
 
@@ -174,7 +194,8 @@ class BarangKeluarController extends Controller
                     'jumlah_keluar'       => $jumlahDiambil,
                     'harga'               => $batch->harga,
                     'total_harga'         => $jumlahDiambil * $batch->harga,
-                    'keterangan'          => $request->keterangan,
+                    'no_faktur'           => $request->no_faktur ?? null,
+                    'no_jalan'           => $request->no_jalan ?? null,
                 ]);
 
                 $sisaKebutuhan -= $jumlahDiambil;
