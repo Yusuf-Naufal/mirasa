@@ -16,6 +16,7 @@ use App\Http\Controllers\SuperAdminDashboardController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\ProsesController;
+use App\Http\Controllers\LandingMirasaController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -89,3 +90,6 @@ Route::resource('produksi', ProduksiController::class);
 Route::get('barang-keluar/create-produksi', [BarangKeluarController::class, 'createProduksi'])->name('barang-keluar.create-produksi');
 Route::get('barang-keluar/create-penjualan', [BarangKeluarController::class, 'createPenjualan'])->name('barang-keluar.create-penjualan');
 Route::resource('barang-keluar', BarangKeluarController::class)->except(['create']);
+
+// LANDING PAGE
+Route::get('/mirasa', [LandingMirasaController::class, 'index'])->name('landing.mirasa');
