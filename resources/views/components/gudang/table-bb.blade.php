@@ -1,4 +1,4 @@
-@props(['details'])
+@props(['details', 'supplier'])
 
 <div class="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden mx-4 md:mx-0"
     x-data="{
@@ -34,14 +34,14 @@
 
         <div>
             {{-- Tombol Menuju Halaman Create --}}
-            <a href="{{ route('inventory.create-bp') }}"
+            <a href="{{ route('inventory.create-bb') }}"
                 class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-200 transition-all active:scale-95 group">
                 <svg xmlns="http://www.w3.org/2000/svg"
                     class="h-4 w-4 transform group-hover:rotate-90 transition-transform duration-300" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Tambah Stok</span>
+                <span class="hidden md:block">Tambah Stok</span>
             </a>
         </div>
     </div>
@@ -55,7 +55,7 @@
                         No</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Log Kedatangan
                     </th>
-                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Tempat
+                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Supplier
                     </th>
                     {{-- <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">
                         Rincian Unit</th> --}}
@@ -85,24 +85,9 @@
 
                         <td class="px-6 py-4">
                             <span class="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                                {{ $i->tempat_penyimpanan }}
+                                {{ $i->supplier->nama_supplier }}
                             </span>
                         </td>
-
-                        {{-- Rincian Unit (Masuk - Rusak) --}}
-                        {{-- <td class="px-6 py-4 text-right">
-                            <div class="inline-flex items-center gap-2">
-                                <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md"
-                                    title="Jumlah Diterima">
-                                    {{ number_format($i->jumlah_diterima, $i->jumlah_diterima == floor($i->jumlah_diterima) ? 0 : 2, ',', '.') }}
-                                </span>
-                                <span class="text-slate-300 text-xs">-</span>
-                                <span class="text-xs font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-md"
-                                    title="Jumlah Rusak">
-                                    {{ number_format($i->jumlah_rusak, $i->jumlah_rusak == floor($i->jumlah_rusak) ? 0 : 2, ',', '.') }}
-                                </span>
-                            </div>
-                        </td> --}}
 
                         {{-- Stok Aktif --}}
                         <td class="px-6 py-4 text-right">
@@ -128,25 +113,32 @@
 
                         {{-- Aksi --}}
                         <td class="px-6 py-4 text-center">
-                            <button type="button"
-                                @click="openEdit({ 
+                            @if ($i->stok == $i->jumlah_diterima)
+                                <button type="button"
+                                    @click="openEdit({ 
                                     id: '{{ $i->id }}', 
                                     jumlah_diterima: '{{ $i->jumlah_diterima }}', 
                                     jumlah_rusak: '{{ $i->jumlah_rusak }}', 
                                     stok: '{{ $i->stok }}', 
                                     harga: '{{ $i->harga }}', 
                                     tgl_masuk: '{{ $i->tanggal_masuk }}', 
-                                    tgl_exp: '{{ $i->tanggal_exp }}',
-                                    lokasi: '{{ $i->tempat_penyimpanan }}',
-                                    kondisi_brg: '{{ $i->kondisi_barang }}',
-                                    kondisi_knd: '{{ $i->kondisi_kendaraan }}'
+                                    lokasi: '{{ $i->tempat_penyimpanan }}', 
                                 })"
-                                class="inline-flex items-center justify-center w-9 h-9 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-slate-200 hover:border-blue-200 transition-all duration-200 bg-slate-50/50">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
+                                    class="inline-flex items-center justify-center w-9 h-9 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-slate-200 hover:border-blue-200 transition-all duration-200 bg-slate-50/50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                            @else
+                                <div class="inline-flex items-center justify-center w-9 h-9 text-slate-300 bg-slate-100/50 rounded-xl border border-slate-100 cursor-not-allowed"
+                                    title="Data tidak dapat diedit karena stok sudah digunakan">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -187,7 +179,6 @@
                 <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <div>
                         <h3 class="text-xl font-bold text-slate-800">Edit Riwayat Stok</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">ID Transaksi: <span x-text="editData.id"></span></p>
                     </div>
                     <button @click="editModalOpen = false"
                         class="p-2 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 transition-colors shadow-sm">
@@ -209,31 +200,6 @@
                             <input type="date" name="tanggal_masuk" x-model="editData.tgl_masuk"
                                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Lokasi
-                                Penyimpanan</label>
-                            <input type="text" name="tempat_penyimpanan" x-model="editData.lokasi"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
-                                placeholder="Contoh: Rak A1">
-                        </div>
-
-                        {{-- Baris 2: Kondisi Quality Control --}}
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Kondisi Barang</label>
-                            <select name="kondisi_barang" x-model="editData.kondisi_brg"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
-                                <option value="Sesuai Standar">Sesuai Standar</option>
-                                <option value="Tidak Sesuai">Tidak Sesuai</option>
-                            </select>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Kondisi Kendaraan</label>
-                            <select name="kondisi_kendaraan" x-model="editData.kondisi_knd"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
-                                <option value="Baik">Baik / Bersih</option>
-                                <option value="Kotor">Kotor</option>
-                            </select>
-                        </div>
 
                         {{-- Baris 3: Kuantitas --}}
                         <div class="space-y-1.5">
@@ -241,21 +207,7 @@
                             <input type="number" name="jumlah_diterima" x-model.number="editData.jumlah_diterima"
                                 class="w-full px-4 py-2.5 bg-blue-50/30 border border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-sm">
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-red-500 uppercase ml-1">Jumlah Rusak
-                                (Reject)</label>
-                            <input type="number" name="jumlah_rusak" x-model.number="editData.jumlah_rusak"
-                                class="w-full px-4 py-2.5 bg-red-50/30 border border-red-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none transition-all font-bold text-red-600 text-sm">
-                        </div>
 
-                        {{-- Baris 4: Stok Akhir & Harga --}}
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Stok Bersih (Masuk
-                                Gudang)</label>
-                            <input type="number" name="stok"
-                                :value="editData.jumlah_diterima - editData.jumlah_rusak" readonly
-                                class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl outline-none font-black text-gray-800 shadow-inner cursor-not-allowed text-sm">
-                        </div>
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Harga Per Satuan</label>
                             <div class="relative">

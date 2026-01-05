@@ -11,6 +11,7 @@ class DetailInventory extends Model
     protected $fillable = [
         'id_inventory',
         'id_supplier',
+        'id_produksi',
         'nomor_batch',
         'tanggal_masuk',
         'tanggal_exp',
@@ -30,11 +31,27 @@ class DetailInventory extends Model
         return $this->belongsTo(Inventory::class, 'id_inventory');
     }
 
+    public function Produksi()
+    {
+        return $this->belongsTo(Produksi::class, 'id_produksi');
+    }
+
     protected static function booted()
     {
-        // Setiap kali ada update di detail, otomatis hitung ulang stok di parent (Inventory)
-        static::updated(function ($detail) {
-            $detail->inventory->syncTotalStock();
+        static::saved(function ($detail) {
+            if ($detail->Inventory) {
+                $detail->Inventory->syncTotalStock();
+            }
+        });
+
+        static::deleted(function ($detail) {
+            if ($detail->Inventory) {
+                $detail->Inventory->syncTotalStock();
+            }
+            // Jika dihapus, tetap sync produksi terkait
+            if ($detail->id_produksi && $detail->Produksi) {
+                $detail->Produksi->syncTotals();
+            }
         });
     }
 

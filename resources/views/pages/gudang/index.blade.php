@@ -104,14 +104,14 @@
                                     class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
                                     <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Produksi
                                 </a>
+                                <a href="{{ route('inventory.create-bb') }}"
+                                    class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-purple-500 rounded-full"></span> Bahan Baku
+                                </a>
                                 <a href="{{ route('inventory.create-bp') }}"
                                     class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
                                     <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Bahan Penolong
                                 </a>
-                                {{-- <a href="{{ route('inventory.create-bb') }}"
-                                    class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-purple-500 rounded-full"></span> Bahan Baku
-                                </a> --}}
                             </div>
                         </div>
                     </div>
@@ -121,16 +121,19 @@
             {{-- 3. GROUPBY INVENTORY (Card by Jenis Barang) --}}
             <div class="space-y-12">
                 @php
-                    // 1. Filter Koleksi untuk Hasil Produksi
+                    // 1. Filter Koleksi untuk Hasil Produksi (FG, WIP, EC)
                     $produksiItems = $inventory->filter(
                         fn($i) => in_array(strtoupper($i->barang->jenisBarang->kode), ['FG', 'WIP', 'EC']),
                     );
 
-                    // 2. Filter Koleksi untuk Bahan Penolong
+                    // 2. Filter Koleksi untuk Bahan Baku (BB)
+                    $bahanBakuItems = $inventory->filter(fn($i) => strtoupper($i->barang->jenisBarang->kode) === 'BB');
+
+                    // 3. Filter Koleksi untuk Bahan Penolong (BP)
                     $penolongItems = $inventory->filter(fn($i) => strtoupper($i->barang->jenisBarang->kode) === 'BP');
                 @endphp
 
-                {{-- GRUP 1: HASIL PRODUKSI (DIPISAH PER KATEGORI FG, WIP, EC) --}}
+                {{-- GRUP 1: HASIL PRODUKSI --}}
                 <section>
                     <div class="flex items-center justify-between mb-6 border-l-4 border-blue-600 pl-4">
                         <div>
@@ -149,9 +152,7 @@
                             Tidak ada data hasil produksi ditemukan
                         </div>
                     @else
-                        {{-- Grid untuk menampung Card Kategori --}}
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {{-- Kita Group berdasarkan nama jenis agar muncul card FG sendiri, WIP sendiri, dst --}}
                             @foreach ($produksiItems->groupBy('barang.jenisBarang.nama_jenis') as $jenis => $items)
                                 <x-gudang.card-index :jenis="$jenis" :items="$items" accent="blue" />
                             @endforeach
@@ -159,7 +160,35 @@
                     @endif
                 </section>
 
-                {{-- GRUP 2: BAHAN PENOLONG (LANGSUNG GRID TANPA CARD KATEGORI) --}}
+                {{-- GRUP 2: BAHAN BAKU (BB) --}}
+                <section>
+                    <div class="flex items-center justify-between mb-6 border-l-4 border-amber-500 pl-4">
+                        <div>
+                            <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Bahan Baku</h2>
+                            <p class="text-sm text-gray-500 font-medium">Stok material utama produksi (BB)</p>
+                        </div>
+                        <span
+                            class="bg-amber-50 text-amber-700 text-xs font-bold px-3 py-1 rounded-full border border-amber-100">
+                            {{ $bahanBakuItems->count() }} Total Item
+                        </span>
+                    </div>
+
+                    @if ($bahanBakuItems->isEmpty())
+                        <div
+                            class="bg-gray-50 rounded-2xl p-10 text-center border-2 border-dashed border-gray-200 text-gray-400">
+                            Tidak ada data bahan baku ditemukan
+                        </div>
+                    @else
+                        {{-- Menggunakan Grid Index agar tampilan lebih detail untuk material --}}
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                            @foreach ($bahanBakuItems as $item)
+                                <x-gudang.grid-index :item="$item" accent="amber" />
+                            @endforeach
+                        </div>
+                    @endif
+                </section>
+
+                {{-- GRUP 3: BAHAN PENOLONG (BP) --}}
                 <section>
                     <div class="flex items-center justify-between mb-6 border-l-4 border-emerald-500 pl-4">
                         <div>
@@ -178,7 +207,6 @@
                             Tidak ada data bahan penolong ditemukan
                         </div>
                     @else
-                        {{-- Grid Item BP --}}
                         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             @foreach ($penolongItems as $item)
                                 <x-gudang.grid-index :item="$item" accent="emerald" />

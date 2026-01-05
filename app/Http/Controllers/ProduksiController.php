@@ -14,14 +14,20 @@ class ProduksiController extends Controller
     public function index(Request $request)
     {
         $query = Produksi::where('id_perusahaan', auth()->user()->id_perusahaan)
-            ->with(['BahanBaku.barang', 'BarangKeluar.DetailInventory.Inventory.Barang'])
+            ->withCount(['DetailInventory as BahanBakuMasuk' => function ($q) {
+                $q->whereHas('Inventory.Barang.jenisBarang', function ($sq) {
+                    $sq->where('kode', 'BB');
+                });
+            }])
+            // Tetap memuat relasi lain yang dibutuhkan
+            ->with(['BarangKeluar.DetailInventory.Inventory.Barang'])
             ->latest('tanggal_produksi');
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('tanggal_produksi', 'like', "%$search%")
-                    ->orWhereHas('barangKeluar.DetailInventory.Inventory.Barang', function ($sq) use ($search) {
+                    ->orWhereHas('BarangKeluar.DetailInventory.Inventory.Barang', function ($sq) use ($search) {
                         $sq->where('nama_barang', 'like', "%$search%");
                     });
             });
@@ -53,10 +59,12 @@ class ProduksiController extends Controller
     public function show($id)
     {
         $produksi = Produksi::with([
-            'bahanBaku.barang',
-            'bahanBaku.supplier',
-            'barangKeluar.DetailInventory.Inventory.Barang',
-            'barangKeluar.Proses'
+            'DetailInventory.Inventory.Barang',
+            'DetailInventory.supplier',
+            'barangKeluar' => function ($query) {
+                $query->where('jenis_keluar', '!=', 'BAHAN BAKU')
+                    ->with(['DetailInventory.Inventory.Barang', 'Proses']);
+            }
         ])
             ->where('id_perusahaan', auth()->user()->id_perusahaan)
             ->findOrFail($id);

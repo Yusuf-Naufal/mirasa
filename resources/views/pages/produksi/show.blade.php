@@ -28,19 +28,21 @@
                         <div
                             class="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110">
                         </div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Ringkasan Bahan Baku
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Ringkasan Bahan
+                            Baku
                             Masuk</p>
 
                         <div class="space-y-4">
                             <div>
                                 <span class="text-[9px] font-black text-emerald-400 uppercase">Total Nilai</span>
                                 <h3 class="text-3xl font-black text-emerald-600 leading-none mt-1">
-                                    Rp {{ number_format($produksi->bahanBaku->sum('total_harga'), 0, ',', '.') }}
+                                    Rp {{ number_format($produksi->DetailInventory->sum('total_harga'), 0, ',', '.') }}
                                 </h3>
                             </div>
                             <div class="flex items-center gap-2 pt-2 border-t border-gray-50">
                                 <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <span class="text-xs font-bold text-gray-700">{{ $produksi->bahanBaku->count() }} Bahan
+                                <span class="text-xs font-bold text-gray-700">{{ $produksi->DetailInventory->count() }}
+                                    Bahan
                                     Baku Diterima</span>
                             </div>
                         </div>
@@ -92,11 +94,13 @@
                                 class="absolute top-0 right-0 w-24 h-24 bg-purple-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110">
                             </div>
 
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6">Rincian
-                                Hasil Produksi</p>
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-6">
+                                Rincian Hasil Produksi
+                            </p>
 
                             <div class="space-y-6">
-                                @foreach ($produksi->detailProduksi as $detail)
+                                {{-- Menggunakan @forelse untuk menangani data kosong --}}
+                                @forelse ($produksi->detailProduksi as $detail)
                                     <div class="relative p-4 rounded-2xl bg-gray-50/50 border border-gray-100">
                                         <div class="flex justify-between items-start mb-3">
                                             <div>
@@ -105,7 +109,6 @@
                                                     ({{ $detail->barang->satuan ?? 'XX' }})
                                                 </h4>
                                             </div>
-                                            {{-- Button Edit --}}
                                             <button type="button"
                                                 @click="initEdit({{ $detail }}, '{{ $detail->barang->nama_barang ?? 'Produk' }}')"
                                                 class="bg-white shadow-sm text-purple-600 hover:bg-purple-600 hover:text-white p-2 rounded-xl transition-all border border-purple-100">
@@ -143,7 +146,23 @@
                                             </div>
                                         </div>
                                     </div>
-                                @endforeach
+                                @empty
+                                    {{-- Tampilan Visual saat Data Kosong --}}
+                                    <div
+                                        class="flex flex-col items-center justify-center py-12 px-4 rounded-3xl border-2 border-dashed border-gray-100 bg-gray-50/30">
+                                        <div class="p-3 bg-purple-50 rounded-2xl mb-4">
+                                            <svg class="w-8 h-8 text-purple-200" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                            </svg>
+                                        </div>
+                                        <h5 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Data
+                                            Kosong</h5>
+                                        <p class="text-[10px] text-gray-400 font-medium text-center">Belum ada rincian
+                                            hasil produksi yang dicatat untuk periode ini.</p>
+                                    </div>
+                                @endforelse
                             </div>
                         </div>
 
@@ -189,7 +208,8 @@
                                                     class="w-full px-5 py-3 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-purple-500 focus:bg-white focus:ring-0 transition-all font-bold">
                                             </div>
                                             <div class="space-y-1">
-                                                <label class="text-[10px] font-bold text-gray-500 uppercase ml-2">Second
+                                                <label
+                                                    class="text-[10px] font-bold text-gray-500 uppercase ml-2">Second
                                                     Grade</label>
                                                 <input type="number" name="total_s" x-model="detail.s"
                                                     class="w-full px-5 py-3 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-purple-500 focus:bg-white focus:ring-0 transition-all font-bold">
@@ -268,10 +288,10 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-50">
-                                    @forelse($produksi->bahanBaku as $bb)
+                                    @forelse($produksi->DetailInventory as $bb)
                                         <tr class="text-sm hover:bg-emerald-50/30 transition-colors">
                                             <td class="px-8 py-4 font-bold text-gray-800 leading-tight">
-                                                {{ $bb->barang->nama_barang }}</td>
+                                                {{ $bb->inventory->barang->nama_barang }}</td>
                                             <td
                                                 class="px-6 py-4 text-gray-500 uppercase text-[10px] font-bold tracking-tighter">
                                                 {{ $bb->supplier->nama_supplier ?? 'Tanpa Supplier' }}
@@ -280,7 +300,7 @@
                                                 <span
                                                     class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-[10px] font-black shadow-sm border border-emerald-100">
                                                     {{ number_format($bb->jumlah_diterima, 0) }}
-                                                    {{ $bb->barang->satuan }}
+                                                    {{ $bb->Inventory->barang->satuan }}
                                                 </span>
                                             </td>
                                             <td class="px-8 py-4 text-right font-black text-gray-800 tracking-tight">
@@ -323,12 +343,13 @@
                                 <div class="flex items-center gap-8">
                                     <div class="text-center sm:text-right">
                                         <p class="text-lg font-black text-gray-800">
-                                            {{ number_format($produksi->bahanBaku->sum('jumlah_diterima'), 0) }}
+                                            {{ number_format($produksi->DetailInventory->sum('jumlah_diterima'), 0) }}
                                         </p>
                                     </div>
                                     <div class="h-10 w-[1px] bg-emerald-100 hidden sm:block"></div>
                                     <div class="text-center sm:text-right">
-                                        <p class="text-2xl font-black text-emerald-600 leading-none">{{ number_format($produksi->bahanBaku->sum('total_harga'), 0, ',', '.') }}
+                                        <p class="text-2xl font-black text-emerald-600 leading-none">
+                                            {{ number_format($produksi->DetailInventory->sum('total_harga'), 0, ',', '.') }}
                                         </p>
                                     </div>
                                 </div>
@@ -440,14 +461,15 @@
 
                                 <div class="flex items-center gap-8">
                                     <div class="text-center sm:text-right">
-        
+
                                         <p class="text-lg font-black text-gray-800">
                                             {{ number_format($produksi->barangKeluar->sum('jumlah_keluar'), 2) }}
                                         </p>
                                     </div>
                                     <div class="h-10 w-[1px] bg-blue-100 hidden sm:block"></div>
                                     <div class="text-center sm:text-right">
-                                        <p class="text-2xl font-black text-blue-600 leading-none">{{ number_format($produksi->barangKeluar->sum('total_harga'), 0, ',', '.') }}
+                                        <p class="text-2xl font-black text-blue-600 leading-none">
+                                            {{ number_format($produksi->barangKeluar->sum('total_harga'), 0, ',', '.') }}
                                         </p>
                                     </div>
                                 </div>
