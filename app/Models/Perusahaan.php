@@ -17,6 +17,8 @@ class Perusahaan extends Model
         'jenis_perusahaan',
         'alamat',
         'kontak',
+        'kota',
+        'logo',
     ];
 
     public function Inventory()

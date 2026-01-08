@@ -7,6 +7,7 @@ use App\Models\Produksi;
 use App\Models\Supplier;
 use App\Models\BahanBaku;
 use App\Models\Inventory;
+use App\Models\Perusahaan;
 use Illuminate\Http\Request;
 use App\Models\DetailInventory;
 use Illuminate\Support\Facades\DB;
@@ -20,15 +21,29 @@ class BahanBakuController extends Controller
     {
         $user = auth()->user();
 
-        // 1. Query dasar
-        $query = DetailInventory::with(['Inventory.Barang.jenisBarang', 'Inventory.Perusahaan'])
+        // Mengambil data perusahaan untuk filter Super Admin
+        $perusahaan = [];
+        if ($user->hasRole('Super Admin')) {
+            $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+        }
+
+        // Mengambil daftar master barang (Bahan Baku) untuk dropdown filter
+        $barang = Barang::whereHas('jenisBarang', function ($q) {
+            $q->where('kode', 'BB');
+        })
+            ->when(!$user->hasRole('Super Admin'), function ($q) use ($user) {
+                $q->where('id_perusahaan', $user->id_perusahaan);
+            })
+            ->get();
+
+        // 1. Query dasar DetailInventory
+        $query = DetailInventory::with(['Inventory.Barang.jenisBarang', 'Inventory.Perusahaan', 'supplier'])
             ->whereHas('Inventory.Barang.jenisBarang', function ($q) {
                 $q->where('kode', 'BB');
             });
 
-        // 2. Proteksi Data: Filter id_perusahaan yang ada di tabel Inventory
+        // 2. Filter Berdasarkan Perusahaan
         if (!$user->hasRole('Super Admin')) {
-            // Gunakan whereHas karena id_perusahaan milik tabel Inventory
             $query->whereHas('Inventory', function ($q) use ($user) {
                 $q->where('id_perusahaan', $user->id_perusahaan);
             });
@@ -38,21 +53,44 @@ class BahanBakuController extends Controller
             });
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('Barang', function ($q) use ($search) {
-                $q->where('nama_barang', 'like', "%{$search}%");
+        // 3. Filter Berdasarkan Barang Spesifik
+        if ($request->filled('jenis')) {
+            $query->whereHas('Inventory', function ($q) use ($request) {
+                $q->where('id_barang', $request->jenis);
             });
         }
 
-        // Ambil data dan kelompokkan berdasarkan tanggal_masuk
-        $listBahanBaku = $query->latest('tanggal_masuk')
-            ->get()
-            ->groupBy(function ($item) {
-                return \Carbon\Carbon::parse($item->tanggal_masuk)->format('Y-m-d');
+        // 4. Filter Pencarian
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('Inventory.Barang', function ($sq) use ($search) {
+                    $sq->where('nama_barang', 'like', "%{$search}%");
+                })->orWhereHas('supplier', function ($sq) use ($search) {
+                    $sq->where('nama_supplier', 'like', "%{$search}%");
+                });
             });
+        }
 
-        return view('pages.bahanbaku.index', compact('listBahanBaku'));
+        // 5. Filter Rentang Tanggal
+        if ($request->filled('date_range')) {
+            $dates = explode(' to ', $request->date_range);
+            if (count($dates) == 2) {
+                $query->whereBetween('tanggal_masuk', [$dates[0], $dates[1]]);
+            } else {
+                $query->whereDate('tanggal_masuk', $dates[0]);
+            }
+        }
+
+        // 6. Pagination
+        $bahanBakuPaginator = $query->latest('tanggal_masuk')->paginate(30)->withQueryString();
+
+        // 7. Kelompokkan hasil pagination berdasarkan tanggal
+        $listBahanBaku = $bahanBakuPaginator->getCollection()->groupBy(function ($item) {
+            return \Carbon\Carbon::parse($item->tanggal_masuk)->format('Y-m-d');
+        });
+
+        return view('pages.bahanbaku.index', compact('listBahanBaku', 'bahanBakuPaginator', 'barang', 'perusahaan'));
     }
 
     /**
@@ -94,32 +132,21 @@ class BahanBakuController extends Controller
             DB::beginTransaction();
 
             // 1. Cari atau Buat Sesi Produksi otomatis berdasarkan tanggal masuk
-            $produksi = Produksi::firstOrCreate(
+            $produksi = Produksi::firstOrCreate([
+                'id_perusahaan'    => $request->id_perusahaan,
+                'tanggal_produksi' => $request->tanggal_masuk,
+            ]);
+
+            // 2. Update atau Buat data Master Stok di tabel Inventory
+            $inventory = Inventory::firstOrCreate(
                 [
-                    'id_perusahaan'    => $request->id_perusahaan,
-                    'tanggal_produksi' => $request->tanggal_masuk,
+                    'id_perusahaan' => $request->id_perusahaan,
+                    'id_barang'     => $request->id_barang
                 ]
             );
 
-            // 2. Update atau Buat data Master Stok di tabel Inventory
-            $inventory = Inventory::where('id_perusahaan', $request->id_perusahaan)
-                ->where('id_barang', $request->id_barang)
-                ->first();
-
-            if ($inventory) {
-                $inventory->stok += $request->jumlah_diterima;
-                $inventory->save();
-            } else {
-                $inventory = Inventory::create([
-                    'id_perusahaan' => $request->id_perusahaan,
-                    'id_barang'     => $request->id_barang,
-                    'stok'          => $request->jumlah_diterima,
-                    'minimum_stok'  => 0,
-                ]);
-            }
-
             // 3. Simpan Riwayat ke Detail Inventory
-            DetailInventory::create([
+            $detail = DetailInventory::create([
                 'id_inventory'       => $inventory->id,
                 'id_supplier'        => $request->id_supplier,
                 'id_produksi'        => $produksi->id,
@@ -131,13 +158,23 @@ class BahanBakuController extends Controller
                 'status'             => 'Tersedia',
             ]);
 
+            // 4. SINKRONISASI (PENTING)
+
+            // A. Update total biaya di tabel Produksi
+            $produksi->syncTotals();
+
+            // B. Update total stok di tabel Master Inventory
+            $inventory->syncTotalStock();
+
             DB::commit();
 
             return redirect()->route('bahan-baku.index')
-                ->with('success', 'Bahan baku berhasil masuk gudang, stok inventory diperbarui, dan sesi produksi telah disiapkan.');
+                ->with('success', 'Bahan baku berhasil masuk, stok diperbarui, dan biaya produksi disinkronkan.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
+            return back()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
+                ->withInput();
         }
     }
 

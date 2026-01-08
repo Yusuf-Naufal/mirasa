@@ -6,9 +6,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BahanBakuController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\BarangKeluarController;
+use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\CostumerController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\JenisBarangController;
+use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\ManagerDashboardController;
 use App\Http\Controllers\PerusahaanController;
 use App\Http\Controllers\ProduksiController;
@@ -19,6 +21,14 @@ use App\Http\Controllers\ProsesController;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::get('/sj-indofood', function () {
+    return view('pages.print.sj-indofood');
+});
+
+Route::get('/sj-biasa', function () {
+    return view('pages.print.sj-biasa');
 });
 
 
@@ -81,6 +91,16 @@ Route::resource('inventory', InventoryController::class);
 // CRUD BAHAN BAKU
 Route::resource('bahan-baku', BahanBakuController::class);
 
+// CRUD BARANG MASUK
+Route::get('barang-masuk/create-produksi', [BarangMasukController::class, 'createProduksi'])->name('barang-masuk.create-produksi');
+Route::get('barang-masuk/create-bp', [BarangMasukController::class, 'createBp'])->name('barang-masuk.create-bp');
+Route::get('barang-masuk/edit-produksi/{id}', [BarangMasukController::class, 'editProduksi'])->name('barang-masuk.edit-produksi');
+Route::get('barang-masuk/edit-bp/{id}', [BarangMasukController::class, 'editBp'])->name('barang-masuk.edit-bp');
+Route::put('/barang-masuk/{id}', [BarangMasukController::class, 'update'])->name('barang-masuk.update');
+Route::post('barang-masuk/create-produksi', [BarangMasukController::class, 'storeProduksi'])->name('barang-masuk.store-produksi');
+Route::post('barang-masuk/create-bahan', [BarangMasukController::class, 'storeBahan'])->name('barang-masuk.store-bahan');
+Route::resource('barang-masuk', BarangMasukController::class)->except(['update']);
+
 // CRUD PRODUKSI
 Route::put('/produksi/detail/{id}', [ProduksiController::class, 'updateDetail'])->name('produksi.update_detail');
 Route::resource('produksi', ProduksiController::class);
@@ -89,4 +109,10 @@ Route::resource('produksi', ProduksiController::class);
 Route::get('barang-keluar/create-produksi', [BarangKeluarController::class, 'createProduksi'])->name('barang-keluar.create-produksi');
 Route::get('barang-keluar/create-bahan-baku', [BarangKeluarController::class, 'createBahanBaku'])->name('barang-keluar.create-bahan-baku');
 Route::get('barang-keluar/create-penjualan', [BarangKeluarController::class, 'createPenjualan'])->name('barang-keluar.create-penjualan');
+Route::get('/barang-keluar/print-group', [BarangKeluarController::class, 'printGroup'])->name('barang-keluar.print-group');
 Route::resource('barang-keluar', BarangKeluarController::class)->except(['create']);
+
+// LAPORAN
+Route::get('laporan-produksi', [LaporanController::class, 'laporanProduksi'])->name('laporan-produksi');
+Route::get('laporan-keuangan', [LaporanController::class, 'laporanKeuangan'])->name('laporan-keuangan');
+Route::get('laporan-gudang', [LaporanController::class, 'laporanGudang'])->name('laporan-gudang');

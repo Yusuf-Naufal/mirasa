@@ -1,7 +1,7 @@
 <div id="editModal-{{ $i->id }}"
     class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[9999] p-4">
     <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 text-left whitespace-normal relative">
-        <h2 class="text-lg font-semibold mb-4 text-gray-800">Edit Data Costumer</h2>
+        <h2 class="text-lg font-semibold mb-4 text-gray-800">Edit Data Jenis</h2>
 
         <form action="{{ route('barang.jenis.update', $i->id) }}" method="POST">
             @csrf

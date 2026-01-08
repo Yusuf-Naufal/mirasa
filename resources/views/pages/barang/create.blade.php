@@ -66,7 +66,7 @@
                                     class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
                                     <option value="" disabled selected>-- Pilih Perusahaan --</option>
                                     @foreach ($perusahaan as $p)
-                                        <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
+                                        <option value="{{ $p->id }}">{{ $p->nama_perusahaan }} ({{ $p->kota }})</option>
                                     @endforeach
                                 </select>
                             </div>

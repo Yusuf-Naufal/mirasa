@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Perusahaan;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PerusahaanController extends Controller
 {
@@ -63,33 +65,25 @@ class PerusahaanController extends Controller
     {
         $validated = $request->validate([
             'nama_perusahaan' => 'required|string|max:255',
-            'jenis_perusahaan' => 'nullable',
-            'kontak'           => 'nullable',
-            'alamat'           => 'nullable',
+            'jenis_perusahaan' => 'nullable|string',
+            'kontak'           => 'nullable|string',
+            'alamat'           => 'nullable|string',
+            'kota'             => 'nullable|string',
+            'logo_cropped'     => 'nullable|string',
         ]);
 
-        // Logika penambahan 62 pada kontak
+        // 1. Logika format kontak ke 62
         if (!empty($validated['kontak'])) {
-            $kontak = $validated['kontak'];
-
-            // Bersihkan karakter non-digit (jika ada)
-            $kontak = preg_replace('/[^0-9]/', '', $kontak);
-
-            // Jika diawali '0', ganti dengan '62'
-            if (str_starts_with($kontak, '0')) {
-                $kontak = '62' . substr($kontak, 1);
-            }
-            // Jika belum ada '62' di depan, tambahkan
-            elseif (!str_starts_with($kontak, '62')) {
-                $kontak = '62' . $kontak;
-            }
-
-            $validated['kontak'] = $kontak;
+            $validated['kontak'] = $this->formatKontak($validated['kontak']);
         }
 
-        // Mengubah string kosong menjadi null (Opsional, Laravel biasanya punya middleware ini)
-        $validated = array_map(fn($value) => $value === "" ? null : $value, $validated);
+        // 2. Proses Logo dari Cropper (Base64)
+        if ($request->filled('logo_cropped')) {
+            $validated['logo'] = $this->uploadLogo($request->logo_cropped);
+        }
 
+        unset($validated['logo_cropped']);
+        // Buat data perusahaan
         Perusahaan::create($validated);
 
         return redirect()->route('perusahaan.index')->with('success', 'Perusahaan berhasil ditambahkan');
@@ -125,25 +119,33 @@ class PerusahaanController extends Controller
     public function update(Request $request, string $id)
     {
         $perusahaan = Perusahaan::withTrashed()->findOrFail($id);
-        
+
         $validated = $request->validate([
             'nama_perusahaan' => 'required|string|max:255',
-            'jenis_perusahaan' => 'required',
-            'kontak'           => 'required',
+            'jenis_perusahaan' => 'required|string',
+            'kontak'           => 'required|string',
             'alamat'           => 'required|string',
+            'kota'             => 'nullable|string',
+            'logo_cropped'     => 'nullable|string', // Ini data Base64 dari Cropper
         ]);
 
-        // Logika penambahan 62 pada kontak
-        if (!empty($validated['kontak'])) {
-            $kontak = preg_replace('/[^0-9]/', '', $validated['kontak']);
-            if (str_starts_with($kontak, '0')) {
-                $kontak = '62' . substr($kontak, 1);
-            } elseif (!str_starts_with($kontak, '62')) {
-                $kontak = '62' . $kontak;
+        // 1. Logika format kontak ke 62
+        $validated['kontak'] = $this->formatKontak($validated['kontak']);
+
+        // 2. Proses Logo Baru dari Cropper
+        if ($request->filled('logo_cropped')) {
+            // Hapus file fisik logo lama jika ada
+            if ($perusahaan->logo && Storage::disk('public')->exists($perusahaan->logo)) {
+                Storage::disk('public')->delete($perusahaan->logo);
             }
-            $validated['kontak'] = $kontak;
+
+            // Upload logo baru
+            $validated['logo'] = $this->uploadLogo($request->logo_cropped);
         }
 
+        unset($validated['logo_cropped']);
+
+        // 4. Update data ke database
         $perusahaan->update($validated);
 
         return redirect()->route('perusahaan.index')->with('success', 'Data perusahaan berhasil diperbarui');
@@ -168,5 +170,35 @@ class PerusahaanController extends Controller
         $perusahaan->save();
 
         return redirect()->back()->with('success', 'Perusahaan berhasil diaktifkan kembali.');
+    }
+
+    /**
+     * Fungsi pembantu untuk memformat nomor kontak
+     */
+    private function formatKontak($kontak)
+    {
+        $kontak = preg_replace('/[^0-9]/', '', $kontak);
+
+        if (str_starts_with($kontak, '0')) {
+            return '62' . substr($kontak, 1);
+        } elseif (!str_starts_with($kontak, '62')) {
+            return '62' . $kontak;
+        }
+        return $kontak;
+    }
+
+    /**
+     * Fungsi pembantu untuk upload base64 logo
+     */
+    private function uploadLogo($base64Data)
+    {
+        // Hapus header base64 (data:image/png;base64,)
+        $image_service_str = explode(',', $base64Data);
+        $image = base64_decode($image_service_str[1]);
+
+        $fileName = 'logo/' . Str::random(10) . '_' . time() . '.png';
+        Storage::disk('public')->put($fileName, $image);
+
+        return $fileName;
     }
 }
