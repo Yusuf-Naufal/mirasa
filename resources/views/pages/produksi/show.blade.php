@@ -36,12 +36,12 @@
                             <div>
                                 <span class="text-[9px] font-black text-emerald-400 uppercase">Total Nilai</span>
                                 <h3 class="text-3xl font-black text-emerald-600 leading-none mt-1">
-                                    Rp {{ number_format($produksi->DetailInventory->sum('total_harga'), 0, ',', '.') }}
+                                    Rp {{ number_format($produksi->list_bahan_baku->sum('total_harga'), 0, ',', '.') }}
                                 </h3>
                             </div>
                             <div class="flex items-center gap-2 pt-2 border-t border-gray-50">
                                 <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <span class="text-xs font-bold text-gray-700">{{ $produksi->DetailInventory->count() }}
+                                <span class="text-xs font-bold text-gray-700">{{ $produksi->list_bahan_baku->count() }}
                                     Bahan
                                     Baku Diterima</span>
                             </div>
@@ -72,7 +72,35 @@
                         </div>
                     </div>
 
-                    {{-- Card 3: Daftar Hasil Produksi --}}
+                    {{-- Card 3: Bahan Penolong Masuk --}}
+                    <div
+                        class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden group">
+                        <div
+                            class="absolute top-0 right-0 w-24 h-24 bg-yellow-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110">
+                        </div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Ringkasan Bahan
+                            Penolong
+                            Masuk</p>
+
+                        <div class="space-y-4">
+                            <div>
+                                <span class="text-[9px] font-black text-yellow-400 uppercase">Total Nilai</span>
+                                <h3 class="text-3xl font-black text-yellow-600 leading-none mt-1">
+                                    Rp
+                                    {{ number_format($produksi->list_barang_penolong_masuk->sum('total_harga'), 0, ',', '.') }}
+                                </h3>
+                            </div>
+                            <div class="flex items-center gap-2 pt-2 border-t border-gray-50">
+                                <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                <span
+                                    class="text-xs font-bold text-gray-700">{{ $produksi->list_barang_penolong_masuk->count() }}
+                                    Bahan
+                                    Penolong Diterima</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Card 4: Daftar Hasil Produksi --}}
                     <div x-data="{
                         open: false,
                         detail: { id: '', kupas: 0, a: 0, s: 0, j: 0, nama: '' },
@@ -187,7 +215,8 @@
                                     <div class="mb-6">
                                         <h3 class="text-xl font-black text-gray-900 uppercase tracking-tighter">Update
                                             Output</h3>
-                                        <p x-text="detail.nama" class="text-xs font-bold text-purple-500 uppercase"></p>
+                                        <p x-text="detail.nama" class="text-xs font-bold text-purple-500 uppercase">
+                                        </p>
                                     </div>
 
                                     <form :action="'/produksi/detail/' + detail.id" method="POST" class="space-y-4">
@@ -246,235 +275,48 @@
                         </div>
                         <p class="text-[10px] text-gray-400 leading-relaxed font-medium uppercase tracking-tighter">
                             Data ini disinkronisasi secara otomatis melalui sistem inventory FIFO. Setiap perubahan
-                            jumlah akan mempengaruhi nilai HPP secara langsung.
+                            jumlah akan mempengaruhi nilai secara langsung.
                         </p>
                     </div>
                 </div>
 
                 {{-- KANAN: RINCIAN DETAIL --}}
-                <div class="lg:col-span-8 space-y-8">
+                @php
+                    $currentTab = request()->get('tab', 'bb');
+                @endphp
 
-                    {{-- 3. DAFTAR BAHAN BAKU MASUK --}}
+                <div class="lg:col-span-8 space-y-6">
                     <div
-                        class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                        <div
-                            class="px-8 py-5 bg-emerald-50 border-b border-emerald-100 flex justify-between items-center shrink-0">
-                            <h2 class="text-xs font-black text-emerald-700 uppercase tracking-widest italic">Rincian
-                                Penerimaan Bahan Baku</h2>
-                            <span
-                                class="text-[9px] font-black bg-white px-3 py-1 rounded-lg text-emerald-600 border border-emerald-100 uppercase tracking-tighter shadow-sm">Bahan
-                                Baku</span>
-                        </div>
+                        class="flex p-1.5 bg-gray-200/50 backdrop-blur-md rounded-[1.5rem] gap-1 shadow-inner overflow-x-auto no-scrollbar">
 
-                        {{-- Container Scroll pada Body --}}
-                        <div
-                            class="overflow-x-auto overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-emerald-100">
-                            <table class="w-full text-left border-collapse">
-                                {{-- Header Sticky --}}
-                                <thead class="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-md">
-                                    <tr>
-                                        <th
-                                            class="px-8 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                            Barang</th>
-                                        <th
-                                            class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                            Supplier</th>
-                                        <th
-                                            class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">
-                                            Qty</th>
-                                        <th
-                                            class="px-8 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-right">
-                                            Nilai Masuk</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-50">
-                                    @forelse($produksi->DetailInventory as $bb)
-                                        <tr class="text-sm hover:bg-emerald-50/30 transition-colors">
-                                            <td class="px-8 py-4 font-bold text-gray-800 leading-tight">
-                                                {{ $bb->inventory->barang->nama_barang }}</td>
-                                            <td
-                                                class="px-6 py-4 text-gray-500 uppercase text-[10px] font-bold tracking-tighter">
-                                                {{ $bb->supplier->nama_supplier ?? 'Tanpa Supplier' }}
-                                            </td>
-                                            <td class="px-6 py-4 text-center">
-                                                <span
-                                                    class="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-lg text-[10px] font-black shadow-sm border border-emerald-100">
-                                                    {{ number_format($bb->jumlah_diterima, 0) }}
-                                                    {{ $bb->Inventory->barang->satuan }}
-                                                </span>
-                                            </td>
-                                            <td class="px-8 py-4 text-right font-black text-gray-800 tracking-tight">
-                                                Rp {{ number_format($bb->total_harga, 0, ',', '.') }}
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4"
-                                                class="px-8 py-12 text-center text-gray-400 italic text-xs">Belum ada
-                                                rincian bahan baku masuk.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                        {{-- Tab Bahan Baku --}}
+                        <a href="{{ request()->url() }}?tab=bb"
+                            class="flex-1 py-3 text-center text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all whitespace-nowrap px-4 {{ $currentTab === 'bb' ? 'bg-white shadow-md text-emerald-600 scale-[1.02]' : 'text-gray-500 hover:bg-white/30' }}">
+                            Bahan Baku
+                        </a>
 
-                        {{-- FOOTER BAHAN BAKU --}}
-                        <div
-                            class="bg-gradient-to-r from-emerald-50 to-white border-t-2 border-emerald-100 px-8 py-6 shrink-0">
-                            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p
-                                            class="text-[10px] font-black text-emerald-800 uppercase tracking-widest leading-none">
-                                            Total Akumulasi</p>
-                                        <p class="text-xs text-emerald-600/70 font-bold mt-1">Rincian
-                                            penerimaan stok</p>
-                                    </div>
-                                </div>
+                        {{-- Tab Penolong --}}
+                        <a href="{{ request()->url() }}?tab=bp"
+                            class="flex-1 py-3 text-center text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all whitespace-nowrap px-4 {{ $currentTab === 'bp' ? 'bg-white shadow-md text-purple-600 scale-[1.02]' : 'text-gray-500 hover:bg-white/30' }}">
+                            Penolong
+                        </a>
 
-                                <div class="flex items-center gap-8">
-                                    <div class="text-center sm:text-right">
-                                        <p class="text-lg font-black text-gray-800">
-                                            {{ number_format($produksi->DetailInventory->sum('jumlah_diterima'), 0) }}
-                                        </p>
-                                    </div>
-                                    <div class="h-10 w-[1px] bg-emerald-100 hidden sm:block"></div>
-                                    <div class="text-center sm:text-right">
-                                        <p class="text-2xl font-black text-emerald-600 leading-none">
-                                            {{ number_format($produksi->DetailInventory->sum('total_harga'), 0, ',', '.') }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {{-- Tab Pengeluaran --}}
+                        <a href="{{ request()->url() }}?tab=bk"
+                            class="flex-1 py-3 text-center text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all whitespace-nowrap px-4 {{ $currentTab === 'bk' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'text-gray-500 hover:bg-white/30' }}">
+                            Pengeluaran
+                        </a>
                     </div>
 
-                    {{-- 4. DAFTAR BARANG KELUAR --}}
-                    <div
-                        class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                        <div
-                            class="px-8 py-5 bg-blue-50 border-b border-blue-100 flex justify-between items-center shrink-0">
-                            <h2 class="text-xs font-black text-blue-700 uppercase tracking-widest italic">Rincian
-                                Pengeluaran Stok</h2>
-                            <span
-                                class="text-[9px] font-black bg-white px-3 py-1 rounded-lg text-blue-600 border border-blue-100 uppercase tracking-tighter shadow-sm">Keluar
-                                (FIFO)</span>
-                        </div>
-
-                        <div
-                            class="overflow-x-auto overflow-y-auto max-h-[400px] scrollbar-thin scrollbar-thumb-blue-100">
-                            <table class="w-full text-left border-collapse">
-                                <thead class="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-md">
-                                    <tr>
-                                        <th
-                                            class="px-8 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                            Item & Batch</th>
-                                        <th
-                                            class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                            Tujuan / Proses</th>
-                                        <th
-                                            class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">
-                                            Qty</th>
-                                        <th
-                                            class="px-8 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-right">
-                                            Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-50 text-sm">
-                                    @forelse($produksi->barangKeluar as $bk)
-                                        <tr class="hover:bg-blue-50/30 transition-colors">
-                                            <td class="px-8 py-4">
-                                                <p class="font-bold text-gray-800 leading-tight">
-                                                    {{ $bk->DetailInventory->Inventory->Barang->nama_barang }}</p>
-                                                @if ($bk->jenis_keluar != 'PRODUKSI')
-                                                    <p
-                                                        class="text-[9px] text-blue-400 font-black uppercase tracking-tighter mt-1">
-                                                        Batch : {{ $bk->DetailInventory->nomor_batch }}</p>
-                                                @endif
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                <div class="flex flex-col gap-1">
-                                                    @if ($bk->jenis_keluar === 'PRODUKSI')
-                                                        <span
-                                                            class="px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-[9px] font-black w-fit uppercase">PRODUKSI</span>
-                                                        <span
-                                                            class="text-[10px] font-bold text-gray-600 tracking-tighter">{{ $bk->Proses->nama_proses ?? '-' }}</span>
-                                                    @else
-                                                        <span
-                                                            class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-black w-fit uppercase">{{ $bk->jenis_keluar }}</span>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-4 text-center">
-                                                <span
-                                                    class="font-black text-gray-800">{{ number_format($bk->jumlah_keluar, 2) }}</span>
-                                                <span
-                                                    class="text-[9px] font-black text-gray-400 uppercase ml-0.5">{{ $bk->DetailInventory->Inventory->Barang->satuan }}</span>
-                                            </td>
-                                            <td class="px-8 py-4 text-right">
-                                                <p class="font-black text-blue-600 tracking-tight">Rp
-                                                    {{ number_format($bk->total_harga, 0, ',', '.') }}</p>
-                                                <p
-                                                    class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
-                                                    Rp {{ number_format($bk->harga, 0) }}</p>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4"
-                                                class="px-8 py-12 text-center text-gray-400 italic text-xs">Belum ada
-                                                aktivitas barang keluar.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {{-- FOOTER BARANG KELUAR --}}
-                        <div
-                            class="bg-gradient-to-r from-blue-50 to-white border-t-2 border-blue-100 px-8 py-6 shrink-0">
-                            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="w-10 h-10 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p
-                                            class="text-[10px] font-black text-blue-800 uppercase tracking-widest leading-none">
-                                            Ringkasan</p>
-                                        <p class="text-xs text-blue-600/70 font-bold mt-1">Total pengeluaran bahan</p>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-8">
-                                    <div class="text-center sm:text-right">
-
-                                        <p class="text-lg font-black text-gray-800">
-                                            {{ number_format($produksi->barangKeluar->sum('jumlah_keluar'), 2) }}
-                                        </p>
-                                    </div>
-                                    <div class="h-10 w-[1px] bg-blue-100 hidden sm:block"></div>
-                                    <div class="text-center sm:text-right">
-                                        <p class="text-2xl font-black text-blue-600 leading-none">
-                                            {{ number_format($produksi->barangKeluar->sum('total_harga'), 0, ',', '.') }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    {{-- Isi Konten Tetap Sama --}}
+                    <div class="tab-content">
+                        @if ($currentTab === 'bb')
+                            <x-produksi.table-bahan-baku :items="$bahanBaku" :totalNilai="$produksi->list_bahan_baku->sum('total_harga')" />
+                        @elseif($currentTab === 'bp')
+                            <x-produksi.table-bahan-penolong :items="$barangPenolong" :totalNilai="$produksi->list_barang_penolong_masuk->sum('total_harga')" />
+                        @elseif($currentTab === 'bk')
+                            <x-produksi.table-barang-keluar :items="$barangKeluar" :totalBiaya="$produksi->barangKeluar->sum('total_harga')" />
+                        @endif
                     </div>
                 </div>
             </div>

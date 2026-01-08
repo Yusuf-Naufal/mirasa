@@ -80,7 +80,7 @@
                                     @foreach ($perusahaan as $p)
                                         <option value="{{ $p->id }}"
                                             {{ $barang->id_perusahaan == $p->id ? 'selected' : '' }}>
-                                            {{ $p->nama_perusahaan }}</option>
+                                            {{ $p->nama_perusahaan }} ({{ $p->kota }})</option>
                                     @endforeach
                                 </select>
                             </div>

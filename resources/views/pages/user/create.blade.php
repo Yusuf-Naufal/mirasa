@@ -51,7 +51,7 @@
                                 <option value="" disabled selected>-- Pilih Perusahaan --</option>
                                 @foreach ($perusahaan as $p)
                                     <option value="{{ $p->id }}"
-                                        {{ old('id_perusahaan') == $p->id ? 'selected' : '' }}>{{ $p->nama_perusahaan }}
+                                        {{ old('id_perusahaan') == $p->id ? 'selected' : '' }}>{{ $p->nama_perusahaan }} ({{ $p->kota }})
                                     </option>
                                 @endforeach
                             </select>

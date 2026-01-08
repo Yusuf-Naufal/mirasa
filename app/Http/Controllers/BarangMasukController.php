@@ -6,13 +6,12 @@ use App\Models\Barang;
 use App\Models\Produksi;
 use App\Models\Supplier;
 use App\Models\Inventory;
-use App\Models\JenisBarang;
+use App\Models\Perusahaan;
 use Illuminate\Http\Request;
 use App\Models\DetailInventory;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 
-class InventoryController extends Controller
+class BarangMasukController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -21,84 +20,84 @@ class InventoryController extends Controller
     {
         $user = auth()->user();
 
-        // Ambil semua jenis barang untuk dropdown filter di view, 
-        $jenisBarang = JenisBarang::all();
+        // Mengambil data perusahaan untuk filter Super Admin
+        $perusahaan = [];
+        if ($user->hasRole('Super Admin')) {
+            $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+        }
 
-        // 1. Query dasar
-        $query = Inventory::with(['Barang.jenisBarang', 'Perusahaan'])
-            ->whereHas('Barang.jenisBarang');
+        // Mengambil daftar master barang (Bahan Baku) untuk dropdown filter
+        $barang = Barang::whereHas('jenisBarang', function ($q) {
+            $q->where('kode', '!=', 'BB');
+        })
+            ->when(!$user->hasRole('Super Admin'), function ($q) use ($user) {
+                $q->where('id_perusahaan', $user->id_perusahaan);
+            })
+            ->get();
 
-        // 2. Proteksi Data: Hanya ambil data milik perusahaan user login
+        // 1. Query dasar DetailInventory
+        $query = DetailInventory::with(['Inventory.Barang.jenisBarang', 'Inventory.Perusahaan', 'supplier'])
+            ->whereHas('Inventory.Barang.jenisBarang', function ($q) {
+                $q->where('kode', '!=', 'BB');
+            });
+
+        // 2. Filter Berdasarkan Perusahaan
         if (!$user->hasRole('Super Admin')) {
-            $query->where('id_perusahaan', $user->id_perusahaan);
+            $query->whereHas('Inventory', function ($q) use ($user) {
+                $q->where('id_perusahaan', $user->id_perusahaan);
+            });
         } elseif ($request->filled('id_perusahaan')) {
-            $query->where('id_perusahaan', $request->id_perusahaan);
+            $query->whereHas('Inventory', function ($q) use ($request) {
+                $q->where('id_perusahaan', $request->id_perusahaan);
+            });
         }
 
-        // 3. Fitur Search
+        // 3. Filter Berdasarkan Barang Spesifik
+        if ($request->filled('jenis')) {
+            $query->whereHas('Inventory', function ($q) use ($request) {
+                $q->where('id_barang', $request->jenis);
+            });
+        }
+
+        // 4. Filter Pencarian
         if ($request->filled('search')) {
-            $search = strtolower($request->search);
-            $query->whereHas('Barang', function ($q) use ($search) {
-                $q->whereRaw('LOWER(nama_barang) like ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(kode) like ?', ["%{$search}%"]);
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('Inventory.Barang', function ($sq) use ($search) {
+                    $sq->where('nama_barang', 'like', "%{$search}%");
+                })->orWhereHas('supplier', function ($sq) use ($search) {
+                    $sq->where('nama_supplier', 'like', "%{$search}%");
+                });
             });
         }
 
-        // Filter berdasarkan Jenis Barang (pilihan user dari dropdown)
-        if ($request->filled('id_jenis')) {
-            $query->whereHas('Barang', function ($q) use ($request) {
-                $q->where('id_jenis', $request->id_jenis);
-            });
+        // 5. Filter Rentang Tanggal
+        if ($request->filled('date_range')) {
+            $dates = explode(' to ', $request->date_range);
+            if (count($dates) == 2) {
+                $query->whereBetween('tanggal_masuk', [$dates[0], $dates[1]]);
+            } else {
+                $query->whereDate('tanggal_masuk', $dates[0]);
+            }
         }
 
-        // 4. Ambil data dengan Pagination
-        $inventory = $query->latest()->paginate(15)->withQueryString();
+        // 6. Pagination
+        $barangMasukPagination = $query->latest('tanggal_masuk')->paginate(30)->withQueryString();
 
-        return view('pages.gudang.index', compact('inventory', 'jenisBarang'));
+        // 7. Kelompokkan hasil pagination berdasarkan tanggal
+        $listBarangMasuk = $barangMasukPagination->getCollection()->groupBy(function ($item) {
+            return \Carbon\Carbon::parse($item->tanggal_masuk)->format('Y-m-d');
+        });
+
+        return view('pages.barangmasuk.index', compact('listBarangMasuk', 'barangMasukPagination', 'barang', 'perusahaan'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Request $request)
+    public function create()
     {
-        $user = auth()->user();
-        $kategori = $request->query('kategori', 'produksi');
-
-        // Ambil data barang berdasarkan perusahaan user
-        $barang = Barang::where('id_perusahaan', $user->id_perusahaan)->get();
-
-        return view('pages.gudang.create', compact('barang', 'kategori'));
-    }
-
-    public function createProduksi()
-    {
-        $user = auth()->user();
-
-        $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
-            ->whereHas('jenisBarang', function ($query) {
-                $query->whereIn('kode', ['FG', 'WIP', 'EC']);
-            })
-            ->get();
-
-        return view('pages.gudang.create-produksi', compact('barang'));
-    }
-
-    public function createBb()
-    {
-        $user = auth()->user();
-
-        $supplier = Supplier::where('jenis_supplier', 'Bahan Baku')
-            ->whereNull('deleted_at')
-            ->get();
-
-        $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
-            ->whereHas('jenisBarang', function ($query) {
-                $query->whereIn('kode', ['BB']);
-            })
-            ->get();
-
-        return view('pages.gudang.create-bb', compact('barang', 'supplier'));
+        //
     }
 
     public function createBp()
@@ -116,7 +115,20 @@ class InventoryController extends Controller
             })
             ->get();
 
-        return view('pages.gudang.create-bp', compact('barang', 'supplier'));
+        return view('pages.barangmasuk.create-bp', compact('barang', 'supplier'));
+    }
+
+    public function createProduksi()
+    {
+        $user = auth()->user();
+
+        $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
+            ->whereHas('jenisBarang', function ($query) {
+                $query->whereIn('kode', ['FG', 'WIP', 'EC']);
+            })
+            ->get();
+
+        return view('pages.barangmasuk.create-produksi', compact('barang'));
     }
 
     /**
@@ -190,7 +202,7 @@ class InventoryController extends Controller
             // Commit jika semua berhasil
             DB::commit();
 
-            return redirect()->route('inventory.index')
+            return redirect()->route('barang-masuk.index')
                 ->with('success', 'Data produksi berhasil disimpan dan stok telah diperbarui.');
         } catch (\Exception $e) {
             // Batalkan jika ada error
@@ -267,7 +279,7 @@ class InventoryController extends Controller
             // Mengambil nama barang untuk pesan sukses
             $namaBarang = $inventory->barang->nama_barang ?? 'Barang';
 
-            return redirect()->route('inventory.show', $inventory->id)
+            return redirect()->route('barang-masuk.index')
                 ->with('success', "Data {$namaBarang} berhasil masuk gudang dan stok diperbarui.");
         } catch (\Exception $e) {
             DB::rollBack();
@@ -282,19 +294,7 @@ class InventoryController extends Controller
      */
     public function show(string $id)
     {
-        // Mengambil data inventory beserta barangnya
-        $inventory = Inventory::with('barang')->findOrFail($id);
-
-        // Mengambil details dengan filter: stok > 0 dan urutan paling lama (oldest)
-        $details = $inventory->DetailInventory()
-            ->where('stok', '>', 0)
-            ->orderBy('tanggal_masuk', 'asc')
-            ->get();
-
-        return view('pages.gudang.show', [
-            'inventory' => $inventory,
-            'details'   => $details
-        ]);
+        //
     }
 
     /**
@@ -305,69 +305,62 @@ class InventoryController extends Controller
         //
     }
 
+    public function editProduksi($id)
+    {
+        $user = auth()->user();
+
+        $item = DetailInventory::findOrFail($id);
+
+        $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
+            ->whereHas('jenisBarang', function ($query) {
+                $query->whereIn('kode', ['FG', 'WIP', 'EC']);
+            })
+            ->get();
+
+        $supplier = Supplier::where('jenis_supplier', 'Bahan Baku')
+            ->where('id_perusahaan', $user->id_perusahaan)
+            ->whereNull('deleted_at')
+            ->get();
+
+        return view('pages.barangmasuk.edit-produksi', compact('item', 'barang', 'supplier'));
+    }
+
+    public function editBp($id)
+    {
+        $user = auth()->user();
+
+        $item = DetailInventory::findOrFail($id);
+
+        $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
+            ->whereHas('jenisBarang', function ($query) {
+                $query->whereIn('kode', ['BP']);
+            })
+            ->get();
+
+        $supplier = Supplier::where('jenis_supplier', 'Barang')
+            ->where('id_perusahaan', $user->id_perusahaan)
+            ->whereNull('deleted_at')
+            ->get();
+
+        return view('pages.barangmasuk.edit-bp', compact('item', 'barang', 'supplier'));
+    }
+
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    public function updateMinimum(Request $request, $id)
-    {
-        // 1. Validasi input (gunakan numeric agar titik/koma desimal diterima)
         $request->validate([
-            'minimum_stok' => 'required|numeric|min:0',
-        ], [
-            'minimum_stok.required' => 'Angka stok minimum wajib diisi.',
-            'minimum_stok.numeric'  => 'Input harus berupa angka desimal atau bulat.',
-            'minimum_stok.min'      => 'Stok minimum tidak boleh kurang dari 0.',
-        ]);
-
-        try {
-            // 2. Cari data inventory
-            $inventory = Inventory::findOrFail($id);
-
-            // 3. Gunakan floatval() untuk menghapus nol di depan dan mendukung desimal
-            $newMinimum = floatval($request->minimum_stok);
-
-            // 4. Update data
-            $inventory->update([
-                'minimum_stok' => $newMinimum
-            ]);
-
-            // 5. Logika Peringatan Stok Kritis
-            if ($inventory->stok <= $newMinimum) {
-                return redirect()->back()->with('warning', "Ambang batas diperbarui. Stok saat ini ({$inventory->stok}) sudah mencapai batas minimum!");
-            }
-
-            return redirect()->back()->with('success', 'Ambang batas stok berhasil diperbarui!');
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan data.');
-        }
-    }
-
-    public function updateDetail(Request $request, $id)
-    {
-        $request->validate([
+            'id_barang'          => 'required|exists:barang,id',
+            'id_supplier'        => 'nullable|exists:supplier,id',
             'tanggal_masuk'      => 'required|date',
             'tanggal_exp'        => 'nullable|date',
-            'jumlah_diterima'    => 'nullable|numeric|min:0',
+            'jumlah_diterima'    => 'required|numeric|min:0',
             'jumlah_rusak'       => 'nullable|numeric|min:0',
             'stok'               => 'nullable|numeric|min:0',
             'harga'              => 'required|numeric|min:0',
             'total_harga'        => 'nullable|numeric|min:0',
             'nomor_batch'        => 'nullable|string',
-            'kondisi_barang'     => 'nullable|string',
-            'kondisi_kendaraan'  => 'nullable|string',
             'tempat_penyimpanan' => 'nullable|string|max:255',
         ]);
 
@@ -375,43 +368,53 @@ class InventoryController extends Controller
 
         try {
             $detail = DetailInventory::findOrFail($id);
+            $inventory = $detail->Inventory;
 
-            // 1. SIMPAN STATE LAMA (PENTING)
+            // 1. SIMPAN STATE LAMA (Grup Produksi)
             $idProduksiLama = $detail->id_produksi;
 
-            // 2. Cari atau Buat Produksi BARU berdasarkan tanggal_masuk
+            // 2. LOGIKA PERHITUNGAN
+            $diterima = (float) $request->jumlah_diterima;
+            $rusak    = (float) ($request->jumlah_rusak ?? 0);
+            // Hitung stok bersih jika input 'stok' kosong (misal dari form produksi yang tidak ada field stok bersih)
+            $stokBersih = $request->filled('stok') ? (float)$request->stok : ($diterima - $rusak);
+            $harga      = (float) $request->harga;
+            // Gunakan total_harga dari input (Alpine.js) atau hitung manual
+            $totalHarga = $request->filled('total_harga') ? (float)$request->total_harga : ($stokBersih * $harga);
+
+            // 3. CARI ATAU BUAT GRUP PRODUKSI BARU (Berdasarkan Tanggal)
             $produksiBaru = Produksi::firstOrCreate([
                 'id_perusahaan'    => auth()->user()->id_perusahaan,
                 'tanggal_produksi' => $request->tanggal_masuk,
             ]);
 
-            // 3. Logika Perhitungan
-            $diterima = (float) $request->jumlah_diterima;
-            $rusak    = (float) ($request->jumlah_rusak ?? 0);
-            $stok     = $request->stok ?? ($diterima - $rusak); // Gunakan input stok atau hitung bersih
-            $harga    = (float) $request->harga;
-            $totalHarga = $request->total_harga ?? ($stok * $harga);
+            // 4. UPDATE DATA INVENTORY INDUK (Jika barang diubah di dropdown)
+            if ($inventory && $inventory->id_barang != $request->id_barang) {
+                $inventory->update([
+                    'id_barang' => $request->id_barang
+                ]);
+            }
 
-            // 4. Update data detail
+            // 5. UPDATE DATA DETAIL INVENTORY
             $detail->update([
+                'id_supplier'        => $request->id_supplier, // Menghandle edit supplier pada BP
                 'id_produksi'        => $produksiBaru->id,
                 'tanggal_masuk'      => $request->tanggal_masuk,
                 'tanggal_exp'        => $request->tanggal_exp,
                 'jumlah_diterima'    => $diterima,
                 'jumlah_rusak'       => $rusak,
                 'nomor_batch'        => $request->nomor_batch,
-                'stok'               => $stok,
+                'stok'               => $stokBersih,
                 'harga'              => $harga,
                 'total_harga'        => $totalHarga,
                 'tempat_penyimpanan' => $request->tempat_penyimpanan,
             ]);
 
-            // 5. SINKRONISASI PRODUKSI (KRUSIAL!)
-
-            // A. Refresh Produksi BARU
+            // 6. SINKRONISASI TOTAL PRODUKSI (Recap Harian)
+            // Refresh Grup Produksi Baru
             $produksiBaru->syncTotals();
 
-            // B. Refresh Produksi LAMA
+            // Refresh Grup Produksi Lama (Jika tanggal diubah)
             if ($idProduksiLama && $idProduksiLama != $produksiBaru->id) {
                 $oldProd = Produksi::find($idProduksiLama);
                 if ($oldProd) {
@@ -419,16 +422,27 @@ class InventoryController extends Controller
                 }
             }
 
-            // 6. SINKRONISASI STOK MASTER
-            if ($detail->Inventory) {
-                $detail->Inventory->syncTotalStock();
+            // 7. SINKRONISASI STOK MASTER BARANG
+            if ($inventory) {
+                $inventory->syncTotalStock();
             }
 
             DB::commit();
-            return redirect()->back()->with('success', 'Data berhasil diperbarui dan rekap produksi disinkronkan.');
+            return redirect()->route('barang-masuk.index')->with('success', 'Data distribusi berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        $bahanBaku = DetailInventory::findOrFail($id);
+        $bahanBaku->delete();
+
+        return redirect()->route('barang-masuk.index')->with('success', 'Data berhasil dihapus.');
     }
 }

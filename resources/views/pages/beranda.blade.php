@@ -9,13 +9,13 @@
 
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 mx-auto max-w-7xl items-center">
                 <a href="{{ route('super-admin.dashboard') }}"
-                    class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-blue-50">
-                    <svg class="w-12 h-12 mb-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-purple-50">
+                    <svg class="w-12 h-12 mb-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
                         </path>
                     </svg>
-                    <span class="text-sm font-medium text-gray-700 group-hover:text-blue-700">Dashboard</span>
+                    <span class="text-sm font-medium text-gray-700 group-hover:text-purple-700">Dashboard</span>
                 </a>
 
                 <a href="{{ route('inventory.index') }}"
@@ -54,6 +54,15 @@
                             d="m21.706 5.292l-2.999-2.999A1 1 0 0 0 18 2H6a1 1 0 0 0-.707.293L2.294 5.292A1 1 0 0 0 2 6v13c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V6a1 1 0 0 0-.294-.708M6.414 4h11.172l1 1H5.414zM14 14v3h-4v-3H7l5-5l5 5z" />
                     </svg>
                     <span class="text-sm font-medium text-gray-700 group-hover:text-red-700">Barang Keluar</span>
+                </a>
+
+                <a href="{{ route('barang-masuk.index') }}"
+                    class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-blue-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-blue-600" viewBox="0 0 16 16">
+                        <path fill="currentColor"
+                            d="M13 1H3L0 4v10.5a.5.5 0 0 0 .5.5h15a.5.5 0 0 0 .5-.5V4zM8 13L3 9h3V6h4v3h3zM2.414 3l1-1h9.172l1 1z" />
+                    </svg>
+                    <span class="text-sm font-medium text-gray-700 group-hover:text-blue-700">Barang Masuk</span>
                 </a>
 
 
