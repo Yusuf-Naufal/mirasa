@@ -1,4 +1,4 @@
-<x-layout.beranda.app>
+<x-layout.beranda.app title="Tambah Barang Keluar - Produksi">
     <div class="min-h-screen bg-gray-50/50 md:px-10 py-8" x-data="{
         open: false,
         search: '',
@@ -20,6 +20,8 @@
                         fn($d) => [
                             'id' => $d->id,
                             'tgl' => \Carbon\Carbon::parse($d->tanggal_masuk)->format('d/m/y'),
+                            'tanggal_masuk_raw' => $d->tanggal_masuk,
+                            'created_at' => $d->created_at,
                             'stok' => (float) $d->stok,
                             'harga' => (float) $d->harga,
                         ],
@@ -51,17 +53,35 @@
             let rencana = [];
             let item = this.inventoryRaw.find(inv => inv.id === this.selectedInventoryId);
     
-            for (let b of item.batches) {
+            if (!item || !item.batches) return { totalBiaya: 0, rencana: [] };
+    
+            // --- LOGIKA SORTING FIFO GANDA ---
+            const sortedBatches = [...item.batches].sort((a, b) => {
+                // 1. Urutkan berdasarkan Tanggal Masuk (Prioritas Utama)
+                let dateA = new Date(a.tanggal_masuk_raw);
+                let dateB = new Date(b.tanggal_masuk_raw);
+    
+                if (dateA - dateB !== 0) {
+                    return dateA - dateB; // Dari yang terlama ke terbaru
+                }
+    
+                // 2. Jika tanggal masuk sama, urutkan berdasarkan created_at (Prioritas Kedua)
+                return new Date(a.created_at) - new Date(b.created_at);
+            });
+    
+            for (let b of sortedBatches) {
                 if (sisa <= 0) break;
                 let diambil = Math.min(b.stok, sisa);
-                rencana.push({
-                    tgl: b.tgl,
-                    qty: diambil,
-                    harga: b.harga,
-                    subtotal: diambil * b.harga
-                });
-                totalBiaya += diambil * b.harga;
-                sisa -= diambil;
+                if (diambil > 0) {
+                    rencana.push({
+                        tgl: b.tgl,
+                        qty: diambil,
+                        harga: b.harga,
+                        subtotal: diambil * b.harga
+                    });
+                    totalBiaya += diambil * b.harga;
+                    sisa -= diambil;
+                }
             }
             return { totalBiaya, rencana };
         }

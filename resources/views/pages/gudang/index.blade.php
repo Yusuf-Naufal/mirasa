@@ -1,4 +1,4 @@
-<x-layout.beranda.app>
+<x-layout.beranda.app title="Inventory">
     <div class="md:px-10 py-6 flex flex-col">
         <div class="flex-1 pt-12">
 
@@ -118,108 +118,169 @@
                 </div>
             </div>
 
+            {{-- GRID INDIKATOR STATISTIK --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                <div
+                    class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-red-600 flex flex-col justify-between transition-transform hover:scale-[1.02]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2 bg-red-50 rounded-lg">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500 uppercase">Stok Habis</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-3xl font-black text-gray-900">{{ $stats['habis'] }}</h3>
+                        <span
+                            class="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-md font-bold uppercase">Kritis</span>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-orange-500 flex flex-col justify-between transition-transform hover:scale-[1.02]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2 bg-orange-50 rounded-lg">
+                            <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500 uppercase">Dibawah Limit</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-3xl font-black text-gray-900">{{ $stats['limit'] }}</h3>
+                        <span
+                            class="text-[10px] bg-orange-100 text-orange-700 px-2 py-1 rounded-md font-bold uppercase">Restock</span>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-yellow-400 flex flex-col justify-between transition-transform hover:scale-[1.02]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2 bg-yellow-50 rounded-lg">
+                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500 uppercase">Mendekati Limit</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-3xl font-black text-gray-900">{{ $stats['warning'] }}</h3>
+                        <span
+                            class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded-md font-bold uppercase">Waspada</span>
+                    </div>
+                </div>
+
+            </div>
+
             {{-- 3. GROUPBY INVENTORY (Card by Jenis Barang) --}}
             <div class="space-y-12">
-                @php
-                    // 1. Filter Koleksi untuk Hasil Produksi (FG, WIP, EC)
-                    $produksiItems = $inventory->filter(
-                        fn($i) => in_array(strtoupper($i->barang->jenisBarang->kode), ['FG', 'WIP', 'EC']),
-                    );
 
-                    // 2. Filter Koleksi untuk Bahan Baku (BB)
-                    $bahanBakuItems = $inventory->filter(fn($i) => strtoupper($i->barang->jenisBarang->kode) === 'BB');
-
-                    // 3. Filter Koleksi untuk Bahan Penolong (BP)
-                    $penolongItems = $inventory->filter(fn($i) => strtoupper($i->barang->jenisBarang->kode) === 'BP');
-                @endphp
-
-                {{-- GRUP 1: HASIL PRODUKSI --}}
-                <section>
-                    <div class="flex items-center justify-between mb-6 border-l-4 border-blue-600 pl-4">
-                        <div>
-                            <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Hasil Produksi</h2>
-                            <p class="text-sm text-gray-500 font-medium">Monitoring stok produk FG, WIP, dan Eceran</p>
+                {{-- GRUP 1: HASIL PRODUKSI (Hanya tampil jika ada isi) --}}
+                @if ($produksiItems->isNotEmpty())
+                    <section>
+                        <div class="flex items-center justify-between mb-6 border-l-4 border-blue-600 pl-4">
+                            <div>
+                                <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Hasil Produksi
+                                </h2>
+                                <p class="text-sm text-gray-500 font-medium">Monitoring stok produk FG, WIP, dan Eceran
+                                </p>
+                            </div>
                         </div>
-                        <span
-                            class="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-100">
-                            {{ $produksiItems->count() }} Total Item
-                        </span>
-                    </div>
 
-                    @if ($produksiItems->isEmpty())
-                        <div
-                            class="bg-gray-50 rounded-2xl p-10 text-center border-2 border-dashed border-gray-200 text-gray-400">
-                            Tidak ada data hasil produksi ditemukan
+                        <div class="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                @foreach ($produksiItems->groupBy('barang.jenisBarang.nama_jenis') as $jenis => $items)
+                                    <x-gudang.card-index :jenis="$jenis" :items="$items" accent="blue" />
+                                @endforeach
+                            </div>
                         </div>
-                    @else
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            @foreach ($produksiItems->groupBy('barang.jenisBarang.nama_jenis') as $jenis => $items)
-                                <x-gudang.card-index :jenis="$jenis" :items="$items" accent="blue" />
-                            @endforeach
-                        </div>
-                    @endif
-                </section>
+                    </section>
+                @endif
 
-                {{-- GRUP 2: BAHAN BAKU (BB) --}}
-                <section>
-                    <div class="flex items-center justify-between mb-6 border-l-4 border-amber-500 pl-4">
-                        <div>
-                            <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Bahan Baku</h2>
-                            <p class="text-sm text-gray-500 font-medium">Stok material utama produksi (BB)</p>
+                {{-- GRUP 2: BAHAN BAKU (Hanya tampil jika ada isi) --}}
+                @if ($bahanBakuItems->total() > 0)
+                    <section>
+                        <div class="flex items-center justify-between mb-6 border-l-4 border-amber-500 pl-4">
+                            <div>
+                                <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Bahan Baku</h2>
+                                <p class="text-sm text-gray-500 font-medium">Stok material utama produksi (BB)</p>
+                            </div>
+                            <span
+                                class="bg-amber-50 text-amber-700 text-xs font-bold px-3 py-1 rounded-full border border-amber-100">
+                                {{ $bahanBakuItems->total() }} Total Item
+                            </span>
                         </div>
-                        <span
-                            class="bg-amber-50 text-amber-700 text-xs font-bold px-3 py-1 rounded-full border border-amber-100">
-                            {{ $bahanBakuItems->count() }} Total Item
-                        </span>
-                    </div>
 
-                    @if ($bahanBakuItems->isEmpty())
-                        <div
-                            class="bg-gray-50 rounded-2xl p-10 text-center border-2 border-dashed border-gray-200 text-gray-400">
-                            Tidak ada data bahan baku ditemukan
-                        </div>
-                    @else
-                        {{-- Menggunakan Grid Index agar tampilan lebih detail untuk material --}}
                         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             @foreach ($bahanBakuItems as $item)
                                 <x-gudang.grid-index :item="$item" accent="amber" />
                             @endforeach
                         </div>
-                    @endif
-                </section>
 
-                {{-- GRUP 3: BAHAN PENOLONG (BP) --}}
-                <section>
-                    <div class="flex items-center justify-between mb-6 border-l-4 border-emerald-500 pl-4">
-                        <div>
-                            <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Bahan Penolong</h2>
-                            <p class="text-sm text-gray-500 font-medium">Stok material pendukung operasional (BP)</p>
+                        <div class="mt-6">
+                            <div class="flex justify-end">
+                                {{ $bahanBakuItems->appends(['page_bp' => request('page_bp'), 'search' => request('search'), 'id_jenis' => request('id_jenis')])->links('vendor.pagination.custom') }}
+                            </div>
                         </div>
-                        <span
-                            class="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-100">
-                            {{ $penolongItems->count() }} Total Item
-                        </span>
-                    </div>
+                    </section>
+                @endif
 
-                    @if ($penolongItems->isEmpty())
-                        <div
-                            class="bg-gray-50 rounded-2xl p-10 text-center border-2 border-dashed border-gray-200 text-gray-400">
-                            Tidak ada data bahan penolong ditemukan
+                {{-- GRUP 3: BAHAN PENOLONG (Hanya tampil jika ada isi) --}}
+                @if ($penolongItems->total() > 0)
+                    <section>
+                        <div class="flex items-center justify-between mb-6 border-l-4 border-emerald-500 pl-4">
+                            <div>
+                                <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Bahan Penolong
+                                </h2>
+                                <p class="text-sm text-gray-500 font-medium">Stok material pendukung operasional (BP)
+                                </p>
+                            </div>
+                            <span
+                                class="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-100">
+                                {{ $penolongItems->total() }} Total Item
+                            </span>
                         </div>
-                    @else
+
                         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             @foreach ($penolongItems as $item)
                                 <x-gudang.grid-index :item="$item" accent="emerald" />
                             @endforeach
                         </div>
-                    @endif
-                </section>
+
+                        <div class="mt-6">
+                            <div class="flex justify-end">
+                                {{ $penolongItems->appends(['page_bb' => request('page_bb'), 'search' => request('search'), 'id_jenis' => request('id_jenis')])->links('vendor.pagination.custom') }}
+                            </div>
+                        </div>
+                    </section>
+                @endif
+
+                {{-- Pesan Jika Semua Kosong --}}
+                @if ($produksiItems->isEmpty() && $bahanBakuItems->isEmpty() && $penolongItems->isEmpty())
+                    <div class="bg-white rounded-3xl p-20 text-center border border-gray-100 shadow-sm">
+                        <div class="flex justify-center mb-4">
+                            <svg class="w-20 h-20 text-gray-200" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800">Barang tidak ditemukan</h3>
+                        <p class="text-gray-500">Tidak ada barang yang cocok dengan kata kunci
+                            "{{ request('search') }}"</p>
+                        <a href="{{ route('inventory.index') }}"
+                            class="mt-4 inline-block text-blue-600 font-semibold hover:underline">Lihat semua
+                            barang</a>
+                    </div>
+                @endif
             </div>
 
-            {{-- PAGINATION --}}
-            <div class="mt-8">
-                {{ $inventory->links('vendor.pagination.custom') }}
-            </div>
         </div>
     </div>
 </x-layout.beranda.app>

@@ -25,7 +25,7 @@
                                 {{-- KODE BARANG DI BAWAH NAMA --}}
                                 <div
                                     class="text-xs font-mono text-gray-500 mt-0.5 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 w-fit">
-                                    {{ $i->Perusahaan->nama_perusahaan ?? 'All Akses' }}
+                                    {{ $i->Perusahaan->nama_perusahaan ?? 'All Akses' }} ({{ $i->Perusahaan->kota ?? 'XX' }})
                                 </div>
                             </div>
                         </td>

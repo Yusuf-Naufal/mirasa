@@ -1,4 +1,4 @@
-<x-layout.beranda.app>
+<x-layout.beranda.app title="Beranda">>
 
     <div class="md:px-10 py-6 flex flex-col">
         {{-- MENU FITUR --}}

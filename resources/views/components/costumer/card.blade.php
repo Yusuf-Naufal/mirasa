@@ -114,7 +114,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0zM15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <span class="text-xs text-gray-700 leading-relaxed">{{ $i->perusahaan->nama_perusahaan ?? '-' }}</span>
+                        <span
+                            class="text-xs text-gray-700 leading-relaxed">{{ $i->perusahaan->nama_perusahaan ?? '-' }}
+                            ({{ $i->perusahaan->kota ?? '-' }})</span>
                     </div>
                 </div>
 
@@ -123,7 +125,7 @@
         </div>
 
         {{-- EDIT MODAL --}}
-        
+
     @empty
         <div class="text-center py-10 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
             <p class="text-sm text-gray-500 font-medium">Data costumer tidak ditemukan</p>
@@ -132,5 +134,7 @@
 </div>
 
 <div class="md:hidden mt-6">
-    {{ $costumer->links('vendor.pagination.custom') }}
+    <div class="flex justify-end">
+        {{ $costumer->links('vendor.pagination.custom') }}
+    </div>
 </div>

@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Edit Perusahaan">
     <div class="py-2">
         <div class="mb-6 flex items-center justify-between">
             <div>

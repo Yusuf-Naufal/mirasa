@@ -238,7 +238,8 @@ class BarangKeluarController extends Controller
             // 3. Ambil Batch Detail Inventory menggunakan metode FIFO
             $batches = DetailInventory::where('id_inventory', $inventory->id)
                 ->where('stok', '>', 0)
-                ->orderBy('tanggal_masuk', 'asc')
+                ->orderBy('tanggal_masuk', 'asc') 
+                ->orderBy('created_at', 'asc')   
                 ->get();
 
             // 4. Cek ketersediaan stok total dari seluruh batch

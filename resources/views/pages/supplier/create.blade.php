@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Tambah Supplier">
     <div class="py-2">
 
         <form action="{{ route('supplier.store') }}" method="POST"

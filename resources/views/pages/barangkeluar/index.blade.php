@@ -1,4 +1,4 @@
-<x-layout.beranda.app>
+<x-layout.beranda.app title="Daftar Barang Keluar">
     <div class="md:px-10 py-6 flex flex-col" x-data="{ tab: 'produksi', menuOpen: false }">
         <div class="flex-1 pt-12">
 
@@ -185,21 +185,23 @@
                         </div>
                     @endif
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">
-                            Pilih Barang (Tab {{ ucfirst($activeTab) }})
-                        </label>
-                        <select name="id_barang"
-                            class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500">
-                            <option value="">Semua Barang</option>
-                            @foreach ($listBarang as $b)
-                                <option value="{{ $b->id }}"
-                                    {{ request('id_barang') == $b->id ? 'selected' : '' }}>
-                                    {{ $b->nama_barang }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    @if (!auth()->user()->hasRole('Super Admin'))
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">
+                                Pilih Barang (Tab {{ ucfirst($activeTab) }})
+                            </label>
+                            <select name="id_barang"
+                                class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500">
+                                <option value="">Semua Barang</option>
+                                @foreach ($listBarang as $b)
+                                    <option value="{{ $b->id }}"
+                                        {{ request('id_barang') == $b->id ? 'selected' : '' }}>
+                                        {{ $b->nama_barang }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
                     {{-- Filter Rentang Tanggal --}}
                     <div>
