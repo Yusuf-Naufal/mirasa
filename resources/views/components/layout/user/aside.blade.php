@@ -121,8 +121,6 @@
                 </li>
             @endif
 
-<<<<<<< HEAD
-=======
             @if (auth()->user()->hasRole('Super Admin'))
                 <li>
                     <a href="{{ route('perusahaan.index') }}"
@@ -206,8 +204,6 @@
                     </a>
                 </div>
             </li>
-
->>>>>>> origin/yusuf
         </ul>
     </div>
 </aside>
