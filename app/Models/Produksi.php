@@ -47,6 +47,20 @@ class Produksi extends Model
         }
     }
 
+    public function getListBahanBakuAttribute()
+    {
+        return $this->DetailInventory->filter(function ($item) {
+            return optional(optional($item->Inventory->Barang)->jenisBarang)->kode === 'BB';
+        });
+    }
+
+    public function getListBarangPenolongMasukAttribute()
+    {
+        return $this->DetailInventory->filter(function ($item) {
+            return optional(optional($item->Inventory->Barang)->jenisBarang)->kode === 'BP';
+        });
+    }
+
     public function DetailProduksi()
     {
         return $this->hasMany(DetailProduksi::class, 'id_produksi');

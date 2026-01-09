@@ -36,24 +36,6 @@
                 </li>
             @endif
 
-            @if (auth()->user()->hasRole('Super Admin'))
-                <li>
-                    <a href="{{ route('user.index') }}"
-                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                        <div class="min-w-[32px] flex justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
-                                viewBox="0 0 24 24">
-                                <path fill="currentColor"
-                                    d="M12 14v8H4a8 8 0 0 1 8-8m0-1c-3.315 0-6-2.685-6-6s2.685-6 6-6s6 2.685 6 6s-2.685 6-6 6m9 4h1v5h-8v-5h1v-1a3 3 0 1 1 6 0zm-2 0v-1a1 1 0 1 0-2 0v1z" />
-                            </svg>
-                        </div>
-                        <span
-                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">User</span>
-                    </a>
-                </li>
-            @endif
-
             @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin Gudang'))
                 <li>
                     <a href="{{ route('beranda') }}"
@@ -139,6 +121,93 @@
                 </li>
             @endif
 
+<<<<<<< HEAD
+=======
+            @if (auth()->user()->hasRole('Super Admin'))
+                <li>
+                    <a href="{{ route('perusahaan.index') }}"
+                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 24 24">
+                                <path fill="currentColor" fill-rule="evenodd"
+                                    d="M19.618 1H4.382L2 5.764V11h20V5.764zM3 17v-4.5h2V17h7v-4.5h2V21h5v-8.5h2V23H3z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Perusahaan</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('user.index') }}"
+                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M12 14v8H4a8 8 0 0 1 8-8m0-1c-3.315 0-6-2.685-6-6s2.685-6 6-6s6 2.685 6 6s-2.685 6-6 6m9 4h1v5h-8v-5h1v-1a3 3 0 1 1 6 0zm-2 0v-1a1 1 0 1 0-2 0v1z" />
+                            </svg>
+                        </div>
+                        <span
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">User</span>
+                    </a>
+                </li>
+            @endif
+
+            <li x-data="{ open: false }">
+                {{-- Tombol Utama Laporan --}}
+                <button @click="open = !open"
+                    class="w-full flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                    <div class="min-w-[32px] flex justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                            viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                d="M13 9h5.5L13 3.5zM6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2m1 18h2v-6H7zm4 0h2v-8h-2zm4 0h2v-4h-2z" />
+                        </svg>
+                    </div>
+                    <span
+                        class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-bold uppercase text-xs tracking-widest flex-1 text-left">
+                        Laporan
+                    </span>
+                    {{-- Indikator Panah --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" :class="open ? 'rotate-180' : ''"
+                        class="w-4 h-4 transition-transform duration-200 opacity-0 group-hover:opacity-100"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                {{-- Sub-Menu (Children) --}}
+                <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 transform -translate-y-2"
+                    x-transition:enter-end="opacity-100 transform translate-y-0" class="mt-1 space-y-1 px-2"
+                    style="display: none;"> {{-- style display none mencegah kedipan saat refresh --}}
+
+                    {{-- Laporan Produksi --}}
+                    <a href="{{ route('laporan-produksi') }}"
+                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all pl-12 font-medium">
+                        Produksi
+                    </a>
+
+                    {{-- Laporan Gudang --}}
+                    <a href="{{ route('laporan-gudang') }}"
+                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all pl-12 font-medium">
+                        Gudang
+                    </a>
+
+                    {{-- Laporan Keuangan --}}
+                    <a href="{{ route('laporan-keuangan') }}"
+                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all pl-12 font-medium">
+                        Keuangan
+                    </a>
+                </div>
+            </li>
+
+>>>>>>> origin/yusuf
         </ul>
     </div>
 </aside>

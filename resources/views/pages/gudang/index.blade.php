@@ -218,7 +218,7 @@
 
             {{-- PAGINATION --}}
             <div class="mt-8">
-                {{ $inventory->links() }}
+                {{ $inventory->links('vendor.pagination.custom') }}
             </div>
         </div>
     </div>

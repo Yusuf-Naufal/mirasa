@@ -22,6 +22,7 @@ class BarangKeluar extends Model
         'total_harga',
         'no_jalan',
         'no_faktur',
+        'keterangan',
     ];
 
     public function Proses()

@@ -13,7 +13,7 @@
                     </svg>
                     Kembali ke Beranda
                 </a>
-                <h1 class="text-2xl font-bold text-gray-800 tracking-tight mt-2">Catatan Bahan Baku</h1>
+                <h1 class="text-2xl font-bold text-gray-800 tracking-tight mt-2">Catatan Barang Masuk</h1>
                 <p class="text-sm text-gray-500 font-medium">
                     Gudang:
                     <span class="font-bold text-gray-800">
@@ -53,20 +53,48 @@
                     </button>
                 </div>
 
-                <a href="{{ route('bahan-baku.create') }}"
-                    class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd"
-                            d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                            clip-rule="evenodd" />
-                    </svg>
-                    Tambah
-                </a>
+                {{-- BUTTON TAMBAH BARANG DENGAN DROPDOWN (Pemisahan) --}}
+                <div class="relative inline-block text-left w-full md:w-56" x-data="{ open: false }">
+                    <button @click="open = !open" @click.away="open = false" type="button"
+                        class="inline-flex justify-center items-center w-full lg:w-auto gap-x-1.5 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Barang Masuk
+                        <svg class="-mr-1 h-5 w-5 text-green-200" viewBox="0 0 20 20" fill="currentColor"
+                            aria-hidden="true">
+                            <path fill-rule="evenodd"
+                                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
+                    {{-- MENU PILIHAN --}}
+                    <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="transform opacity-0 scale-95"
+                        x-transition:enter-end="transform opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="transform opacity-100 scale-100"
+                        x-transition:leave-end="transform opacity-0 scale-95"
+                        class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
+                        <div class="py-1">
+                            <a href="{{ route('barang-masuk.create-produksi') }}"
+                                class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
+                                <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Produksi
+                            </a>
+                            <a href="{{ route('barang-masuk.create-bp') }}"
+                                class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
+                                <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Bahan Penolong
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {{-- 3. DATA BAHAN BAKU GROUPED BY DATE (SLIM VERSION) --}}
             <div class="space-y-8">
-                @forelse ($listBahanBaku as $tanggal => $items)
+                @forelse ($listBarangMasuk as $tanggal => $items)
                     <div class="space-y-3">
                         {{-- Label Tanggal Minimalis --}}
                         <div class="flex items-center gap-3 py-2">
@@ -115,7 +143,7 @@
                                                 <path
                                                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                             </svg>
-                                            {{ $bahan->Supplier->nama_supplier }}
+                                            {{ $bahan->Supplier->nama_supplier ?? 'PRODUKSI' }}
                                         </p>
 
                                         <div class="flex items-center justify-between border-t border-gray-50 pt-2">
@@ -134,8 +162,19 @@
                                     <div class="flex flex-col gap-1">
                                         {{-- Tombol Hapus --}}
                                         @if ($bahan->stok == $bahan->jumlah_diterima)
+                                            @php
+                                                // Ambil kode jenis barang melalui relasi Inventory -> Barang -> jenisBarang
+                                                $kodeJenis = $bahan->Inventory->Barang->jenisBarang->kode ?? null;
+
+                                                // Tentukan route berdasarkan kode jenis
+                                                $routeEdit =
+                                                    $kodeJenis === 'BP'
+                                                        ? route('barang-masuk.edit-bp', $bahan->id)
+                                                        : route('barang-masuk.edit-produksi', $bahan->id);
+                                            @endphp
+
                                             {{-- Tombol Edit --}}
-                                            <a href="{{ route('bahan-baku.edit', $bahan->id) }}"
+                                            <a href="{{ $routeEdit }}"
                                                 class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
@@ -144,7 +183,8 @@
                                                 </svg>
                                             </a>
 
-                                            <form action="{{ route('bahan-baku.destroy', $bahan->id) }}" method="POST"
+                                            <form action="{{ route('barang-masuk.destroy', $bahan->id) }}"
+                                                method="POST"
                                                 onsubmit="return confirm('Hapus data ini? Rekapitulasi akan disesuaikan.')">
                                                 @csrf
                                                 @method('DELETE')
@@ -172,7 +212,7 @@
 
             {{-- 4. PAGINATION --}}
             <div class="mt-8">
-                {{ $bahanBakuPaginator->links('vendor.pagination.custom') }}
+                {{ $barangMasukPagination->links('vendor.pagination.custom') }}
             </div>
 
         </div>
