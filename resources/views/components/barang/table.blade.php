@@ -60,8 +60,13 @@
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="text-sm font-semibold text-gray-700">{{ $i->Perusahaan->nama_perusahaan }}
+                            <div class="flex flex-col">
+                                <div class="text-sm font-semibold text-gray-700">
+                                    {{ $i->perusahaan->nama_perusahaan ?? 'No Company' }}
+                                </div>
+
+                                <div class="text-xs text-gray-500">
+                                    {{ $i->perusahaan->kota ?? 'No City' }}
                                 </div>
                             </div>
                         </td>

@@ -27,6 +27,12 @@ class JenisBarangSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
+                'nama_jenis' => 'Eceran',
+                'kode'       => 'EC',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'nama_jenis' => 'Bahan Baku',
                 'kode'       => 'BB',
                 'created_at' => now(),
@@ -35,12 +41,6 @@ class JenisBarangSeeder extends Seeder
             [
                 'nama_jenis' => 'Bahan Penolong',
                 'kode'       => 'BP',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'nama_jenis' => 'Eceran',
-                'kode'       => 'EC',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

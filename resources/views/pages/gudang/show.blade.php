@@ -1,4 +1,4 @@
-<x-layout.beranda.app>
+<x-layout.beranda.app title="Detail Inventory">
     <div class="min-h-screen bg-slate-50/50 md:px-10 py-8">
         <div class="mx-auto flex flex-col pt-12 gap-6">
 
@@ -99,8 +99,7 @@
                             @php
                                 $stokAktual = $inventory->stok;
                                 $stokMin = $inventory->minimum_stok ?? 0;
-                                // Tentukan ambang batas "mendekati" (contoh: stok min + 5 unit)
-                                $ambangPeringatan = $stokMin + 30;
+                                $ambangPeringatan = $stokMin * 1.2;
                             @endphp
 
                             <div>

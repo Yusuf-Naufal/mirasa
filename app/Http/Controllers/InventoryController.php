@@ -20,41 +20,79 @@ class InventoryController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-
-        // Ambil semua jenis barang untuk dropdown filter di view, 
         $jenisBarang = JenisBarang::all();
+        $search = strtolower($request->search);
+        $id_jenis = $request->id_jenis;
 
-        // 1. Query dasar
-        $query = Inventory::with(['Barang.jenisBarang', 'Perusahaan'])
-            ->whereHas('Barang.jenisBarang');
+        // Base Query Builder function untuk efisiensi
+        $getBaseQuery = function () use ($user, $request, $search, $id_jenis) {
+            $q = Inventory::with(['Barang.jenisBarang', 'Perusahaan'])
+                ->whereHas('Barang.jenisBarang');
 
-        // 2. Proteksi Data: Hanya ambil data milik perusahaan user login
-        if (!$user->hasRole('Super Admin')) {
-            $query->where('id_perusahaan', $user->id_perusahaan);
-        } elseif ($request->filled('id_perusahaan')) {
-            $query->where('id_perusahaan', $request->id_perusahaan);
-        }
+            // Proteksi Data
+            if (!$user->hasRole('Super Admin')) {
+                $q->where('id_perusahaan', $user->id_perusahaan);
+            } elseif ($request->filled('id_perusahaan')) {
+                $q->where('id_perusahaan', $request->id_perusahaan);
+            }
 
-        // 3. Fitur Search
-        if ($request->filled('search')) {
-            $search = strtolower($request->search);
-            $query->whereHas('Barang', function ($q) use ($search) {
-                $q->whereRaw('LOWER(nama_barang) like ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(kode) like ?', ["%{$search}%"]);
-            });
-        }
+            // Search Filter
+            if ($search) {
+                $q->whereHas('Barang', function ($bq) use ($search) {
+                    $bq->whereRaw('LOWER(nama_barang) like ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(kode) like ?', ["%{$search}%"]);
+                });
+            }
 
-        // Filter berdasarkan Jenis Barang (pilihan user dari dropdown)
-        if ($request->filled('id_jenis')) {
-            $query->whereHas('Barang', function ($q) use ($request) {
-                $q->where('id_jenis', $request->id_jenis);
-            });
-        }
+            // Jenis Barang Filter
+            if ($id_jenis) {
+                $q->whereHas('Barang', function ($bq) use ($id_jenis) {
+                    $bq->where('id_jenis', $id_jenis);
+                });
+            }
 
-        // 4. Ambil data dengan Pagination
-        $inventory = $query->latest()->paginate(15)->withQueryString();
+            return $q;
+        };
 
-        return view('pages.gudang.index', compact('inventory', 'jenisBarang'));
+        // 2. Hitung Statistik (Berdasarkan ID Barang yang Unik)
+        $stats = [
+            // 1. Habis: Stok benar-benar 0
+            'habis'   => $getBaseQuery()->where('stok', '<=', 0)
+                ->distinct('id_barang')->count('id_barang'),
+
+            // 2. Limit: Stok > 0 DAN Stok < minimum_stok
+            'limit'   => $getBaseQuery()->whereColumn('stok', '<', 'minimum_stok')
+                ->where('stok', '>', 0)
+                ->distinct('id_barang')->count('id_barang'),
+
+            // 3. Warning: Stok mendekati limit (Hanya untuk limit > 0)
+            'warning' => $getBaseQuery()->whereRaw('minimum_stok > 0 AND stok >= minimum_stok AND stok <= (minimum_stok * 1.2)')
+                ->where('stok', '>', 0)
+                ->distinct('id_barang')->count('id_barang'),
+        ];
+
+        // 1. HASIL PRODUKSI (FG, WIP, EC) - Scrollable (Ambil semua yang sesuai filter)
+        $produksiItems = $getBaseQuery()->whereHas('Barang.jenisBarang', function ($q) {
+            $q->whereIn('kode', ['FG', 'WIP', 'EC']);
+        })->latest()->get();
+
+        // 2. BAHAN BAKU (BB) - Paginate 20
+        $bahanBakuItems = $getBaseQuery()->whereHas('Barang.jenisBarang', function ($q) {
+            $q->where('kode', 'BB');
+        })->latest()->paginate(20, ['*'], 'page_bb')->withQueryString();
+
+        // 3. BAHAN PENOLONG (BP) - Paginate 20
+        $penolongItems = $getBaseQuery()->whereHas('Barang.jenisBarang', function ($q) {
+            $q->where('kode', 'BP');
+        })->latest()->paginate(20, ['*'], 'page_bp')->withQueryString();
+
+        return view('pages.gudang.index', compact(
+            'produksiItems',
+            'bahanBakuItems',
+            'penolongItems',
+            'jenisBarang',
+            'stats'
+        ));
     }
 
     /**

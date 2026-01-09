@@ -114,6 +114,10 @@
                         <span class="text-xs text-gray-700 font-medium truncate">{{ $i->perusahaan->nama_perusahaan ?? 'All Akses' }}</span>
                     </div>
                     <div class="flex justify-between items-center gap-1">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Kota:</span>
+                        <span class="text-xs text-gray-700 font-medium truncate">{{ $i->perusahaan->kota ?? 'All Akses' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center gap-1">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Terdaftar:</span>
                         <span class="text-xs text-gray-700 font-medium">{{ $i->created_at->format('d M Y') }}</span>
                     </div>

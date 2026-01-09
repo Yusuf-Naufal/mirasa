@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Super Admin Dashboard">
     <style>
         /* Menghilangkan scrollbar tapi fungsi scroll tetap jalan */
         .no-scrollbar::-webkit-scrollbar {

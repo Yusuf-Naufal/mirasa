@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Laporan Produksi">
     <div class="space-y-6">
         {{-- HEADER & FILTER --}}
         <div class="relative overflow-hidden bg-white border border-gray-100 rounded-[2rem] p-4 shadow-sm">

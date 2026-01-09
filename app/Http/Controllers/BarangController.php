@@ -8,7 +8,6 @@ use App\Models\JenisBarang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Contracts\Validation\Rule;
 
 class BarangController extends Controller
 {
@@ -56,7 +55,7 @@ class BarangController extends Controller
         }
 
         // 6. Eksekusi Query
-        $barang = $query->orderBy('id_jenis', 'asc')
+        $barang = $query->orderBy('id', 'desc')
             ->paginate(10)
             ->withQueryString();
 
@@ -85,12 +84,14 @@ class BarangController extends Controller
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->id_perusahaan : $user->id_perusahaan;
 
         $request->validate([
-            'id_perusahaan' => 'required|exists:perusahaan,id',
-            'id_jenis'      => 'required|exists:jenis_barang,id',
-            'nama_barang'   => "required|string|unique:barang,nama_barang,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
-            'kode'          => "required|string|unique:barang,kode,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
-            'satuan'        => 'required|string',
-            'cropped_image' => 'nullable|string',
+            'id_perusahaan'     => 'required|exists:perusahaan,id',
+            'id_jenis'          => 'required|exists:jenis_barang,id',
+            'nama_barang'       => "required|string|unique:barang,nama_barang,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+            'kode'              => "required|string|unique:barang,kode,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+            'satuan'            => 'required|string',
+            'nilai_konversi'    => 'nullable',
+            'isi_bungkus'       => 'nullable',
+            'cropped_image'     => 'nullable|string',
         ], [
             'nama_barang.unique' => 'Nama barang sudah ada di perusahaan ini.',
             'kode.unique'        => 'Kode barang sudah ada di perusahaan ini.',
@@ -101,7 +102,7 @@ class BarangController extends Controller
         $kodeFinal = strtoupper($jenis->kode . '-' . $request->kode);
 
         // 2. Persiapkan Data
-        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan']);
+        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan', 'nilai_konversi', 'isi_bungkus']);
         $data['kode'] = $kodeFinal;
         $data['satuan'] = strtoupper($request->satuan);
 
@@ -153,24 +154,27 @@ class BarangController extends Controller
         $request->merge(['kode_gabungan' => $kodeFinal]);
 
         $request->validate([
-            'id_perusahaan' => 'required|exists:perusahaan,id',
-            'id_jenis'      => 'required|exists:jenis_barang,id',
-            'nama_barang'   => "required|string|unique:barang,nama_barang,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
-            'kode_gabungan' => "required|string|unique:barang,kode,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
-
-            'satuan'        => 'required|string',
-            'cropped_image' => 'nullable|string',
+            'id_perusahaan'     => 'required|exists:perusahaan,id',
+            'id_jenis'          => 'required|exists:jenis_barang,id',
+            'nama_barang'       => "required|string|unique:barang,nama_barang,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+            'kode_gabungan'     => "required|string|unique:barang,kode,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+            'nilai_konversi'    => 'nullable',
+            'isi_bungkus'       => 'nullable',
+            'satuan'            => 'required|string',
+            'cropped_image'     => 'nullable|string',
         ], [
             'nama_barang.unique' => 'Nama barang sudah ada di perusahaan ini.',
             'kode_gabungan.unique' => 'Kode barang sudah ada di perusahaan ini.',
         ]);
 
         $data = [
-            'id_perusahaan' => $idPerusahaan,
-            'id_jenis'      => $request->id_jenis,
-            'nama_barang'   => $request->nama_barang,
-            'kode'          => $kodeFinal, // Simpan hasil gabungan
-            'satuan'        => strtoupper($request->satuan),
+            'id_perusahaan'     => $idPerusahaan,
+            'id_jenis'          => $request->id_jenis,
+            'nama_barang'       => $request->nama_barang,
+            'nilai_konversi'    => $request->nilai_konversi,
+            'isi_bungkus'       => $request->isi_bungkus,
+            'kode'              => $kodeFinal, // Simpan hasil gabungan
+            'satuan'            => strtoupper($request->satuan),
         ];
 
         // 3. Logika Update Gambar

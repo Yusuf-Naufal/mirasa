@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Daftar Barang">
 
     <div class="space-y-2">
         <div class="flex flex-col gap-4 md:justify-between">

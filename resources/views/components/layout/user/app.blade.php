@@ -4,7 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Dashboard Super Admin</title>
+    <title>{{ $title ?? 'Dashboard Super Admin' }}</title>
+
+    @if(auth()->check() && auth()->user()->perusahaan->logo)
+        <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . auth()->user()->perusahaan->logo) }}">
+    @else
+        <link rel="icon" type="image/x-icon" href="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}">
+    @endif
+    
 
     {{-- TAILWIND --}}
     @vite('resources/css/app.css')

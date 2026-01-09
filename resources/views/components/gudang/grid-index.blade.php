@@ -3,7 +3,7 @@
 @php
     $stokAktual = $item->stok;
     $stokMin = $item->minimum_stok ?? 0;
-    $ambangKuning = $stokMin + 30;
+    $ambangKuning = $stokMin * 1.2;
 
     // Logika warna status
     $statusColor = 'emerald';

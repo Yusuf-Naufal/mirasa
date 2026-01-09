@@ -119,7 +119,7 @@
 
                         {{-- Aksi --}}
                         <td class="px-6 py-4 text-center">
-                            @if ($i->stok == $i->jumlah_diterima)
+                            @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
                                 <button type="button"
                                     @click="openEdit({ 
                                     id: '{{ $i->id }}', 

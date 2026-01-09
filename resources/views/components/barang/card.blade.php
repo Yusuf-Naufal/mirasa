@@ -105,7 +105,9 @@
                     <div class="flex justify-between gap-1">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Perusahaan:</span>
                         <span
-                            class="text-xs text-gray-700 font-medium truncate">{{ $i->perusahaan->nama_perusahaan ?? '-' }}</span>
+                            class="text-xs text-gray-700 leading-relaxed">{{ $i->perusahaan->nama_perusahaan ?? '-' }}
+                            ({{ $i->perusahaan->kota ?? '-' }})
+                        </span>
                     </div>
                     <div class="flex justify-between gap-1">
                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tight">Jenis:</span>
@@ -125,5 +127,7 @@
 </div>
 
 <div class="md:hidden mt-6">
-    {{ $barang->links('vendor.pagination.custom') }}
+    <div class="flex justify-end">
+        {{ $barang->links('vendor.pagination.custom') }}
+    </div>
 </div>
