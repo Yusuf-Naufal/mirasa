@@ -19,7 +19,7 @@
                                 class="w-10 h-10 object-contain rounded-lg">
                         @else
                             {{-- Logo Default (Backup jika logo kosong) --}}
-                            <img src="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}"
+                            <img src="{{ asset('/assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}"
                                 alt="Logo Default" class="w-10 h-10 object-contain">
                         @endif
                     </div>
