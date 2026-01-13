@@ -89,7 +89,7 @@
                             @forelse($recent_stock_movements as $move)
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-8 py-4">
-                                    <p class="text-sm font-bold text-gray-800 leading-tight">{{ $move->Inventory->Barang->nama_barang }}</p>
+                                    <p class="text-sm font-bold text-gray-800 leading-tight">{{ $move->Inventory?->Barang?->nama_barang ?? 'Data Tidak Ditemukan' }}</p>
                                     <p class="text-[10px] text-gray-400 font-medium">{{ $move->tanggal_masuk ?? 'Baru' }}</p>
                                 </td>
                                 <td class="px-6 py-4 text-center">
@@ -97,7 +97,7 @@
                                 </td>
                                 <td class="px-8 py-4 text-right">
                                     <p class="text-sm font-black text-emerald-600">+{{ number_format($move->jumlah_diterima, 0) }}</p>
-                                    <p class="text-[9px] font-bold text-gray-400 uppercase">{{ $move->Inventory->Barang->satuan }}</p>
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase">{{ $move->Inventory?->Barang?->satuan ?? '-' }}</p>
                                 </td>
                             </tr>
                             @empty

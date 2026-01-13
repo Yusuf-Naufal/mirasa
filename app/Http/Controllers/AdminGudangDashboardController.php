@@ -27,9 +27,9 @@ class AdminGudangDashboardController extends Controller
         ];
 
         $recent_stock_movements = DetailInventory::with(['Inventory.Barang'])
-            ->whereHas('Inventory', fn($q) => $q->where('id_perusahaan', $id_perusahaan))
-            ->latest()
-            ->take(6)
+            ->whereHas('Inventory.Barang') 
+            ->orderBy('created_at', 'desc')
+            ->limit(6)
             ->get();
 
         return view('pages.dashboard.admingudang', compact('stats', 'recent_stock_movements'));
