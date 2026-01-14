@@ -57,7 +57,7 @@ class DetailInventory extends Model
 
     public function Supplier()
     {
-        return $this->belongsTo(Supplier::class, 'id_supplier');
+        return $this->belongsTo(Supplier::class, 'id_supplier')->withTrashed();
     }
 
     public function BarangKeluar()

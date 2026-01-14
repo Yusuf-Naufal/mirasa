@@ -90,7 +90,7 @@
                                 @else
                                     <li>
                                         <form id="aktif-form-{{ $i->id }}"
-                                            action="{{ route('perusahaan.activate', $i->id) }}" method="POST">
+                                            action="{{ route('supplier.activate', $i->id) }}" method="POST">
                                             @csrf
                                             @method('PATCH')
                                             <button type="button" onclick="confirmActivate('{{ $i->id }}')"

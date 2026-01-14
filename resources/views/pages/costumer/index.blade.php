@@ -93,13 +93,14 @@
                             Costumer</label>
                         <select name="status" id="filter_status"
                             class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] focus:outline-none focus:ring-2 focus:ring-[#FFC829]/20 outline-none">
-                            <option value="">Semua Status</option>
+                            <option value="">Default (Aktif)</option>
                             <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif (Tersedia)
                             </option>
                             <option value="tidak_aktif" {{ request('status') == 'tidak_aktif' ? 'selected' : '' }}>Tidak
                                 Aktif (Terhapus)</option>
                         </select>
                     </div>
+                    
                 </div>
 
                 <div class="mt-8 flex items-center gap-3">

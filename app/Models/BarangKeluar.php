@@ -27,17 +27,17 @@ class BarangKeluar extends Model
 
     public function Proses()
     {
-        return $this->belongsTo(Proses::class, 'id_proses');
+        return $this->belongsTo(Proses::class, 'id_proses')->withTrashed();
     }
 
     public function Perusahaan()
     {
-        return $this->belongsTo(Perusahaan::class, 'id_perusahaan');
+        return $this->belongsTo(Perusahaan::class, 'id_perusahaan')->withTrashed();
     }
 
     public function Costumer()
     {
-        return $this->belongsTo(Costumer::class, 'id_costumer');
+        return $this->belongsTo(Costumer::class, 'id_costumer')->withTrashed();
     }
 
     public function Produksi()
