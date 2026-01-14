@@ -82,7 +82,7 @@
                                                     class="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Gudang
                                                     / Lokasi</span>
                                                 <span
-                                                    class="text-xs text-gray-700 font-medium">{{ $detail->DetailInventory->tempat_penyimpanan }}</span>
+                                                    class="text-xs text-gray-700 font-medium">{{ $detail->DetailInventory->tempat_penyimpanan ?? '-' }}</span>
                                             </div>
                                             <div class="flex flex-col">
                                                 <span
@@ -99,6 +99,12 @@
                                                     class="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Subtotal</span>
                                                 <span class="text-xs font-black text-blue-600">Rp
                                                     {{ number_format($detail->total_harga, 0, ',', '.') }}</span>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span
+                                                    class="text-[10px] text-gray-400 uppercase font-bold tracking-tight">Proses</span>
+                                                <span class="text-xs">
+                                                    {{ $detail->proses->nama_proses ?? '-' }}</span>
                                             </div>
                                         </div>
 

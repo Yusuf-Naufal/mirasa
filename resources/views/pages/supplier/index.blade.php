@@ -1,4 +1,4 @@
-<x-layout.user.app title="Daftar Supplier">>
+<x-layout.user.app title="Daftar Supplier">
 
     <div class="space-y-2">
         <div class="flex flex-col gap-4 md:justify-between">
@@ -96,6 +96,21 @@
                             </option>
                             <option value="Bahan Baku" {{ request('jenis_supplier') == 'Bahan Baku' ? 'selected' : '' }}>
                                 Bahan Baku</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="filter_status" class="block text-sm font-semibold text-gray-700 mb-1">Status
+                            Supplier</label>
+                        <select name="status" id="filter_status"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] focus:outline-none focus:ring-2 focus:ring-[#FFC829]/20 outline-none">
+                            <option value="aktif">Default (Aktif)</option>
+                            <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif
+                                (Tersedia)
+                            </option>
+                            <option value="tidak_aktif" {{ request('status') == 'tidak_aktif' ? 'selected' : '' }}>
+                                Tidak
+                                Aktif (Terhapus)</option>
                         </select>
                     </div>
                 </div>

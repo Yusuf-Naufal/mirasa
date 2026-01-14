@@ -202,6 +202,12 @@
                         class="flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium">
                         Keuangan
                     </a>
+
+                    {{-- HPP --}}
+                    <a href="{{ route('laporan-hpp') }}"
+                        class="flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium">
+                        HPP
+                    </a>
                 </div>
             </li>
 

@@ -18,29 +18,35 @@ class BarangController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Dropdown Perusahaan: Jika bukan Super Admin, hanya ambil perusahaan miliknya
+        // 1. Dropdown Perusahaan
         if ($user->hasRole('Super Admin')) {
-            $perusahaan = Perusahaan::all();
+            $perusahaan = Perusahaan::whereNull('deleted_at')->get();
         } else {
             $perusahaan = Perusahaan::where('id', $user->id_perusahaan)->get();
         }
 
-        // Dropdown Jenis Barang tetap tampil semua
         $jenis = JenisBarang::all();
 
-        // 2. Query dasar dengan eager loading
-        $query = Barang::whereNull('deleted_at')->with(['perusahaan', 'jenisBarang']);
+        // 2. Inisialisasi Query berdasarkan Status
+        if ($request->status == 'tidak_aktif') {
+            $query = Barang::onlyTrashed();
+        } elseif ($request->status == 'semua') {
+            $query = Barang::withTrashed();
+        } else {
+            $query = Barang::query();
+        }
 
-        // 3. PROTEKSI DATA: Jika selain Super Admin, kunci ke perusahaan sendiri
+        // Load relasi
+        $query->with(['perusahaan', 'jenisBarang']);
+
+        // 3. PROTEKSI DATA & FILTER PERUSAHAAN
         if (!$user->hasRole('Super Admin')) {
             $query->where('id_perusahaan', $user->id_perusahaan);
-        }
-        // Jika Super Admin dan filter perusahaan dipilih
-        elseif ($request->filled('id_perusahaan')) {
+        } elseif ($request->filled('id_perusahaan')) {
             $query->where('id_perusahaan', $request->id_perusahaan);
         }
 
-        // 4. Filter berdasarkan Search (Nama Barang atau Kode)
+        // 4. Filter berdasarkan Search
         if ($request->filled('search')) {
             $search = strtolower($request->search);
             $query->where(function ($q) use ($search) {
@@ -55,7 +61,7 @@ class BarangController extends Controller
         }
 
         // 6. Eksekusi Query
-        $barang = $query->orderBy('id', 'desc')
+        $barang = $query->latest()
             ->paginate(10)
             ->withQueryString();
 
@@ -141,7 +147,7 @@ class BarangController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $barang = Barang::findOrFail($id);
+        $barang = Barang::withTrashed()->findOrFail($id);
         $user = auth()->user();
 
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->id_perusahaan : $user->id_perusahaan;
@@ -199,6 +205,31 @@ class BarangController extends Controller
         $barang->delete();
 
         return redirect()->route('barang.index')->with('success', 'Barang berhasil dipindahkan ke sampah');
+    }
+
+    public function activate($id)
+    {
+        // 1. Cari data yang akan di-restore (termasuk yang sedang terhapus)
+        $barang = Barang::withTrashed()->findOrFail($id);
+
+        // 2. Cek apakah ada barang AKTIF lain dengan Nama & Kode yang sama di perusahaan yang sama
+        $isDuplicate = Barang::where('id_perusahaan', $barang->id_perusahaan)
+            ->where(function ($q) use ($barang) {
+                $q->where('nama_barang', $barang->nama_barang)
+                    ->orWhere('kode', $barang->kode);
+            })
+            ->where('id', '!=', $id)
+            ->exists();
+
+        // 3. Jika ditemukan duplikat, batalkan proses dan kirim pesan error
+        if ($isDuplicate) {
+            return redirect()->back()->with('error', 'Gagal mengaktifkan! Nama atau Kode barang tersebut sudah digunakan oleh barang aktif lain di perusahaan ini.');
+        }
+
+        // 4. Proses Restore
+        $barang->restore();
+
+        return redirect()->back()->with('success', 'Barang berhasil diaktifkan kembali.');
     }
 
     private function processBase64Crop($base64String)

@@ -26,7 +26,7 @@ class SupplierController extends Controller
         }
 
         // 2. Query dasar dengan eager loading relasi perusahaan
-        $query = Supplier::whereNull('deleted_at')->with('perusahaan');
+        $query = Supplier::with('perusahaan');
 
         // 3. PROTEKSI DATA: Batasi akses berdasarkan role
         if (!$user->hasRole('Super Admin')) {
@@ -51,7 +51,18 @@ class SupplierController extends Controller
             $query->where('jenis_supplier', $request->jenis_supplier);
         }
 
-        // 6. Eksekusi Paginate
+        // 6. Filter Status (Aktif / Tidak Aktif)
+        if ($request->filled('status')) {
+            if ($request->status == 'aktif') {
+                $query->whereNull('deleted_at');
+            } elseif ($request->status == 'tidak_aktif') {
+                $query->onlyTrashed();
+            }
+        } else {
+            $query->whereNull('deleted_at');
+        }
+
+        // 7. Eksekusi Paginate
         $supplier = $query->latest()->paginate(10)->withQueryString();
 
         return view('pages.supplier.index', compact('supplier', 'perusahaan'));
@@ -146,5 +157,15 @@ class SupplierController extends Controller
         $supplier->delete();
 
         return redirect()->route('supplier.index')->with('success', 'Supplier berhasil dihapus');
+    }
+
+    public function activate($id)
+    {
+        $supplier = Supplier::withTrashed()->findOrFail($id);
+
+        $supplier->deleted_at = null;
+        $supplier->save();
+
+        return redirect()->back()->with('success', 'Supplier berhasil diaktifkan kembali.');
     }
 }

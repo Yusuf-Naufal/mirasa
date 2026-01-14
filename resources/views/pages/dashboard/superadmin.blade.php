@@ -118,7 +118,8 @@
                                     class="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center text-white text-xs font-bold shadow-sm">
                                     {{ substr($perusahaan->nama_perusahaan, 0, 1) }}
                                 </div>
-                                <h3 class="font-bold text-gray-800 tracking-tight">{{ $perusahaan->nama_perusahaan }} ({{ $perusahaan->kota }})
+                                <h3 class="font-bold text-gray-800 tracking-tight">{{ $perusahaan->nama_perusahaan }}
+                                    ({{ $perusahaan->kota }})
                                 </h3>
                             </div>
                             <a href="#"
@@ -127,16 +128,17 @@
                         </div>
 
                         {{-- Slider Container --}}
-                        <div class="flex overflow-x-auto gap-4 pb-4 snap-x snap-mandatory no-scrollbar"
+                        <div class="grid grid-flow-col auto-cols-[160px] md:auto-cols-[180px] gap-4 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar"
                             style="scrollbar-width: none; -ms-overflow-style: none;">
+
                             @forelse($perusahaan->barang->take(7) as $barang)
-                                <div class="min-w-[160px] md:min-w-[180px] snap-start">
+                                <div class="snap-start h-full">
                                     <div
-                                        class="bg-white rounded-[2rem] p-3 border border-gray-100 shadow-sm hover:shadow-md transition-all group group">
+                                        class="bg-white rounded-[2rem] p-3 border border-gray-100 shadow-sm hover:shadow-md transition-all group h-full flex flex-col">
 
                                         {{-- Foto Produk --}}
                                         <div
-                                            class="aspect-square w-full rounded-[1.5rem] bg-gray-50 overflow-hidden mb-3 relative">
+                                            class="aspect-square w-full rounded-[1.5rem] bg-gray-50 overflow-hidden mb-3 relative flex items-center justify-center shrink-0">
                                             @if ($barang->foto)
                                                 <img src="{{ asset('storage/' . $barang->foto) }}"
                                                     alt="{{ $barang->nama_barang }}"
@@ -156,26 +158,28 @@
                                             {{-- Floating Badge Kode --}}
                                             <div class="absolute top-2 right-2">
                                                 <span
-                                                    class="px-2 py-1 rounded-lg text-[8px] font-black uppercase shadow-sm backdrop-blur-md {{ $barang->jenisBarang->kode == 'FG' ? 'bg-green-500/90 text-white' : ($barang->jenisBarang->kode == 'WIP' ? 'bg-orange-500/90 text-white' : 'bg-purple-500/90 text-white') }}">
+                                                    class="px-2 py-1 rounded-lg text-[8px] font-black uppercase shadow-sm backdrop-blur-md 
+                                                    {{ $barang->jenisBarang->kode == 'FG' ? 'bg-green-500/90 text-white' : ($barang->jenisBarang->kode == 'WIP' ? 'bg-orange-500/90 text-white' : 'bg-purple-500/90 text-white') }}">
                                                     {{ $barang->jenisBarang->kode }}
                                                 </span>
                                             </div>
                                         </div>
 
                                         {{-- Info Produk --}}
-                                        <div class="px-1 pb-1">
+                                        <div class="px-1 pb-1 flex-grow">
                                             <h4 class="font-bold text-gray-700 text-xs truncate leading-snug group-hover:text-blue-600 transition-colors"
                                                 title="{{ $barang->nama_barang }}">
                                                 {{ $barang->nama_barang }}
                                             </h4>
                                             <p class="text-[9px] text-gray-400 mt-1 font-medium italic">
-                                                #{{ $barang->kode ?? 'No-Code' }}</p>
+                                                #{{ $barang->kode ?? 'No-Code' }}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
                             @empty
                                 <div
-                                    class="w-full bg-gray-50 rounded-3xl py-10 text-center border border-dashed border-gray-200">
+                                    class="w-full bg-gray-50 rounded-3xl py-10 text-center items-center justify-center border border-dashed border-gray-200">
                                     <p class="text-xs text-gray-400 font-medium">Katalog barang masih kosong.</p>
                                 </div>
                             @endforelse

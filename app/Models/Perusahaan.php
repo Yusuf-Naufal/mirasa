@@ -61,8 +61,13 @@ class Perusahaan extends Model
         return $this->hasMany(Produksi::class, 'id_perusahaan');
     }
 
-    public function BahanBaku()
+    public function PemakaianGas()
     {
-        return $this->hasMany(BahanBaku::class, 'id_perusahaan');
+        return $this->hasMany(PemakaianGas::class, 'id_perusahaan');
+    }
+
+    public function Pengeluaran()
+    {
+        return $this->hasMany(Pengeluaran::class, 'id_perusahaan');
     }
 }

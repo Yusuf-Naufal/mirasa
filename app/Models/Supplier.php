@@ -20,7 +20,7 @@ class Supplier extends Model
 
     public function Perusahaan()
     {
-        return $this->belongsTo(Perusahaan::class, 'id_perusahaan');
+        return $this->belongsTo(Perusahaan::class, 'id_perusahaan')->withTrashed();
     }
 
     public function DetailInventory()
@@ -28,8 +28,8 @@ class Supplier extends Model
         return $this->hasMany(DetailInventory::class, 'id_supplier');
     }
 
-    public function BahanBaku()
+    public function PemakaianGas()
     {
-        return $this->hasMany(BahanBaku::class, 'id_supplier');
+        return $this->hasMany(PemakaianGas::class, 'id_supplier');
     }
 }

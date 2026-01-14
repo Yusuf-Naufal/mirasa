@@ -26,14 +26,12 @@ class ProsesController extends Controller
         }
 
         // 2. Query dasar
-        $query = Proses::whereNull('deleted_at');
+        $query = Proses::withTrashed();
 
-        // 3. PROTEKSI DATA: Batasi akses data berdasarkan Role
+        // 3. PROTEKSI DATA
         if (!$user->hasRole('Super Admin')) {
-            // Paksa filter ke id_perusahaan milik user yang login
             $query->where('id_perusahaan', $user->id_perusahaan);
         } elseif ($request->filled('id_perusahaan')) {
-            // Jika Super Admin, gunakan filter dari request jika ada
             $query->where('id_perusahaan', $request->id_perusahaan);
         }
 
@@ -44,6 +42,16 @@ class ProsesController extends Controller
                 $q->whereRaw('LOWER(nama_proses) like ?', ["%{$search}%"])
                     ->orWhereRaw('LOWER(kode) like ?', ["%{$search}%"]);
             });
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status == 'aktif') {
+                $query->whereNull('deleted_at');
+            } elseif ($request->status == 'tidak_aktif') {
+                $query->onlyTrashed();
+            }
+        } else {
+            $query->whereNull('deleted_at');
         }
 
         // 5. Eksekusi Paginate
@@ -98,7 +106,7 @@ class ProsesController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $proses = Proses::findOrFail($id);
+        $proses = Proses::withTrashed()->findOrFail($id);
 
         $request->validate([
             'id_perusahaan' => 'required|exists:perusahaan,id',
@@ -124,5 +132,15 @@ class ProsesController extends Controller
         $proses->delete();
 
         return redirect()->route('proses.index')->with('success', 'Data proses berhasil dihapus.');
+    }
+
+    public function activate($id)
+    {
+        $proses = Proses::withTrashed()->findOrFail($id);
+
+        $proses->deleted_at = null;
+        $proses->save();
+
+        return redirect()->back()->with('success', 'Proses berhasil diaktifkan kembali.');
     }
 }

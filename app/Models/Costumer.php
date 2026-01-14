@@ -20,7 +20,7 @@ class Costumer extends Model
 
     public function Perusahaan()
     {
-        return $this->belongsTo(Perusahaan::class, 'id_perusahaan');
+        return $this->belongsTo(Perusahaan::class, 'id_perusahaan')->withTrashed();
     }
 
     public function BarangKeluar()

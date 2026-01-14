@@ -56,10 +56,10 @@ class BarangKeluarController extends Controller
         }
 
         // 5. Logika Filter berdasarkan Tab
-        if ($activeTab === 'produksi') {
+        if ($activeTab === 'PRODUKSI') {
             $query->where('jenis_keluar', 'PRODUKSI');
             $barangDropdownQuery->whereHas('jenisBarang', fn($q) => $q->where('kode', 'BP'));
-        } else if ($activeTab === 'bahan baku') {
+        } else if ($activeTab === 'BAHAN BAKU') {
             $query->where('jenis_keluar', 'BAHAN BAKU');
             $barangDropdownQuery->whereHas('jenisBarang', fn($q) => $q->where('kode', 'BB'));
         } else {
@@ -102,14 +102,14 @@ class BarangKeluarController extends Controller
         $groupedData = $dataPaginated->getCollection()->groupBy(function ($item) use ($activeTab) {
             $tanggal = $item->tanggal_keluar ?? 'no-date';
 
-            if ($activeTab === 'produksi') {
+            if ($activeTab === 'PRODUKSI') {
                 /**
                  * Grouping PRODUKSI: Berdasarkan ID Barang + Tanggal
                  * Karena produksi biasanya dipantau per jenis barang yang dihasilkan di hari tersebut
                  */
                 $barangId = $item->DetailInventory->Inventory->id_barang ?? '0';
                 return 'prod-' . $barangId . '_' . $tanggal;
-            } else if ($activeTab === 'bahan baku') {
+            } else if ($activeTab === 'BAHAN BAKU') {
                 /**
                  * Grouping BAHAN BAKU: Berdasarkan ID Barang + Tanggal
                  * Agar terlihat total pemakaian bahan baku tertentu dalam satu hari
@@ -277,7 +277,7 @@ class BarangKeluarController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('barang-keluar.index')
+            return redirect()->route('barang-keluar.index', ['tab' => $jenis])
                 ->with('success', "Transaksi $jenis berhasil dicatat menggunakan metode FIFO.");
         } catch (\Exception $e) {
             DB::rollBack();
