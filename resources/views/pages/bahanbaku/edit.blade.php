@@ -4,12 +4,13 @@
             {{-- Data Awal --}}
             jumlah: {{ $bahanBaku->jumlah_diterima }},
                 harga: {{ $bahanBaku->harga }},
+                diskon: {{ $bahanBaku->diskon ?? 0 }},
                 selectedFoto: '{{ $bahanBaku->Inventory->Barang->foto ? asset('storage/' . $bahanBaku->Inventory->Barang->foto) : '' }}',
                 selectedKode: '{{ $bahanBaku->Inventory->Barang->kode }}',
                 selectedSatuan: '{{ $bahanBaku->Inventory->Barang->satuan }}',
         
                 {{-- Data Barang & Supplier --}}
-                barangOpen: false,
+            barangOpen: false,
                 barangSearch: '',
                 selectedBarangId: '{{ $bahanBaku->Inventory->id_barang }}',
                 selectedBarangName: '{{ $bahanBaku->Inventory->Barang->nama_barang }}',
@@ -29,7 +30,11 @@
                 selectedSupplierName: '{{ $bahanBaku->Supplier->nama_supplier }}',
                 suppliers: {{ $supplier->map(fn($s) => ['id' => $s->id, 'name' => $s->nama_supplier])->toJson() }},
         
-                get total() { return this.jumlah * this.harga },
+                get total() {
+                    let subtotal = this.jumlah * this.harga;
+                    let potongan = subtotal * (this.diskon / 100);
+                    return subtotal - potongan;
+                },
         
                 get filteredBarangs() {
                     return this.barangs.filter(b =>
@@ -214,7 +219,7 @@
                                                 clip-rule="evenodd" />
                                         </svg>
                                     </span>
-                                    Informasi Kedatangan & QC
+                                    Informasi Kedatangan Bahan Baku
                                 </h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -240,6 +245,21 @@
                                             <input type="number" step="any" name="harga"
                                                 x-model.number="harga"
                                                 class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+
+                                    {{-- Input Diskon Persen --}}
+                                    <div class="space-y-1.5 text-left">
+                                        <label class="text-xs font-bold text-rose-500 uppercase ml-1">Potongan Diskon
+                                            (%)</label>
+                                        <div class="relative">
+                                            {{-- Ganti span Rp menjadi % di sebelah kanan agar lebih intuitif --}}
+                                            <input type="number" step="any" name="diskon"
+                                                x-model.number="diskon"
+                                                class="w-full pl-4 pr-12 py-3 bg-rose-50/30 border border-rose-100 rounded-2xl focus:ring-2 focus:ring-rose-500 font-bold outline-none text-rose-700"
+                                                placeholder="0" min="0" max="100">
+                                            <span
+                                                class="absolute right-4 top-1/2 -translate-y-1/2 text-rose-400 font-bold">%</span>
                                         </div>
                                     </div>
                                 </div>

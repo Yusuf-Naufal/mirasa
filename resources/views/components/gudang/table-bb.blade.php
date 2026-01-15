@@ -4,7 +4,7 @@
     x-data="{
         // Modal Edit Lengkap
         editModalOpen: false,
-        editData: { id: '', jumlah_diterima: 0, jumlah_rusak: 0, stok: 0, harga: 0, tgl_masuk: '', tgl_exp: '', lokasi: '', kondisi_brg: '', kondisi_knd: '' },
+        editData: { id: '', jumlah_diterima: 0, jumlah_rusak: 0, stok: 0, harga: 0, tgl_masuk: '', tgl_exp: '', lokasi: '', kondisi_brg: '', kondisi_knd: '', diskon: 0 },
     
         // Modal Edit Cepat (Tambah/Kurangi Stok & Ubah Harga)
         showActionModal: false,
@@ -139,6 +139,7 @@
                                     jumlah_rusak: '{{ $i->jumlah_rusak }}', 
                                     stok: '{{ $i->stok }}', 
                                     harga: '{{ $i->harga }}', 
+                                    diskon: '{{ $i->diskon }}', 
                                     tgl_masuk: '{{ $i->tanggal_masuk }}', 
                                     lokasi: '{{ $i->tempat_penyimpanan }}', 
                                 })"
@@ -237,27 +238,42 @@
                     @method('PATCH')
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-                        {{-- Baris 1: Tanggal & Lokasi --}}
+                        {{-- Baris 1: Tanggal Masuk --}}
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Tanggal Masuk</label>
                             <input type="date" name="tanggal_masuk" x-model="editData.tgl_masuk"
                                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
                         </div>
 
-                        {{-- Baris 3: Kuantitas --}}
+                        {{-- Baris 1: Jumlah Diterima --}}
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-blue-600 uppercase ml-1">Jumlah Diterima</label>
-                            <input type="number" name="jumlah_diterima" x-model.number="editData.jumlah_diterima"
+                            <input type="number" step="any" name="jumlah_diterima"
+                                x-model.number="editData.jumlah_diterima"
                                 class="w-full px-4 py-2.5 bg-blue-50/30 border border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-sm">
                         </div>
 
+                        {{-- Baris 2: Harga Per Satuan --}}
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Harga Per Satuan</label>
                             <div class="relative">
                                 <span
                                     class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">Rp</span>
-                                <input type="number" name="harga" x-model.number="editData.harga"
+                                <input type="number" step="any" name="harga" x-model.number="editData.harga"
                                     class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-sm">
+                            </div>
+                        </div>
+
+                        {{-- Baris 2: Diskon Baru (%) --}}
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-rose-500 uppercase ml-1">Diskon Baru (%)</label>
+                            <div class="relative">
+                                <input type="number" step="any" name="diskon_persen"
+                                    x-model.number="editData.diskon"
+                                    class="w-full pl-4 pr-10 py-2.5 bg-rose-50/30 border border-rose-100 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-bold text-rose-600 text-sm"
+                                    placeholder="0" min="0" max="100">
+                                <span
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-rose-400 font-bold text-xs">%</span>
                             </div>
                         </div>
                     </div>

@@ -52,8 +52,20 @@ class BarangKeluar extends Model
 
     protected static function booted()
     {
+        static::creating(function ($keluar) {
+            $detail = $keluar->DetailInventory;
+            if ($detail) {
+                // Formula: total_harga / jumlah_diterima
+                $hargaNetto = $detail->jumlah_diterima > 0
+                    ? ($detail->total_harga / $detail->jumlah_diterima)
+                    : $detail->harga;
+
+                $keluar->harga = $hargaNetto;
+                $keluar->total_harga = $keluar->jumlah_keluar * $hargaNetto;
+            }
+        });
+
         static::created(function ($keluar) {
-            // Logika pemotongan stok otomatis tetap sama
             $detail = $keluar->DetailInventory;
             if ($detail) {
                 $detail->stok -= $keluar->jumlah_keluar;
@@ -62,7 +74,6 @@ class BarangKeluar extends Model
         });
 
         static::deleted(function ($keluar) {
-            // Kembalikan stok jika catatan dihapus
             $detail = $keluar->DetailInventory;
             if ($detail) {
                 $detail->stok += $keluar->jumlah_keluar;

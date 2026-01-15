@@ -18,6 +18,8 @@ return new class extends Migration
             $table->unsignedBigInteger('id_pengeluaran')->nullable();
             $table->date('tanggal_pemakaian')->nullable();
             $table->double('jumlah_gas')->nullable();
+            $table->double('harga')->nullable();
+            $table->double('total_harga')->nullable();
             $table->timestamps();
         });
     }

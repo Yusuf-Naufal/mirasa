@@ -14,6 +14,8 @@ class PemakaianGas extends Model
         'id_pengeluaran',
         'tanggal_pemakaian',
         'jumlah_gas',
+        'harga',
+        'total_harga',
     ];
 
     public function Perusahaan()

@@ -41,7 +41,7 @@ class PerusahaanSeeder extends Seeder
         ];
 
         foreach ($perusahaan as $p) {
-            DB::table('perusahaans')->insert(array_merge($p, [
+            DB::table('perusahaan')->insert(array_merge($p, [
                 'created_at' => now(),
                 'updated_at' => now(),
             ]));

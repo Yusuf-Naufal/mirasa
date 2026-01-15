@@ -32,7 +32,7 @@ class CostumerSeeder extends Seeder
         ];
 
         foreach ($costumers as $c) {
-            DB::table('costumers')->insert(array_merge($c, [
+            DB::table('costumer')->insert(array_merge($c, [
                 'created_at' => now(),
                 'updated_at' => now(),
             ]));
