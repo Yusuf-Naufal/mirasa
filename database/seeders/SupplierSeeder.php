@@ -32,7 +32,7 @@ class SupplierSeeder extends Seeder
         ];
 
         foreach ($suppliers as $data) {
-            DB::table('suppliers')->insert(array_merge($data, [
+            DB::table('supplier')->insert(array_merge($data, [
                 'created_at' => now(),
                 'updated_at' => now(),
             ]));

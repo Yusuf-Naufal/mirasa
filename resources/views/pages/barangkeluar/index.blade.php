@@ -1,5 +1,5 @@
 <x-layout.beranda.app title="Daftar Barang Keluar">
-    <div class="md:px-10 py-6 flex flex-col" x-data="{ tab: 'produksi', menuOpen: false }">
+    <div class="md:px-10 py-6 flex flex-col" x-data="{ tab: 'PRODUKSI', menuOpen: false }">
         <div class="flex-1 pt-12">
 
             {{-- 1. HEADER --}}

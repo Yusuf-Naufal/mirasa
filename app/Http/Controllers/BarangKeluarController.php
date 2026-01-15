@@ -21,7 +21,7 @@ class BarangKeluarController extends Controller
     public function index(Request $request)
     {
         // 1. Ambil parameter filter
-        $activeTab = $request->get('tab', 'produksi');
+        $activeTab = $request->get('tab', 'PRODUKSI');
         $search = $request->get('search');
         $idPerusahaanFilter = $request->get('id_perusahaan');
         $dateRange = $request->get('date_range');
