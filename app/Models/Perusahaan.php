@@ -17,6 +17,8 @@ class Perusahaan extends Model
         'jenis_perusahaan',
         'alamat',
         'kontak',
+        'kota',
+        'logo',
     ];
 
     public function Inventory()
@@ -43,9 +45,29 @@ class Perusahaan extends Model
     {
         return $this->hasMany(Proses::class, 'id_perusahaan');
     }
+
+    public function BarangKeluar()
+    {
+        return $this->hasMany(BarangKeluar::class, 'id_perusahaan');
+    }
     
-    public function Suplier()
+    public function Supplier()
     {
         return $this->hasMany(Supplier::class, 'id_perusahaan');
+    }
+
+    public function Produksi()
+    {
+        return $this->hasMany(Produksi::class, 'id_perusahaan');
+    }
+
+    public function PemakaianGas()
+    {
+        return $this->hasMany(PemakaianGas::class, 'id_perusahaan');
+    }
+
+    public function Pengeluaran()
+    {
+        return $this->hasMany(Pengeluaran::class, 'id_perusahaan');
     }
 }

@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Daftar Pengguna">
 
     <div class="space-y-2">
         <div class="flex flex-col gap-4 md:justify-between">
@@ -78,7 +78,7 @@
                             @foreach ($perusahaan as $p)
                                 <option value="{{ $p->id }}"
                                     {{ request('id_perusahaan') == $p->id ? 'selected' : '' }}>
-                                    {{ $p->nama_perusahaan }}
+                                    {{ $p->nama_perusahaan }} ({{ $p->kota }})
                                 </option>
                             @endforeach
                         </select>

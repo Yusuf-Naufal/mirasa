@@ -8,7 +8,6 @@ use App\Models\JenisBarang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Contracts\Validation\Rule;
 
 class BarangController extends Controller
 {
@@ -19,29 +18,35 @@ class BarangController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Dropdown Perusahaan: Jika bukan Super Admin, hanya ambil perusahaan miliknya
+        // 1. Dropdown Perusahaan
         if ($user->hasRole('Super Admin')) {
-            $perusahaan = Perusahaan::all();
+            $perusahaan = Perusahaan::whereNull('deleted_at')->get();
         } else {
             $perusahaan = Perusahaan::where('id', $user->id_perusahaan)->get();
         }
 
-        // Dropdown Jenis Barang tetap tampil semua
         $jenis = JenisBarang::all();
 
-        // 2. Query dasar dengan eager loading
-        $query = Barang::whereNull('deleted_at')->with(['perusahaan', 'jenisBarang']);
+        // 2. Inisialisasi Query berdasarkan Status
+        if ($request->status == 'tidak_aktif') {
+            $query = Barang::onlyTrashed();
+        } elseif ($request->status == 'semua') {
+            $query = Barang::withTrashed();
+        } else {
+            $query = Barang::query();
+        }
 
-        // 3. PROTEKSI DATA: Jika selain Super Admin, kunci ke perusahaan sendiri
+        // Load relasi
+        $query->with(['perusahaan', 'jenisBarang']);
+
+        // 3. PROTEKSI DATA & FILTER PERUSAHAAN
         if (!$user->hasRole('Super Admin')) {
             $query->where('id_perusahaan', $user->id_perusahaan);
-        }
-        // Jika Super Admin dan filter perusahaan dipilih
-        elseif ($request->filled('id_perusahaan')) {
+        } elseif ($request->filled('id_perusahaan')) {
             $query->where('id_perusahaan', $request->id_perusahaan);
         }
 
-        // 4. Filter berdasarkan Search (Nama Barang atau Kode)
+        // 4. Filter berdasarkan Search
         if ($request->filled('search')) {
             $search = strtolower($request->search);
             $query->where(function ($q) use ($search) {
@@ -56,7 +61,7 @@ class BarangController extends Controller
         }
 
         // 6. Eksekusi Query
-        $barang = $query->orderBy('id_jenis', 'asc')
+        $barang = $query->latest()
             ->paginate(10)
             ->withQueryString();
 
@@ -85,12 +90,14 @@ class BarangController extends Controller
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->id_perusahaan : $user->id_perusahaan;
 
         $request->validate([
-            'id_perusahaan' => 'required|exists:perusahaan,id',
-            'id_jenis'      => 'required|exists:jenis_barang,id',
-            'nama_barang'   => "required|string|unique:barang,nama_barang,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
-            'kode'          => "required|string|unique:barang,kode,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
-            'satuan'        => 'required|string',
-            'cropped_image' => 'nullable|string',
+            'id_perusahaan'     => 'required|exists:perusahaan,id',
+            'id_jenis'          => 'required|exists:jenis_barang,id',
+            'nama_barang'       => "required|string|unique:barang,nama_barang,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+            'kode'              => "required|string|unique:barang,kode,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+            'satuan'            => 'required|string',
+            'nilai_konversi'    => 'nullable',
+            'isi_bungkus'       => 'nullable',
+            'cropped_image'     => 'nullable|string',
         ], [
             'nama_barang.unique' => 'Nama barang sudah ada di perusahaan ini.',
             'kode.unique'        => 'Kode barang sudah ada di perusahaan ini.',
@@ -101,7 +108,7 @@ class BarangController extends Controller
         $kodeFinal = strtoupper($jenis->kode . '-' . $request->kode);
 
         // 2. Persiapkan Data
-        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan']);
+        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan', 'nilai_konversi', 'isi_bungkus']);
         $data['kode'] = $kodeFinal;
         $data['satuan'] = strtoupper($request->satuan);
 
@@ -140,7 +147,7 @@ class BarangController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $barang = Barang::findOrFail($id);
+        $barang = Barang::withTrashed()->findOrFail($id);
         $user = auth()->user();
 
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->id_perusahaan : $user->id_perusahaan;
@@ -153,24 +160,27 @@ class BarangController extends Controller
         $request->merge(['kode_gabungan' => $kodeFinal]);
 
         $request->validate([
-            'id_perusahaan' => 'required|exists:perusahaan,id',
-            'id_jenis'      => 'required|exists:jenis_barang,id',
-            'nama_barang'   => "required|string|unique:barang,nama_barang,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
-            'kode_gabungan' => "required|string|unique:barang,kode,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
-
-            'satuan'        => 'required|string',
-            'cropped_image' => 'nullable|string',
+            'id_perusahaan'     => 'required|exists:perusahaan,id',
+            'id_jenis'          => 'required|exists:jenis_barang,id',
+            'nama_barang'       => "required|string|unique:barang,nama_barang,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+            'kode_gabungan'     => "required|string|unique:barang,kode,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
+            'nilai_konversi'    => 'nullable',
+            'isi_bungkus'       => 'nullable',
+            'satuan'            => 'required|string',
+            'cropped_image'     => 'nullable|string',
         ], [
             'nama_barang.unique' => 'Nama barang sudah ada di perusahaan ini.',
             'kode_gabungan.unique' => 'Kode barang sudah ada di perusahaan ini.',
         ]);
 
         $data = [
-            'id_perusahaan' => $idPerusahaan,
-            'id_jenis'      => $request->id_jenis,
-            'nama_barang'   => $request->nama_barang,
-            'kode'          => $kodeFinal, // Simpan hasil gabungan
-            'satuan'        => strtoupper($request->satuan),
+            'id_perusahaan'     => $idPerusahaan,
+            'id_jenis'          => $request->id_jenis,
+            'nama_barang'       => $request->nama_barang,
+            'nilai_konversi'    => $request->nilai_konversi,
+            'isi_bungkus'       => $request->isi_bungkus,
+            'kode'              => $kodeFinal, // Simpan hasil gabungan
+            'satuan'            => strtoupper($request->satuan),
         ];
 
         // 3. Logika Update Gambar
@@ -195,6 +205,31 @@ class BarangController extends Controller
         $barang->delete();
 
         return redirect()->route('barang.index')->with('success', 'Barang berhasil dipindahkan ke sampah');
+    }
+
+    public function activate($id)
+    {
+        // 1. Cari data yang akan di-restore (termasuk yang sedang terhapus)
+        $barang = Barang::withTrashed()->findOrFail($id);
+
+        // 2. Cek apakah ada barang AKTIF lain dengan Nama & Kode yang sama di perusahaan yang sama
+        $isDuplicate = Barang::where('id_perusahaan', $barang->id_perusahaan)
+            ->where(function ($q) use ($barang) {
+                $q->where('nama_barang', $barang->nama_barang)
+                    ->orWhere('kode', $barang->kode);
+            })
+            ->where('id', '!=', $id)
+            ->exists();
+
+        // 3. Jika ditemukan duplikat, batalkan proses dan kirim pesan error
+        if ($isDuplicate) {
+            return redirect()->back()->with('error', 'Gagal mengaktifkan! Nama atau Kode barang tersebut sudah digunakan oleh barang aktif lain di perusahaan ini.');
+        }
+
+        // 4. Proses Restore
+        $barang->restore();
+
+        return redirect()->back()->with('success', 'Barang berhasil diaktifkan kembali.');
     }
 
     private function processBase64Crop($base64String)

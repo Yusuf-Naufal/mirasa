@@ -1,22 +1,28 @@
-<x-layout.beranda.app>
+<x-layout.beranda.app title="Tambah Bahan Baku">
     <div class="min-h-screen bg-gray-50/50 md:px-10 py-8">
         <div class="mx-auto flex flex-col pt-12" x-data="{
-                jumlah: 0,
-                harga: 0,
-                selectedFoto: '',
-                selectedKode: '-',
-                selectedSatuan: '-',
-                get total() { return this.jumlah * this.harga },
-                updateBarang(e) {
-                    const opt = e.target.options[e.target.selectedIndex];
-                    this.selectedKode = opt.dataset.kode || '-';
-                    this.selectedSatuan = opt.dataset.satuan || '-';
-                    this.selectedFoto = opt.dataset.foto ? '/storage/' + opt.dataset.foto : '';
-                }
-            }">
+            jumlah: 0,
+            harga: 0,
+            diskon: 0,
+            selectedFoto: '',
+            selectedKode: '-',
+            selectedSatuan: '-',
+            get total() {
+                let subtotal = this.jumlah * this.harga;
+                let potongan = subtotal * (this.diskon / 100);
+                let hasil = subtotal - potongan;
+                return hasil > 0 ? hasil : 0;
+            },
+            updateBarang(e) {
+                const opt = e.target.options[e.target.selectedIndex];
+                this.selectedKode = opt.dataset.kode || '-';
+                this.selectedSatuan = opt.dataset.satuan || '-';
+                this.selectedFoto = opt.dataset.foto ? '/storage/' + opt.dataset.foto : '';
+            }
+        }">
 
             {{-- Header Section --}}
-            <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 text-left">
                 <div>
                     <a href="{{ route('inventory.index') }}"
                         class="group inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-semibold transition-all mb-3">
@@ -33,7 +39,8 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+            {{-- Container Utama: Hapus overflow-hidden agar dropdown bisa 'keluar' dari box --}}
+            <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100">
                 <form action="{{ route('inventory.store-bahan') }}" method="POST" class="p-6 md:p-10">
                     @csrf
                     <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
@@ -41,7 +48,7 @@
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
                         {{-- Kiri: Pemilihan Barang & Supplier --}}
-                        <div class="lg:col-span-5 space-y-6" x-data="{
+                        <div class="lg:col-span-5 space-y-6 relative z-30" x-data="{
                             // Data Barang
                             barangOpen: false,
                             barangSearch: '',
@@ -90,13 +97,13 @@
                             }
                         }">
                             <div
-                                class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 border border-blue-100/50">
+                                class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 border border-blue-100/50 text-left">
                                 <label
                                     class="block text-sm font-bold text-blue-900 mb-4 uppercase tracking-wider">Identitas
                                     Logistik</label>
 
-                                {{-- 1. Searchable Select: Supplier --}}
-                                <div class="mb-4 space-y-2">
+                                {{-- 1. Searchable Select: Supplier (Z-Index tertinggi di grup kiri) --}}
+                                <div class="mb-4 space-y-2 relative z-[50]">
                                     <label class="text-[10px] font-bold text-blue-400 uppercase ml-1">Supplier /
                                         Vendor</label>
                                     <div class="relative">
@@ -115,7 +122,7 @@
                                         </button>
 
                                         <div x-show="supplierOpen" @click.away="supplierOpen = false"
-                                            class="absolute z-[60] w-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
+                                            class="absolute z-[100] w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
                                             x-cloak x-transition>
                                             <div class="p-2 border-b border-gray-50 bg-gray-50/50">
                                                 <input type="text" x-model="supplierSearch"
@@ -142,7 +149,7 @@
                                 </div>
 
                                 {{-- 2. Image Preview --}}
-                                <div class="relative group mb-4 text-center">
+                                <div class="relative group mb-4 text-center z-10">
                                     <div
                                         class="aspect-square w-full max-w-[150px] mx-auto bg-white rounded-2xl flex items-center justify-center border-2 border-dashed border-blue-200 overflow-hidden shadow-inner transition-all">
                                         <template x-if="!selectedFoto">
@@ -163,11 +170,11 @@
                                     </div>
                                 </div>
 
-                                {{-- 3. Searchable Select: Nama Barang --}}
-                                <div class="space-y-4">
+                                {{-- 3. Searchable Select: Nama Barang (Z-Index menengah) --}}
+                                <div class="space-y-4 relative z-[40]">
                                     <div class="space-y-2">
                                         <label class="text-[10px] font-bold text-blue-400 uppercase ml-1">Pilih Bahan
-                                            Penolong</label>
+                                            Baku</label>
                                         <div class="relative">
                                             <input type="hidden" name="id_barang" :value="selectedBarangId">
                                             <button type="button"
@@ -185,7 +192,7 @@
                                             </button>
 
                                             <div x-show="barangOpen" @click.away="barangOpen = false"
-                                                class="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
+                                                class="absolute z-[100] w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
                                                 x-cloak x-transition>
                                                 <div class="p-2 border-b border-gray-50 bg-gray-50/50">
                                                     <input type="text" x-model="barangSearch"
@@ -208,8 +215,8 @@
                                         </div>
                                     </div>
 
-                                    {{-- 4. Info Kode & Satuan --}}
-                                    <div class="grid grid-cols-2 gap-3">
+                                    {{-- 4. Info Kode & Satuan (Z-Index rendah) --}}
+                                    <div class="grid grid-cols-2 gap-3 relative z-10">
                                         <div
                                             class="bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-blue-100 shadow-sm">
                                             <p class="text-[10px] text-blue-400 font-bold uppercase tracking-tighter">
@@ -229,46 +236,63 @@
                             </div>
                         </div>
 
-                        {{-- Kanan: Detail Input --}}
-                        <div class="lg:col-span-7 space-y-8 text-left">
+                        {{-- Kanan: Detail Input (Relative z-10 agar di bawah dropdown kolom kiri) --}}
+                        <div class="lg:col-span-7 space-y-8 text-left relative z-10">
                             <div>
                                 <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                                    <span class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-blue-200">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg>
+                                    <span
+                                        class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center mr-3 shadow-lg shadow-blue-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
+                                            fill="currentColor">
+                                            <path
+                                                d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
+                                            <path fill-rule="evenodd"
+                                                d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                                                clip-rule="evenodd" />
+                                        </svg>
                                     </span>
-                                    Informasi Kedatangan & QC
+                                    Informasi Kedatangan Bahan Baku
                                 </h3>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div class="md:col-span-2 space-y-1.5 text-left">
-                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Tanggal Masuk</label>
-                                        <input type="date" name="tanggal_masuk" value="{{ date('Y-m-d') }}" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Tanggal
+                                            Masuk</label>
+                                        <input type="date" name="tanggal_masuk" value="{{ date('Y-m-d') }}"
+                                            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                                     </div>
+
                                     <div class="space-y-1.5 text-left">
-                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Kondisi Barang</label>
-                                        <select name="kondisi_barang" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all outline-none">
-                                            <option value="Sesuai Standar">Sesuai Standar</option>
-                                            <option value="Tidak Sesuai">Tidak Sesuai</option>
-                                        </select>
-                                    </div>
-                                    <div class="space-y-1.5 text-left">
-                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1 text-left block">Kondisi Kendaraan</label>
-                                        <select name="kondisi_kendaraan" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all outline-none">
-                                            <option value="Baik">Baik / Bersih</option>
-                                            <option value="Kotor">Kotor</option>
-                                        </select>
-                                    </div>
-                                    <div class="space-y-1.5 text-left">
-                                        <label class="text-xs font-bold text-blue-600 uppercase ml-1">Jumlah Diterima</label>
-                                        <input type="number" step="any" name="jumlah_diterima" x-model.number="jumlah"
+                                        <label class="text-xs font-bold text-blue-600 uppercase ml-1">Jumlah
+                                            Diterima</label>
+                                        <input type="number" step="any" name="jumlah_diterima"
+                                            x-model.number="jumlah"
                                             class="w-full px-4 py-3 bg-blue-50/30 border border-blue-100 rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold outline-none">
                                     </div>
+
                                     <div class="space-y-1.5 text-left">
-                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Harga Per Satuan</label>
+                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Harga Per
+                                            Satuan</label>
                                         <div class="relative">
-                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">Rp</span>
-                                            <input type="number" step="any" name="harga" x-model.number="harga"
+                                            <span
+                                                class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">Rp</span>
+                                            <input type="number" step="any" name="harga"
+                                                x-model.number="harga"
                                                 class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold outline-none">
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-1.5 text-left">
+                                        <label class="text-xs font-bold text-rose-500 uppercase ml-1">Potongan Diskon
+                                            (%)</label>
+                                        <div class="relative">
+
+                                            <input type="number" step="any" name="diskon"
+                                                x-model.number="diskon"
+                                                class="w-full pl-4 pr-12 py-3 bg-rose-50/30 border border-rose-100 rounded-2xl focus:ring-2 focus:ring-rose-500 font-bold outline-none text-rose-700"
+                                                placeholder="0" min="0" max="100">
+                                            <span
+                                                class="absolute right-4 top-1/2 -translate-y-1/2 text-rose-400 font-bold">%</span>
                                         </div>
                                     </div>
                                 </div>
@@ -276,22 +300,29 @@
 
                             {{-- Total Section --}}
                             <div class="bg-green-100 rounded-3xl p-6 text-green-700 shadow-xl border border-green-200">
-                                <div class="flex justify-between items-center mb-1 text-green-600 text-xs font-bold uppercase">
+                                <div
+                                    class="flex justify-between items-center mb-1 text-green-600 text-xs font-bold uppercase">
                                     <span>Total Biaya Bahan</span>
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
                                 </div>
                                 <div class="text-3xl font-black tracking-tight flex items-center gap-2">
                                     <span>Rp</span>
                                     <span x-text="new Intl.NumberFormat('id-ID').format(total)">0</span>
                                 </div>
                                 <input type="hidden" name="total_harga" :value="total">
-                                <input type="hidden" name="stok" value="0"> {{-- Sesuai req: tidak masuk stok master --}}
+                                <input type="hidden" name="stok" value="0">
                             </div>
 
                             <button type="submit"
                                 class="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-green-200 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                    fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                        clip-rule="evenodd" />
                                 </svg>
                                 Catat Pembelian Bahan
                             </button>

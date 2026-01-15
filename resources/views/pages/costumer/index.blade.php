@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Daftar Costumer">
 
     <div class="space-y-2">
         <div class="flex flex-col gap-4 md:justify-between">
@@ -82,7 +82,7 @@
                                 @foreach ($perusahaan as $p)
                                     <option value="{{ $p->id }}"
                                         {{ request('id_perusahaan') == $p->id ? 'selected' : '' }}>
-                                        {{ $p->nama_perusahaan }}
+                                        {{ $p->nama_perusahaan }} ({{ $p->kota }})
                                     </option>
                                 @endforeach
                             </select>
@@ -93,13 +93,14 @@
                             Costumer</label>
                         <select name="status" id="filter_status"
                             class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] focus:outline-none focus:ring-2 focus:ring-[#FFC829]/20 outline-none">
-                            <option value="">Semua Status</option>
+                            <option value="">Default (Aktif)</option>
                             <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif (Tersedia)
                             </option>
                             <option value="tidak_aktif" {{ request('status') == 'tidak_aktif' ? 'selected' : '' }}>Tidak
                                 Aktif (Terhapus)</option>
                         </select>
                     </div>
+                    
                 </div>
 
                 <div class="mt-8 flex items-center gap-3">
@@ -129,7 +130,7 @@
                                 class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
                                 @foreach ($perusahaan as $p)
                                     <option value="{{ $p->id }}">
-                                        {{ $p->nama_perusahaan }}
+                                        {{ $p->nama_perusahaan }} ({{ $p->kota }})
                                     </option>
                                 @endforeach
                             </select>

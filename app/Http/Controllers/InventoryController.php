@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
+use App\Models\Produksi;
+use App\Models\Supplier;
 use App\Models\Inventory;
 use App\Models\JenisBarang;
+use App\Models\BarangKeluar;
 use Illuminate\Http\Request;
 use App\Models\DetailInventory;
-use App\Models\Supplier;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,40 +21,100 @@ class InventoryController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-
         $jenisBarang = JenisBarang::all();
+        $search = strtolower($request->search);
+        $id_jenis = $request->id_jenis;
 
-        // 1. Query dasar dengan Eager Loading
-        // Kita panggil 'Barang.JenisBarang' agar bisa melakukan GroupBy di View nanti
-        $query = Inventory::with(['Barang.jenisBarang', 'Perusahaan']);
+        // Base Query Builder function untuk efisiensi
+        $getBaseQuery = function () use ($user, $request, $search, $id_jenis) {
+            // 1. Gunakan with(['Barang' => fn($q) => $q->withTrashed()...])
+            $q = Inventory::with([
+                'Barang' => function ($query) {
+                    $query->withTrashed(); // Load data barang meski sudah softdelete
+                },
+                'Barang.jenisBarang',
+                'Perusahaan'
+            ])
+                // 2. Filter utama: Tampilkan jika (Barang TIDAK dihapus) ATAU (Barang DIHAPUS tapi STOK > 0)
+                ->whereHas('Barang', function ($bq) {
+                    $bq->withTrashed()
+                        ->where(function ($sub) {
+                            $sub->whereNull('deleted_at') // Barang aktif
+                                ->orWhere(function ($stokQuery) {
+                                    $stokQuery->whereNotNull('deleted_at') // Barang terhapus
+                                        ->where('inventory.stok', '>', 0); // Tapi stok masih ada
+                                });
+                        });
+                })
+                ->whereHas('Barang.jenisBarang');
 
-        // 2. Proteksi Data: Hanya ambil data milik perusahaan user login
-        if (!$user->hasRole('Super Admin')) {
-            $query->where('id_perusahaan', $user->id_perusahaan);
-        } elseif ($request->filled('id_perusahaan')) {
-            $query->where('id_perusahaan', $request->id_perusahaan);
-        }
+            // Proteksi Data
+            if (!$user->hasRole('Super Admin')) {
+                $q->where('id_perusahaan', $user->id_perusahaan);
+            } elseif ($request->filled('id_perusahaan')) {
+                $q->where('id_perusahaan', $request->id_perusahaan);
+            }
 
-        // 3. Fitur Search
-        if ($request->filled('search')) {
-            $search = strtolower($request->search);
-            $query->whereHas('Barang', function ($q) use ($search) {
-                $q->whereRaw('LOWER(nama_barang) like ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(kode) like ?', ["%{$search}%"]);
-            });
-        }
+            // Search Filter (Gunakan withTrashed agar pencarian kena ke barang yang dihapus)
+            if ($search) {
+                $q->whereHas('Barang', function ($bq) use ($search) {
+                    $bq->withTrashed()
+                        ->where(function ($sub) use ($search) {
+                            $sub->whereRaw('LOWER(nama_barang) like ?', ["%{$search}%"])
+                                ->orWhereRaw('LOWER(kode) like ?', ["%{$search}%"]);
+                        });
+                });
+            }
 
-        // Filter berdasarkan Jenis Barang
-        if ($request->filled('id_jenis')) {
-            $query->whereHas('Barang', function ($q) use ($request) {
-                $q->where('id_jenis', $request->id_jenis);
-            });
-        }
+            // Jenis Barang Filter
+            if ($id_jenis) {
+                $q->whereHas('Barang', function ($bq) use ($id_jenis) {
+                    $bq->withTrashed()->where('id_jenis', $id_jenis);
+                });
+            }
 
-        // 4. Ambil data dengan Pagination
-        $inventory = $query->latest()->paginate(15)->withQueryString();
+            return $q;
+        };
 
-        return view('pages.gudang.index', compact('inventory', 'jenisBarang'));
+        // 2. Hitung Statistik (Berdasarkan ID Barang yang Unik)
+        $stats = [
+            // 1. Habis: Stok benar-benar 0
+            'habis'   => $getBaseQuery()->where('stok', '<=', 0)
+                ->distinct('id_barang')->count('id_barang'),
+
+            // 2. Limit: Stok > 0 DAN Stok < minimum_stok
+            'limit'   => $getBaseQuery()->whereColumn('stok', '<', 'minimum_stok')
+                ->where('stok', '>', 0)
+                ->distinct('id_barang')->count('id_barang'),
+
+            // 3. Warning: Stok mendekati limit (Hanya untuk limit > 0)
+            'warning' => $getBaseQuery()->whereRaw('minimum_stok > 0 AND stok >= minimum_stok AND stok <= (minimum_stok * 1.2)')
+                ->where('stok', '>', 0)
+                ->distinct('id_barang')->count('id_barang'),
+        ];
+
+        // 1. HASIL PRODUKSI (FG, WIP, EC) - Scrollable (Ambil semua yang sesuai filter)
+        $produksiItems = $getBaseQuery()->whereHas('Barang.jenisBarang', function ($q) {
+            $q->whereIn('kode', ['FG', 'WIP', 'EC']);
+        })->latest()->get();
+
+        // 2. BAHAN BAKU (BB) - Paginate 20
+        $bahanBakuItems = $getBaseQuery()->whereHas('Barang.jenisBarang', function ($q) {
+            $q->where('kode', 'BB');
+        })->latest()->paginate(20, ['*'], 'page_bb')->withQueryString();
+
+        // 3. BAHAN PENOLONG (BP) - Paginate 20
+        $penolongItems = $getBaseQuery()->whereHas('Barang.jenisBarang', function ($q) {
+            $q->where('kode', 'BP');
+        })->latest()->paginate(20, ['*'], 'page_bp')->withQueryString();
+
+        return view('pages.gudang.index', compact(
+            'produksiItems',
+            'bahanBakuItems',
+            'penolongItems',
+            'jenisBarang',
+            'stats'
+        ));
     }
 
     /**
@@ -104,6 +166,7 @@ class InventoryController extends Controller
         $user = auth()->user();
 
         $supplier = Supplier::where('jenis_supplier', 'Barang')
+            ->where('id_perusahaan', $user->id_perusahaan)
             ->whereNull('deleted_at')
             ->get();
 
@@ -135,6 +198,7 @@ class InventoryController extends Controller
             'jumlah_diterima'    => 'required|numeric|min:0.01',
             'harga'              => 'required|numeric|min:0',
             'tempat_penyimpanan' => 'nullable|string|max:255',
+            'nomor_batch'        => 'nullable|string|max:255',
             'total_harga'        => 'required|numeric',
         ], [
             'id_barang.required'      => 'Silahkan pilih barang terlebih dahulu.',
@@ -168,7 +232,6 @@ class InventoryController extends Controller
             }
 
             // 3. Simpan Riwayat ke tabel DetailInventory
-            // Anggap saja tabel detail_inventory menampung info spesifik per batch masuk
             DB::table('detail_inventory')->insert([
                 'id_inventory'       => $inventory->id,
                 'tanggal_masuk'      => $request->tanggal_masuk,
@@ -178,6 +241,8 @@ class InventoryController extends Controller
                 'harga'              => $request->harga,
                 'total_harga'        => $request->total_harga,
                 'tempat_penyimpanan' => $request->tempat_penyimpanan,
+                'nomor_batch'        => $request->nomor_batch,
+                'status'             => 'Tersedia',
                 'created_at'         => now(),
                 'updated_at'         => now(),
             ]);
@@ -199,76 +264,90 @@ class InventoryController extends Controller
 
     public function storeBahan(Request $request)
     {
-        // 1. Validasi Input (Disesuaikan dengan field baru di Blade)
+        // 1. Validasi Input
         $request->validate([
             'id_perusahaan'      => 'required|exists:perusahaan,id',
             'id_barang'          => 'required|exists:barang,id',
+            'id_supplier'        => 'required|exists:supplier,id',
             'tanggal_masuk'      => 'required|date',
             'tempat_penyimpanan' => 'nullable|string|max:255',
-            'kondisi_barang'     => 'nullable|string',
-            'kondisi_kendaraan'  => 'nullable|string',
-            'jumlah_diterima'    => 'nullable|numeric|min:0',
+            'jumlah_diterima'    => 'required|numeric|min:0',
             'jumlah_rusak'       => 'nullable|numeric|min:0',
             'stok'               => 'nullable|numeric|min:0',
             'harga'              => 'nullable|numeric|min:0',
             'total_harga'        => 'nullable|numeric|min:0',
+            'diskon'      => 'nullable|numeric|min:0|max:100', // Validasi diskon persen
         ], [
             'id_barang.required' => 'Silahkan pilih barang terlebih dahulu.',
-            'stok.min'           => 'Stok bersih tidak boleh kurang dari 0.',
+            'jumlah_diterima.required' => 'Jumlah barang masuk harus diisi.',
+            'diskon.max' => 'Diskon tidak boleh lebih dari 100%.',
         ]);
 
         try {
-            // Mulai Transaksi Database
             DB::beginTransaction();
 
-            // 2. Update atau Buat data di tabel Inventory (Master Stok)
-            $inventory = Inventory::where('id_perusahaan', $request->id_perusahaan)
-                ->where('id_barang', $request->id_barang)
-                ->first();
+            $jumlahMasuk = (float) $request->jumlah_diterima;
+            $jumlahRusak = (float) ($request->jumlah_rusak ?? 0);
+            $stokBersih  = $request->stok > 0 ? (float) $request->stok : ($jumlahMasuk - $jumlahRusak);
 
-            if ($inventory) {
-                // Update master stok (Tambah dengan stok bersih)
-                $inventory->stok += $request->stok;
-                $inventory->save();
-            } else {
-                // Buat record master stok baru
-                $inventory = Inventory::create([
-                    'id_perusahaan' => $request->id_perusahaan,
-                    'id_barang'     => $request->id_barang,
-                    'stok'          => $request->stok,
-                    'tanggal_masuk' => $request->tanggal_masuk,
-                    'minimum_stok'  => 0,
-                ]);
-            }
+            // --- LOGIKA DISKON ---
+            $hargaSatuan = (float) ($request->harga ?? 0);
+            $diskonPersen = (float) ($request->diskon_persen ?? 0);
 
-            // 3. Simpan Riwayat Detail (Record Per Batch Kedatangan)
-            DB::table('detail_inventory')->insert([
-                'id_inventory'       => $inventory->id,
-                'tanggal_masuk'      => $request->tanggal_masuk,
-                'jumlah_diterima'    => $request->jumlah_diterima,
-                'jumlah_rusak'       => $request->jumlah_rusak,
-                'stok'               => $request->stok,
-                'harga'              => $request->harga,
-                'total_harga'        => $request->total_harga,
-                'kondisi_barang'     => $request->kondisi_barang,
-                'kondisi_kendaraan'  => $request->kondisi_kendaraan,
-                'tempat_penyimpanan' => $request->tempat_penyimpanan ?? null,
-                'created_at'         => now(),
-                'updated_at'         => now(),
+            // Hitung total harga jika tidak dikirim dari frontend (Back-end safety calculation)
+            $subtotal = $jumlahMasuk * $hargaSatuan;
+            $potongan = $subtotal * ($diskonPersen / 100);
+            $totalSetelahDiskon = $subtotal - $potongan;
+
+            // Gunakan total_harga dari request jika ada, jika tidak gunakan hasil hitung manual
+            $totalFinal = $request->total_harga ?? $totalSetelahDiskon;
+
+            // 1. Cari atau buat Produksi
+            $produksi = Produksi::firstOrCreate([
+                'id_perusahaan'    => $request->id_perusahaan,
+                'tanggal_produksi' => $request->tanggal_masuk,
             ]);
 
-            // Commit jika semua query berhasil
+            // 2. Cari atau buat Inventory (Master)
+            $inventory = Inventory::firstOrCreate(
+                ['id_perusahaan' => $request->id_perusahaan, 'id_barang' => $request->id_barang]
+            );
+
+            // 3. Simpan Riwayat Detail
+            DetailInventory::create([
+                'id_inventory'       => $inventory->id,
+                'id_supplier'        => $request->id_supplier,
+                'id_produksi'        => $produksi->id,
+                'tanggal_masuk'      => $request->tanggal_masuk,
+                'jumlah_diterima'    => $jumlahMasuk,
+                'jumlah_rusak'       => $jumlahRusak,
+                'stok'               => $stokBersih,
+                'harga'              => $hargaSatuan,
+                'diskon'      => $diskonPersen, // Pastikan kolom ini ada di database
+                'total_harga'        => $totalFinal,
+                'tempat_penyimpanan' => $request->tempat_penyimpanan,
+                'status'             => 'Tersedia',
+            ]);
+
+            // 4. Refresh Produksi
+            $produksi->syncTotals();
+
+            // 5. Sinkronisasi Stok Master
+            if ($inventory) {
+                $inventory->syncTotalStock();
+            }
+
             DB::commit();
 
-            return redirect()->route('inventory.index')
-                ->with('success', 'Data Bahan Penolong berhasil masuk gudang dan stok diperbarui.');
-        } catch (\Exception $e) {
-            // Batalkan semua perubahan jika ada error
-            DB::rollBack();
+            $namaBarang = $inventory->barang->nama_barang ?? 'Barang';
 
+            return redirect()->route('inventory.show', $inventory->id)
+                ->with('success', "Data {$namaBarang} berhasil masuk gudang dengan diskon {$diskonPersen}% dan stok diperbarui.");
+        } catch (\Exception $e) {
+            DB::rollBack();
             return back()
                 ->withInput()
-                ->with('error', 'Gagal menyimpan data BP: ' . $e->getMessage());
+                ->with('error', 'Gagal menyimpan data barang: ' . $e->getMessage());
         }
     }
 
@@ -287,6 +366,22 @@ class InventoryController extends Controller
             ->get();
 
         return view('pages.gudang.show', [
+            'inventory' => $inventory,
+            'details'   => $details
+        ]);
+    }
+
+    public function allRiwayat(string $id)
+    {
+        // Mengambil data inventory beserta barangnya
+        $inventory = Inventory::with('barang')->findOrFail($id);
+
+        // Mengambil details dengan filter: urutan terbaru (desc) dan paginasi
+        $details = $inventory->DetailInventory()
+            ->orderBy('tanggal_masuk', 'desc')
+            ->paginate(30);
+
+        return view('pages.gudang.riwayat', [
             'inventory' => $inventory,
             'details'   => $details
         ]);
@@ -352,7 +447,6 @@ class InventoryController extends Controller
 
     public function updateDetail(Request $request, $id)
     {
-        // 1. Validasi Input (Sesuaikan dengan field modal edit)
         $request->validate([
             'tanggal_masuk'      => 'required|date',
             'tanggal_exp'        => 'nullable|date',
@@ -361,45 +455,165 @@ class InventoryController extends Controller
             'stok'               => 'nullable|numeric|min:0',
             'harga'              => 'required|numeric|min:0',
             'total_harga'        => 'nullable|numeric|min:0',
-            'kondisi_barang'     => 'nullable|string',
-            'kondisi_kendaraan'  => 'nullable|string',
+            'nomor_batch'        => 'nullable|string',
+            'diskon'             => 'nullable|numeric|min:0|max:100',
             'tempat_penyimpanan' => 'nullable|string|max:255',
         ]);
 
         DB::beginTransaction();
 
         try {
-            // 2. Cari data detail
-            $detail = DetailInventory::findOrFail($id);
-            $inventoryId = $detail->id_inventory;
+            $detail = DetailInventory::with('Inventory.Barang.JenisBarang')->findOrFail($id);
 
-            // 3. Update data detail dengan penanganan nilai null
+            // 1. Identifikasi Jenis Barang
+            // Cek apakah kode jenis barang adalah 'BB' (Bahan Baku)
+            $kodeJenis = $detail->Inventory->Barang->JenisBarang->kode ?? null;
+            $isBahanBaku = ($kodeJenis === 'BB');
+
+            // 2. SIMPAN STATE LAMA
+            $idProduksiLama = $detail->id_produksi;
+
+            // 3. Cari atau Buat Produksi BARU
+            $produksiBaru = Produksi::firstOrCreate([
+                'id_perusahaan'    => auth()->user()->id_perusahaan,
+                'tanggal_produksi' => $request->tanggal_masuk,
+            ]);
+
+            // 4. Logika Perhitungan
+            $diterima    = (float) $request->jumlah_diterima;
+            $rusak       = (float) ($request->jumlah_rusak ?? 0);
+            $stok        = $request->stok ?? ($diterima - $rusak);
+            $hargaSatuan = (float) $request->harga;
+
+            // --- LOGIKA DISKON KHUSUS BB ---
+            $diskonPersen = 0;
+            $totalHarga   = 0;
+
+            if ($isBahanBaku) {
+                // Jika BB, hitung diskon
+                $diskonPersen = (float) ($request->diskon_persen ?? 0);
+                $subtotal     = $diterima * $hargaSatuan;
+                $potongan     = $subtotal * ($diskonPersen / 100);
+                $totalHarga   = $request->total_harga ?? ($subtotal - $potongan);
+            } else {
+                // Jika BUKAN BB, abaikan diskon (normal)
+                $totalHarga = $request->total_harga ?? ($diterima * $hargaSatuan);
+            }
+
+            // 5. Update data detail
             $detail->update([
+                'id_produksi'        => $produksiBaru->id,
                 'tanggal_masuk'      => $request->tanggal_masuk,
-                'tanggal_exp'        => $request->tanggal_exp ?? null,
-                'jumlah_diterima'    => $request->jumlah_diterima,
-                'jumlah_rusak'       => $request->jumlah_rusak,
-                'stok'               => $request->stok ?? $request->jumlah_diterima,
-                'harga'              => $request->harga,
-                'total_harga'        => $request->total_harga ?? ($request->stok * $request->harga),
-                'kondisi_barang'     => $request->kondisi_barang ?? null,
-                'kondisi_kendaraan'  => $request->kondisi_kendaraan ?? null,
-                'tempat_penyimpanan' => $request->tempat_penyimpanan ?? null,
+                'tanggal_exp'        => $request->tanggal_exp,
+                'jumlah_diterima'    => $diterima,
+                'jumlah_rusak'       => $rusak,
+                'nomor_batch'        => $request->nomor_batch,
+                'stok'               => $stok,
+                'harga'              => $hargaSatuan,
+                'diskon'      => $isBahanBaku ? $diskonPersen : 0, // Set 0 jika bukan BB
+                'total_harga'        => $totalHarga,
+                'tempat_penyimpanan' => $request->tempat_penyimpanan,
             ]);
 
-            // 4. Sinkronisasi Total Stok di tabel Master Inventory
-            // Menghitung ulang total stok dari seluruh detail yang terkait dengan master ini
-            $totalStokBaru = DetailInventory::where('id_inventory', $inventoryId)->sum('stok');
+            // 6. SINKRONISASI PRODUKSI
+            $produksiBaru->syncTotals();
 
-            Inventory::where('id', $inventoryId)->update([
-                'stok' => $totalStokBaru
-            ]);
+            if ($idProduksiLama && $idProduksiLama != $produksiBaru->id) {
+                $oldProd = Produksi::find($idProduksiLama);
+                if ($oldProd) {
+                    $oldProd->syncTotals();
+                }
+            }
+
+            // 7. SINKRONISASI STOK MASTER
+            if ($detail->Inventory) {
+                $detail->Inventory->syncTotalStock();
+            }
 
             DB::commit();
-            return redirect()->back()->with('success', 'Riwayat batch berhasil diperbarui dan stok master disinkronkan.');
+            return redirect()->back()->with('success', 'Data berhasil diperbarui' . ($isBahanBaku ? ' dengan penyesuaian diskon.' : '.'));
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
+    }
+
+    public function quickUpdate(Request $request)
+    {
+        // Menggunakan Model DetailInventory
+        $item = \App\Models\DetailInventory::findOrFail($request->id);
+
+        DB::beginTransaction();
+        try {
+            switch ($request->type) {
+                case 'add':
+                    $request->validate(['qty' => 'required|numeric|min:1']);
+
+                    // 1. Tambah stok dan jumlah_diterima
+                    $item->stok += (float) $request->qty;
+                    $item->jumlah_diterima += (float) $request->qty;
+
+                    // 2. Kalkulasi harga setelah diskon (jika ada)
+                    $hargaSatuan = (float) $item->harga;
+                    $diskonPersen = (float) ($item->diskon ?? 0);
+
+                    // Rumus: (Total Qty * Harga Satuan) - Potongan Diskon
+                    $subtotal = $item->jumlah_diterima * $hargaSatuan;
+                    $potongan = $subtotal * ($diskonPersen / 100);
+
+                    $item->total_harga = $subtotal - $potongan;
+
+                    $item->save();
+
+
+                    if ($item->Produksi) {
+                        $item->Produksi->syncTotals();
+                    }
+
+                    $message = "Stok berhasil ditambahkan dan total biaya telah disesuaikan dengan diskon {$diskonPersen}%.";
+                    break;
+
+                case 'reduce':
+                    // Validasi agar input tidak kosong, minimal 1, dan maksimal sebesar stok yang ada
+                    $request->validate([
+                        'qty' => 'required|numeric|min:0.01|max:' . $item->stok
+                    ], [
+                        'qty.max' => 'Jumlah pengurangan (' . $request->qty . ') melebihi stok yang tersedia (' . $item->stok . ').',
+                        'qty.min' => 'Jumlah pengurangan minimal 0.01.',
+                    ]);
+
+                    // 1. Kurangi stok fisik pada detail_inventory
+                    $item->stok -= $request->qty;
+
+                    $item->save();
+
+                    $message = "Penyesuaian stok fisik berhasil disinkronkan ke inventory.";
+                    break;
+
+                case 'price':
+                    $request->validate(['harga' => 'required|numeric|min:0']);
+
+                    // 1. Update DetailInventory (Harga & Total Investasi)
+                    $item->harga = $request->harga;
+                    $item->total_harga = $item->jumlah_diterima * $request->harga;
+                    $item->save();
+
+                    // 2. Update Semua Barang Keluar yang merujuk ke detail ini
+                    BarangKeluar::where('id_detail_inventory', $item->id)
+                        ->update([
+                            'harga' => $request->harga,
+                            'total_harga' => DB::raw("jumlah_keluar * " . $request->harga)
+                        ]);
+
+                    $message = "Harga satuan dan riwayat barang keluar berhasil diperbarui.";
+                    break;
+            }
+
+            DB::commit();
+            return back()->with('success', $message);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memproses data: ' . $e->getMessage());
         }
     }
 }

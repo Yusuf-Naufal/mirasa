@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Tambah Pengguna">>
     <div class="py-2">
         <form action="{{ route('user.store') }}" method="POST"
             class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
@@ -51,7 +51,7 @@
                                 <option value="" disabled selected>-- Pilih Perusahaan --</option>
                                 @foreach ($perusahaan as $p)
                                     <option value="{{ $p->id }}"
-                                        {{ old('id_perusahaan') == $p->id ? 'selected' : '' }}>{{ $p->nama_perusahaan }}
+                                        {{ old('id_perusahaan') == $p->id ? 'selected' : '' }}>{{ $p->nama_perusahaan }} ({{ $p->kota }})
                                     </option>
                                 @endforeach
                             </select>

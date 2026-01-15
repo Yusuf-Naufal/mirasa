@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Edit Pengguna">>
     <div class="py-2">
         {{-- Gunakan method PUT untuk update data --}}
         <form action="{{ route('user.update', $user->id) }}" method="POST"
@@ -51,7 +51,7 @@
                                 @foreach ($perusahaan as $p)
                                     <option value="{{ $p->id }}"
                                         {{ old('id_perusahaan', $user->id_perusahaan) == $p->id ? 'selected' : '' }}>
-                                        {{ $p->nama_perusahaan }}
+                                        {{ $p->nama_perusahaan }} ({{ $p->kota }})
                                     </option>
                                 @endforeach
                             </select>

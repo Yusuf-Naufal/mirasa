@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Tambah Barang">
     <div class="py-2">
 
         <form action="{{ route('barang.store') }}" method="POST" enctype="multipart/form-data"
@@ -66,7 +66,9 @@
                                     class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
                                     <option value="" disabled selected>-- Pilih Perusahaan --</option>
                                     @foreach ($perusahaan as $p)
-                                        <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
+                                        <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}
+                                            ({{ $p->kota }})
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -77,7 +79,7 @@
                         <div class="space-y-1">
                             <label for="id_jenis" class="block text-sm font-semibold text-gray-700">Jenis Barang <span
                                     class="text-red-500">*</span></label>
-                            <select id="id_jenis" name="id_jenis" required onchange="updateKodeJenis(this)"
+                            <select id="id_jenis" name="id_jenis" required onchange="handleJenisChange(this)"
                                 class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
                                 <option value="" disabled selected>-- Pilih Jenis --</option>
                                 @foreach ($jenis as $j)
@@ -100,6 +102,85 @@
                             </div>
                             <p class="text-[10px] text-gray-400 mt-1 italic">*Kode final akan tersimpan otomatis dengan
                                 format: KODE_JENIS-KODE_BARANG</p>
+                        </div>
+
+                        {{-- KONVERSI --}}
+                        <div id="section-konversi"
+                            class="space-y-4 mt-2 p-5 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 md:col-span-2 transition-all">
+
+                            {{-- Header & Info Badge --}}
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span
+                                        class="flex items-center justify-center w-8 h-8 rounded-lg bg-[#FFC829]/10 text-[#FFC829]">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                        </svg>
+                                    </span>
+                                    <p class="text-sm font-bold text-gray-700">Pengaturan Konversi Satuan <span
+                                            class="text-xs font-normal text-gray-400">(Opsional)</span></p>
+                                </div>
+                                <span
+                                    class="text-[10px] bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-semibold border border-blue-100">
+                                    💡 INFO: Kosongkan jika tidak ada konversi
+                                </span>
+                            </div>
+
+                            {{-- Alert Tip Khusus KG --}}
+                            <div id="tip-kg"
+                                class="flex items-start gap-3 p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-500 mt-0.5"
+                                    viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                <p class="text-xs text-amber-700 leading-relaxed">
+                                    <span class="font-bold">Tips Satuan KG:</span> Jika satuan barang sudah <span
+                                        class="font-bold underline">KG</span>, silakan isi angka <span
+                                        class="font-bold text-amber-900">1</span> pada inputan berat di bawah ini.
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {{-- Konversi Berat --}}
+                                <div class="space-y-2">
+                                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                        Berat per <span class="label-satuan text-green-600">Satuan</span>
+                                        <span id="req-icon" class="text-red-500 hidden">*</span>
+                                    </label>
+                                    <div class="relative group">
+                                        <input type="number" step="0.01" id="nilai_konversi"
+                                            name="nilai_konversi" placeholder="Contoh: 6"
+                                            class="w-full rounded-xl border-gray-300 py-3 px-4 focus:ring-2 focus:ring-[#FFC829]/20 focus:border-[#FFC829] border shadow-sm transition-all group-hover:border-gray-400">
+                                        <div
+                                            class="absolute right-4 top-3 flex items-center gap-1 border-l pl-3 border-gray-200">
+                                            <span class="text-gray-500 font-bold text-sm">Kg</span>
+                                        </div>
+                                    </div>
+                                    <p id="helper-text-konversi" class="text-[10px] text-gray-400 italic">Masukkan
+                                        total berat dalam kilogram.</p>
+                                </div>
+
+                                {{-- Konversi Isi --}}
+                                <div class="space-y-2">
+                                    <label class="block text-xs font-bold text-gray-600 uppercase tracking-wider">
+                                        Isi per <span class="label-satuan text-green-600">Satuan</span>
+                                    </label>
+                                    <div class="relative group">
+                                        <input type="number" name="isi_bungkus" placeholder="Contoh: 40"
+                                            class="w-full rounded-xl border-gray-300 py-3 px-4 focus:ring-2 focus:ring-[#FFC829]/20 focus:border-[#FFC829] border shadow-sm transition-all group-hover:border-gray-400">
+                                        <div
+                                            class="absolute right-4 top-3 flex items-center gap-1 border-l pl-3 border-gray-200">
+                                            <span class="text-gray-500 font-bold text-sm">Bks/Pcs</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 italic">Masukkan jumlah isi dalam satu kemasan.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -193,12 +274,64 @@
 
             modal.classList.add('hidden');
         }
+    </script>
 
-        // Update fungsi Kode tetap seperti sebelumnya
+    {{-- HANDLE CONVERSI --}}
+    <script>
+        function handleJenisChange(selectElement) {
+            // 1. Jalankan fungsi prefix kode bawaan
+            updateKodeJenis(selectElement);
+
+            // 2. Identifikasi Pilihan
+            const selectedOption = selectElement.options[selectElement.selectedIndex];
+            const kodeJenis = selectedOption.getAttribute('data-kode');
+            const inputNilai = document.getElementById('nilai_konversi');
+            const reqIcon = document.getElementById('req-icon');
+            const helperText = document.getElementById('helper-text-konversi');
+
+            // Daftar kode yang mewajibkan konversi
+            const wajibIsi = ['FG', 'WIP', 'EC'];
+
+            if (wajibIsi.includes(kodeJenis)) {
+                // Mode Wajib
+                inputNilai.setAttribute('required', 'required');
+                reqIcon.classList.remove('hidden');
+                helperText.classList.add('text-red-500', 'font-medium');
+                helperText.innerText = "* Wajib diisi untuk jenis " + kodeJenis;
+            } else {
+                // Mode Opsional
+                inputNilai.removeAttribute('required');
+                reqIcon.classList.add('hidden');
+                helperText.classList.remove('text-red-500', 'font-medium');
+                helperText.innerText = "Masukkan total berat dalam kilogram (Opsional).";
+            }
+
+            // Tetap sinkronkan label satuan
+            updateLabelSatuan();
+        }
+
         function updateKodeJenis(select) {
+            const prefix = document.getElementById('prefix-kode');
             const selectedOption = select.options[select.selectedIndex];
             const kode = selectedOption.getAttribute('data-kode');
-            document.getElementById('prefix-kode').innerText = kode ? kode : '?';
+            prefix.innerText = kode ? kode : '?';
         }
+
+        function updateLabelSatuan() {
+            const inputSatuan = document.getElementById('satuan').value || 'Satuan';
+            document.querySelectorAll('.label-satuan').forEach(el => {
+                el.innerText = inputSatuan;
+            });
+        }
+
+        // Listener saat input satuan diketik
+        document.getElementById('satuan').addEventListener('input', function() {
+            updateLabelSatuan();
+        });
+
+        // Jalankan sekali saat halaman dimuat untuk inisialisasi label
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLabelSatuan();
+        });
     </script>
 </x-layout.user.app>

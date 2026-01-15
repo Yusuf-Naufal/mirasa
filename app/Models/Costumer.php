@@ -20,6 +20,11 @@ class Costumer extends Model
 
     public function Perusahaan()
     {
-        return $this->belongsTo(Perusahaan::class, 'id_perusahaan');
+        return $this->belongsTo(Perusahaan::class, 'id_perusahaan')->withTrashed();
+    }
+
+    public function BarangKeluar()
+    {
+        return $this->hasMany(BarangKeluar::class, 'id_costumer');
     }
 }

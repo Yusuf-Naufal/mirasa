@@ -11,6 +11,8 @@ class DetailInventory extends Model
     protected $fillable = [
         'id_inventory',
         'id_supplier',
+        'id_produksi',
+        'nomor_batch',
         'tanggal_masuk',
         'tanggal_exp',
         'stok',
@@ -18,9 +20,11 @@ class DetailInventory extends Model
         'jumlah_rusak',
         'harga',
         'total_harga',
+        'diskon',
         'kondisi_barang',
         'kondisi_kendaraan',
         'tempat_penyimpanan',
+        'status',
     ];
 
     public function Inventory()
@@ -28,16 +32,38 @@ class DetailInventory extends Model
         return $this->belongsTo(Inventory::class, 'id_inventory');
     }
 
+    public function Produksi()
+    {
+        return $this->belongsTo(Produksi::class, 'id_produksi');
+    }
+
     protected static function booted()
     {
-        // Setiap kali ada update di detail, otomatis hitung ulang stok di parent (Inventory)
-        static::updated(function ($detail) {
-            $detail->inventory->syncTotalStock();
+        static::saved(function ($detail) {
+            if ($detail->Inventory) {
+                $detail->Inventory->syncTotalStock();
+            }
         });
+
+        static::deleted(function ($detail) {
+            if ($detail->Inventory) {
+                $detail->Inventory->syncTotalStock();
+            }
+            // Jika dihapus, tetap sync produksi terkait
+            if ($detail->id_produksi && $detail->Produksi) {
+                $detail->Produksi->syncTotals();
+            }
+        });
+        
     }
 
     public function Supplier()
     {
-        return $this->belongsTo(Supplier::class, 'id_supplier');
+        return $this->belongsTo(Supplier::class, 'id_supplier')->withTrashed();
+    }
+
+    public function BarangKeluar()
+    {
+        return $this->hasMany(BarangKeluar::class, 'id_detail_inventory');
     }
 }

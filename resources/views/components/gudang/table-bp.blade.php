@@ -1,23 +1,41 @@
-@props(['details'])
+@props(['details', 'supplier'])
 
 <div class="bg-white rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden mx-4 md:mx-0"
     x-data="{
+        // Modal Edit Lengkap
         editModalOpen: false,
-        editData: {
-            id: '',
-            jumlah_diterima: 0,
-            jumlah_rusak: 0,
-            stok: 0,
-            harga: 0,
-            tgl_masuk: '',
-            tgl_exp: '',
-            lokasi: '',
-            kondisi_brg: '',
-            kondisi_knd: ''
-        },
+        editData: { id: '', jumlah_diterima: 0, jumlah_rusak: 0, stok: 0, harga: 0, tgl_masuk: '', tgl_exp: '', lokasi: '', kondisi_brg: '', kondisi_knd: '' },
+    
+        // Modal Edit Cepat (Tambah/Kurangi Stok & Ubah Harga)
+        showActionModal: false,
+        modalTitle: '',
+        actionType: '',
+        activeId: '',
+        activeHarga: 0,
+        actionUrl: '{{ route('inventory.quick-update') }}',
+    
         openEdit(item) {
             this.editData = item;
             this.editModalOpen = true;
+        },
+        openAddQty(id) {
+            this.activeId = id;
+            this.actionType = 'add';
+            this.modalTitle = 'Tambah Stok Masuk';
+            this.showActionModal = true;
+        },
+        openReduceQty(id) {
+            this.activeId = id;
+            this.actionType = 'reduce';
+            this.modalTitle = 'Kurangi Stok (Penyesuaian)';
+            this.showActionModal = true;
+        },
+        openEditPrice(data) {
+            this.activeId = data.id;
+            this.activeHarga = data.harga;
+            this.actionType = 'price';
+            this.modalTitle = 'Ubah Harga Satuan';
+            this.showActionModal = true;
         }
     }">
 
@@ -41,7 +59,7 @@
                     viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Tambah Stok</span>
+                <span class="hidden md:block">Tambah Stok</span>
             </a>
         </div>
     </div>
@@ -57,14 +75,14 @@
                     </th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Tempat
                     </th>
-                    {{-- <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">
-                        Rincian Unit</th> --}}
+                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400">Supplier
+                    </th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">Stok
                         Aktif</th>
+                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">
+                        Jumlah Diterima</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">Nilai
                         Satuan (Rp)</th>
-                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">Total
-                        Investasi (Rp)</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-center">Aksi
                     </th>
                 </tr>
@@ -89,26 +107,24 @@
                             </span>
                         </td>
 
-                        {{-- Rincian Unit (Masuk - Rusak) --}}
-                        {{-- <td class="px-6 py-4 text-right">
-                            <div class="inline-flex items-center gap-2">
-                                <span class="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md"
-                                    title="Jumlah Diterima">
-                                    {{ number_format($i->jumlah_diterima, $i->jumlah_diterima == floor($i->jumlah_diterima) ? 0 : 2, ',', '.') }}
-                                </span>
-                                <span class="text-slate-300 text-xs">-</span>
-                                <span class="text-xs font-semibold text-red-500 bg-red-50 px-2 py-1 rounded-md"
-                                    title="Jumlah Rusak">
-                                    {{ number_format($i->jumlah_rusak, $i->jumlah_rusak == floor($i->jumlah_rusak) ? 0 : 2, ',', '.') }}
-                                </span>
-                            </div>
-                        </td> --}}
+                        <td class="px-6 py-4">
+                            <span class="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
+                                {{ $i->supplier->nama_supplier }}
+                            </span>
+                        </td>
 
                         {{-- Stok Aktif --}}
                         <td class="px-6 py-4 text-right">
                             <span
                                 class="text-sm font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl ring-1 ring-blue-100">
                                 {{ number_format($i->stok, $i->stok == floor($i->stok) ? 0 : 2, ',', '.') }}
+                            </span>
+                        </td>
+
+                        <td class="px-6 py-4 text-right">
+                            <span
+                                class="text-sm font-black text-green-600 bg-green-50 px-3 py-1.5 rounded-xl ring-1 ring-green-100">
+                                {{ number_format($i->jumlah_diterima, $i->jumlah_diterima == floor($i->jumlah_diterima) ? 0 : 2, ',', '.') }}
                             </span>
                         </td>
 
@@ -119,34 +135,58 @@
                             </span>
                         </td>
 
-                        {{-- Total Harga --}}
-                        <td class="px-6 py-4 text-right">
-                            <span class="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                                {{ number_format($i->total_harga, 0, ',', '.') }}
-                            </span>
-                        </td>
-
                         {{-- Aksi --}}
                         <td class="px-6 py-4 text-center">
-                            <button type="button"
-                                @click="openEdit({ 
+                            @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
+                                <button type="button"
+                                    @click="openEdit({ 
                                     id: '{{ $i->id }}', 
                                     jumlah_diterima: '{{ $i->jumlah_diterima }}', 
                                     jumlah_rusak: '{{ $i->jumlah_rusak }}', 
                                     stok: '{{ $i->stok }}', 
                                     harga: '{{ $i->harga }}', 
                                     tgl_masuk: '{{ $i->tanggal_masuk }}', 
-                                    tgl_exp: '{{ $i->tanggal_exp }}',
-                                    lokasi: '{{ $i->tempat_penyimpanan }}',
-                                    kondisi_brg: '{{ $i->kondisi_barang }}',
-                                    kondisi_knd: '{{ $i->kondisi_kendaraan }}'
+                                    lokasi: '{{ $i->tempat_penyimpanan }}', 
                                 })"
-                                class="inline-flex items-center justify-center w-9 h-9 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-slate-200 hover:border-blue-200 transition-all duration-200 bg-slate-50/50">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
+                                    class="inline-flex items-center justify-center w-9 h-9 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-slate-200 hover:border-blue-200 transition-all duration-200 bg-slate-50/50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </button>
+                            @else
+                                <div class="flex items-center justify-center gap-1">
+
+                                    <button type="button" @click="openAddQty('{{ $i->id }}')"
+                                        class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg border border-emerald-100 transition-colors"
+                                        title="Tambah Stok">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4" />
+                                        </svg>
+                                    </button>
+
+                                    <button type="button" @click="openReduceQty('{{ $i->id }}')"
+                                        class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-100 transition-colors"
+                                        title="Kurangi Stok (Manual)">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M20 12H4" />
+                                        </svg>
+                                    </button>
+
+                                    <button type="button"
+                                        @click="openEditPrice({ id: '{{ $i->id }}', harga: '{{ $i->harga }}' })"
+                                        class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg border border-amber-100 transition-colors"
+                                        title="Ubah Harga">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+
+                                </div>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -162,7 +202,8 @@
                                     </svg>
                                 </div>
                                 <h4 class="text-slate-900 font-bold">Tidak ada riwayat</h4>
-                                <p class="text-slate-400 text-sm max-w-[240px] mt-1">Data riwayat transaksi barang masuk
+                                <p class="text-slate-400 text-sm max-w-[240px] mt-1">Data riwayat transaksi barang
+                                    masuk
                                     belum tersedia untuk produk ini.</p>
                             </div>
                         </td>
@@ -187,7 +228,6 @@
                 <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <div>
                         <h3 class="text-xl font-bold text-slate-800">Edit Riwayat Stok</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">ID Transaksi: <span x-text="editData.id"></span></p>
                     </div>
                     <button @click="editModalOpen = false"
                         class="p-2 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 transition-colors shadow-sm">
@@ -215,24 +255,6 @@
                             <input type="text" name="tempat_penyimpanan" x-model="editData.lokasi"
                                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
                                 placeholder="Contoh: Rak A1">
-                        </div>
-
-                        {{-- Baris 2: Kondisi Quality Control --}}
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Kondisi Barang</label>
-                            <select name="kondisi_barang" x-model="editData.kondisi_brg"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
-                                <option value="Sesuai Standar">Sesuai Standar</option>
-                                <option value="Tidak Sesuai">Tidak Sesuai</option>
-                            </select>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Kondisi Kendaraan</label>
-                            <select name="kondisi_kendaraan" x-model="editData.kondisi_knd"
-                                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
-                                <option value="Baik">Baik / Bersih</option>
-                                <option value="Kotor">Kotor</option>
-                            </select>
                         </div>
 
                         {{-- Baris 3: Kuantitas --}}
@@ -278,6 +300,116 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </template>
+
+    <template x-teleport="body">
+        <div x-show="showActionModal" class="fixed inset-0 z-[1000] overflow-y-auto" x-cloak>
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showActionModal = false"></div>
+
+                <div
+                    class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 relative z-10">
+                    <form :action="actionUrl" method="POST" class="p-8">
+                        @csrf
+                        @method('PATCH')
+
+                        <div class="mb-6">
+                            <div class="flex items-center gap-3 mb-2">
+                                <template x-if="actionType === 'add'">
+                                    <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><svg class="w-5 h-5"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4" />
+                                        </svg></div>
+                                </template>
+                                <template x-if="actionType === 'reduce'">
+                                    <div class="p-2 bg-rose-100 text-rose-600 rounded-lg"><svg class="w-5 h-5"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M20 12H4" />
+                                        </svg></div>
+                                </template>
+                                <template x-if="actionType === 'price'">
+                                    <div class="p-2 bg-amber-100 text-amber-600 rounded-lg"><svg class="w-5 h-5"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg></div>
+                                </template>
+                                <h3 class="text-xl font-bold text-slate-800" x-text="modalTitle"></h3>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="id" :value="activeId">
+                        <input type="hidden" name="type" :value="actionType">
+
+                        {{-- Info & Input untuk Qty (Add/Reduce) --}}
+                        <template x-if="actionType === 'add' || actionType === 'reduce'">
+                            <div class="space-y-4">
+                                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                    <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Catatan Sistem:</p>
+                                    <p class="text-sm text-slate-600" x-show="actionType === 'add'">
+                                        Aksi ini akan menambah Stok Aktif dan record Total Barang Diterima.
+                                    </p>
+                                    <p class="text-sm text-slate-600" x-show="actionType === 'reduce'">
+                                        Digunakan untuk Penyesuaian Stok Fisik. Stok digital akan dikurangi tanpa
+                                        mencatat transaksi keluar.
+                                    </p>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[11px] font-bold text-gray-500 uppercase ml-1"
+                                        x-text="actionType === 'add' ? 'Jumlah Tambahan' : 'Jumlah Pengurangan'"></label>
+                                    <input type="number" step="any" name="qty" required min="1"
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+                                </div>
+                            </div>
+                        </template>
+
+                        {{-- Info & Input untuk Harga --}}
+                        <template x-if="actionType === 'price'">
+                            <div class="space-y-4">
+                                <div
+                                    class="flex justify-between items-center p-4 rounded-2xl bg-amber-50 border border-amber-100">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-amber-700 uppercase">Harga Saat Ini</p>
+                                        <p class="text-lg font-black text-amber-900">Rp <span
+                                                x-text="new Intl.NumberFormat('id-ID').format(activeHarga)"></span></p>
+                                    </div>
+                                    <div class="text-right">
+                                        <svg class="w-6 h-6 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div class="space-y-1.5">
+                                    <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Harga Satuan Baru
+                                        (Rp)</label>
+                                    <input type="number" step="any" name="harga" required
+                                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-600"
+                                        placeholder="Masukkan harga baru...">
+                                </div>
+
+                                <p class="text-[10px] text-rose-500 font-medium leading-relaxed italic">
+                                    * Peringatan: Perubahan harga juga akan memperbarui nilai modal pada riwayat barang
+                                    keluar yang terkait dengan batch stok ini.
+                                </p>
+                            </div>
+                        </template>
+
+                        <div class="flex gap-3 mt-8">
+                            <button type="button" @click="showActionModal = false"
+                                class="flex-1 px-4 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-all">Batal</button>
+                            <button type="submit"
+                                class="flex-1 px-4 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Simpan
+                                Perubahan</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </template>

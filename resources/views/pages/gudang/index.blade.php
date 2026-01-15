@@ -1,4 +1,4 @@
-<x-layout.beranda.app>
+<x-layout.beranda.app title="Inventory">
     <div class="md:px-10 py-6 flex flex-col">
         <div class="flex-1 pt-12">
 
@@ -10,7 +10,8 @@
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="h-4 w-4 transform group-hover:-translate-x-1 transition-transform" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M15 19l-7-7 7-7" />
                         </svg>
                         Kembali ke Beranda
                     </a>
@@ -103,13 +104,13 @@
                                     class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
                                     <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Produksi
                                 </a>
-                                <a href="{{ route('inventory.create-bp') }}"
-                                    class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Bahan Penolong
-                                </a>
                                 <a href="{{ route('inventory.create-bb') }}"
                                     class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2">
                                     <span class="w-2 h-2 bg-purple-500 rounded-full"></span> Bahan Baku
+                                </a>
+                                <a href="{{ route('inventory.create-bp') }}"
+                                    class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Bahan Penolong
                                 </a>
                             </div>
                         </div>
@@ -117,122 +118,169 @@
                 </div>
             </div>
 
+            {{-- GRID INDIKATOR STATISTIK --}}
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                <div
+                    class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-red-600 flex flex-col justify-between transition-transform hover:scale-[1.02]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2 bg-red-50 rounded-lg">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500 uppercase">Stok Habis</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-3xl font-black text-gray-900">{{ $stats['habis'] }}</h3>
+                        <span
+                            class="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-md font-bold uppercase">Kritis</span>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-orange-500 flex flex-col justify-between transition-transform hover:scale-[1.02]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2 bg-orange-50 rounded-lg">
+                            <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500 uppercase">Dibawah Limit</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-3xl font-black text-gray-900">{{ $stats['limit'] }}</h3>
+                        <span
+                            class="text-[10px] bg-orange-100 text-orange-700 px-2 py-1 rounded-md font-bold uppercase">Restock</span>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-yellow-400 flex flex-col justify-between transition-transform hover:scale-[1.02]">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="p-2 bg-yellow-50 rounded-lg">
+                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold text-gray-500 uppercase">Mendekati Limit</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <h3 class="text-3xl font-black text-gray-900">{{ $stats['warning'] }}</h3>
+                        <span
+                            class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-1 rounded-md font-bold uppercase">Waspada</span>
+                    </div>
+                </div>
+
+            </div>
+
             {{-- 3. GROUPBY INVENTORY (Card by Jenis Barang) --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @forelse ($inventory->groupBy('barang.jenisBarang.nama_jenis') as $jenis => $items)
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-                        <div class="px-5 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
-                            <h3 class="font-bold text-gray-700">{{ $jenis ?: 'Tanpa Kategori' }}</h3>
-                            <span class="bg-blue-100 text-blue-600 text-xs font-bold px-2.5 py-1 rounded-lg">
-                                {{ $items->count() }} Item
+            <div class="space-y-12">
+
+                {{-- GRUP 1: HASIL PRODUKSI (Hanya tampil jika ada isi) --}}
+                @if ($produksiItems->isNotEmpty())
+                    <section>
+                        <div class="flex items-center justify-between mb-6 border-l-4 border-blue-600 pl-4">
+                            <div>
+                                <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Hasil Produksi
+                                </h2>
+                                <p class="text-sm text-gray-500 font-medium">Monitoring stok produk FG, WIP, dan Eceran
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                @foreach ($produksiItems->groupBy('barang.jenisBarang.nama_jenis') as $jenis => $items)
+                                    <x-gudang.card-index :jenis="$jenis" :items="$items" accent="blue" />
+                                @endforeach
+                            </div>
+                        </div>
+                    </section>
+                @endif
+
+                {{-- GRUP 2: BAHAN BAKU (Hanya tampil jika ada isi) --}}
+                @if ($bahanBakuItems->total() > 0)
+                    <section>
+                        <div class="flex items-center justify-between mb-6 border-l-4 border-amber-500 pl-4">
+                            <div>
+                                <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Bahan Baku</h2>
+                                <p class="text-sm text-gray-500 font-medium">Stok material utama produksi (BB)</p>
+                            </div>
+                            <span
+                                class="bg-amber-50 text-amber-700 text-xs font-bold px-3 py-1 rounded-full border border-amber-100">
+                                {{ $bahanBakuItems->total() }} Total Item
                             </span>
                         </div>
 
-                        <div class="p-5 flex-1 space-y-4">
-                            @foreach ($items as $item)
-                                <a href="{{ route('inventory.show', $item->id) }}"
-                                    class="flex items-center justify-between group hover:bg-gray-50 p-2 -mx-2 rounded-xl transition-all duration-200">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors overflow-hidden">
-                                            @if ($item->barang->foto)
-                                                <img src="{{ asset('storage/' . $item->barang->foto) }}"
-                                                    alt="{{ $item->barang->nama_barang }}"
-                                                    class="w-full h-full object-cover">
-                                            @else
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                                                    viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                                </svg>
-                                            @endif
-                                        </div>
-
-                                        <div>
-                                            <p class="text-sm font-semibold text-gray-800">
-                                                {{ $item->barang->nama_barang }}
-                                            </p>
-                                            <p class="text-xs text-gray-500">{{ $item->barang->kode }}</p>
-                                        </div>
-                                    </div>
-
-                                    @php
-                                        $stokAktual = $item->stok;
-                                        $stokMin = $item->minimum_stok ?? 0;
-                                        // Indikator Kuning jika stok di atas minimum tapi kurang dari atau sama dengan (stok min + 5)
-                                        $ambangKuning = $stokMin + 30;
-                                    @endphp
-
-                                    <div class="text-right flex flex-col items-end gap-1">
-                                        {{-- Angka Stok --}}
-                                        <p class="text-sm font-bold text-slate-700">
-                                            {{ number_format($stokAktual, 0, ',', '.') }}
-                                            <span
-                                                class="text-[10px] text-slate-400 font-normal uppercase">{{ $item->barang->satuan }}</span>
-                                        </p>
-
-                                        {{-- Indikator Titik (Dot Indicator) --}}
-                                        <div
-                                            class="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-50 border border-slate-100">
-                                            @if ($stokAktual <= $stokMin)
-                                                {{-- Merah: Stok Kritis --}}
-                                                <span class="relative flex h-2 w-2">
-                                                    <span
-                                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                                    <span
-                                                        class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
-                                                </span>
-                                                <span
-                                                    class="text-[10px] font-bold text-red-600 uppercase tracking-tighter">Kritis</span>
-                                            @elseif ($stokAktual <= $ambangKuning)
-                                                {{-- Kuning: Mendekati Limit --}}
-                                                <span class="relative flex h-2 w-2">
-                                                    <span
-                                                        class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                                                </span>
-                                                <span
-                                                    class="text-[10px] font-bold text-amber-600 uppercase tracking-tighter">Limit</span>
-                                            @else
-                                                {{-- Hijau: Aman --}}
-                                                <span class="relative flex h-2 w-2">
-                                                    <span
-                                                        class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                                </span>
-                                                <span
-                                                    class="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter">Aman</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </a>
-
-                                @if (!$loop->last)
-                                    <hr class="border-gray-50">
-                                @endif
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                            @foreach ($bahanBakuItems as $item)
+                                <x-gudang.grid-index :item="$item" accent="amber" />
                             @endforeach
                         </div>
 
-                    </div>
-                @empty
-                    <div
-                        class="col-span-full py-20 flex flex-col items-center justify-center bg-white rounded-3xl border-2 border-dashed border-gray-200">
-                        <div class="bg-gray-50 p-4 rounded-full mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        <div class="mt-6">
+                            <div class="flex justify-end">
+                                {{ $bahanBakuItems->appends(['page_bp' => request('page_bp'), 'search' => request('search'), 'id_jenis' => request('id_jenis')])->links('vendor.pagination.custom') }}
+                            </div>
+                        </div>
+                    </section>
+                @endif
+
+                {{-- GRUP 3: BAHAN PENOLONG (Hanya tampil jika ada isi) --}}
+                @if ($penolongItems->total() > 0)
+                    <section>
+                        <div class="flex items-center justify-between mb-6 border-l-4 border-emerald-500 pl-4">
+                            <div>
+                                <h2 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Bahan Penolong
+                                </h2>
+                                <p class="text-sm text-gray-500 font-medium">Stok material pendukung operasional (BP)
+                                </p>
+                            </div>
+                            <span
+                                class="bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-100">
+                                {{ $penolongItems->total() }} Total Item
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                            @foreach ($penolongItems as $item)
+                                <x-gudang.grid-index :item="$item" accent="emerald" />
+                            @endforeach
+                        </div>
+
+                        <div class="mt-6">
+                            <div class="flex justify-end">
+                                {{ $penolongItems->appends(['page_bb' => request('page_bb'), 'search' => request('search'), 'id_jenis' => request('id_jenis')])->links('vendor.pagination.custom') }}
+                            </div>
+                        </div>
+                    </section>
+                @endif
+
+                {{-- Pesan Jika Semua Kosong --}}
+                @if ($produksiItems->isEmpty() && $bahanBakuItems->isEmpty() && $penolongItems->isEmpty())
+                    <div class="bg-white rounded-3xl p-20 text-center border border-gray-100 shadow-sm">
+                        <div class="flex justify-center mb-4">
+                            <svg class="w-20 h-20 text-gray-200" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                             </svg>
                         </div>
-                        <h3 class="text-lg font-medium text-gray-900">Belum ada inventory</h3>
-                        <p class="text-gray-500">Silahkan klik tombol "Barang Masuk" untuk menambah data.</p>
+                        <h3 class="text-lg font-bold text-gray-800">Barang tidak ditemukan</h3>
+                        <p class="text-gray-500">Tidak ada barang yang cocok dengan kata kunci
+                            "{{ request('search') }}"</p>
+                        <a href="{{ route('inventory.index') }}"
+                            class="mt-4 inline-block text-blue-600 font-semibold hover:underline">Lihat semua
+                            barang</a>
                     </div>
-                @endforelse
+                @endif
             </div>
 
-            {{-- PAGINATION --}}
-            <div class="mt-8">
-                {{ $inventory->links() }}
-            </div>
         </div>
     </div>
 </x-layout.beranda.app>
