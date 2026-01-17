@@ -25,22 +25,38 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Pemakaian</label>
                     <input type="date" name="tanggal_pemakaian" required
                         value="{{ old('tanggal_pemakaian', $i->tanggal_pemakaian) }}"
-                        class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500">
+                        class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 text-sm">
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Gas</label>
-                    <input type="number" step="any" name="jumlah_gas" required
-                        value="{{ old('jumlah_gas', $i->jumlah_gas) }}"
-                        class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 uppercase">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Gas</label>
+                        <input type="number" step="any" name="jumlah_gas" required
+                            value="{{ old('jumlah_gas', $i->jumlah_gas) }}"
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 text-sm"
+                            placeholder="0.00">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Harga Satuan</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-xs font-bold">Rp</span>
+                            <input type="number" step="any" name="harga" required
+                                value="{{ old('harga', $i->harga) }}"
+                                class="w-full border border-gray-200 rounded-lg pl-8 pr-3 py-2 focus:ring-blue-500 text-sm font-semibold"
+                                placeholder="0">
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="flex justify-end gap-2">
                 <button type="button" onclick="closeModal('editModal-{{ $i->id }}')"
-                    class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg">Batal</button>
+                    class="flex-1 px-4 py-3 text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
+                    Batal
+                </button>
                 <button type="submit"
-                    class="px-4 py-2 text-sm bg-[#0D1630] hover:bg-[#FFC829] hover:text-[#0D1630] text-white rounded-lg font-medium">
+                    class="flex-1 px-4 py-3 text-sm bg-[#0D1630] hover:bg-blue-900 text-white rounded-xl font-bold transition-all shadow-md active:scale-95">
                     Simpan Perubahan
                 </button>
             </div>

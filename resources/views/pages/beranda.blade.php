@@ -90,12 +90,11 @@
                 </a>
 
                 <a href=""
-                    class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-emerald-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-emerald-600" viewBox="0 0 24 24">
-                        <path fill="none" stroke="currentColor" stroke-width="2"
-                            d="M1 1h3v3H1zm12 0h3v3h-3zM4 2h9m2 7h5M4 15h9M1 13h3v3H1zm12 0h3v3h-3zM2 4v9m13-9v9m5-5h3v3h-3zm-9 14h9M8 20h3v3H8zm12 0h3v3h-3zM9 16v4m13-9v9" />
+                    class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-yellow-50">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-yellow-600" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M11 15H6l7-14v8h5l-7 14z" />
                     </svg>
-                    <span class="text-sm font-medium text-gray-700 group-hover:text-emerald-700">Asset</span>
+                    <span class="text-sm font-medium text-gray-700 group-hover:text-yellow-700">Pemakaian Listrik</span>
                 </a>
 
 

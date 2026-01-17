@@ -10,9 +10,11 @@
                     <th class="px-6 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
                         Pemasok (Supplier)</th>
                     <th class="px-6 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-right">
-                        Volume</th>
+                        Volume (MMBTU)</th>
+                    <th class="px-6 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-right">
+                        Harga</th>
                     <th class="px-6 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-center">
-                        Tindakan</th>
+                        Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
@@ -43,8 +45,15 @@
                             <div class="inline-flex flex-col items-end">
                                 <div class="flex items-baseline gap-1">
                                     <span
-                                        class="text-sm font-black text-gray-900">{{ number_format($log->jumlah_gas, 2, ',', '.') }}</span>
-                                    <span class="text-[10px] font-bold text-gray-400 uppercase">m³</span>
+                                        class="text-sm font-black text-gray-900">{{ number_format($log->jumlah_gas, 3, ',', '.') }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="inline-flex flex-col items-end">
+                                <div class="flex items-baseline gap-1">
+                                    <span
+                                        class="text-sm font-black text-gray-900">{{ number_format($log->total_harga, 0, ',', '.') }}</span>
                                 </div>
                             </div>
                         </td>

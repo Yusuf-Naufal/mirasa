@@ -183,10 +183,17 @@ class PengeluaranController extends Controller
             ]);
 
             // 3. Logika Khusus Gas: Hubungkan pemakaian harian yang belum terbayar
-            if ($request->sub_kategori === 'Gas' && $pengeluaran->kategori === 'OPERASIONAL') {
+            if (strtoupper($subKategori) === 'GAS' && strtoupper($Kategori) === 'OPERASIONAL') {
+                // Tentukan awal dan akhir bulan dari tanggal pengeluaran yang diinput
+                $tanggalInput = Carbon::parse($request->tanggal_pengeluaran);
+                $awalBulan = $tanggalInput->copy()->startOfMonth();
+                $akhirBulan = $tanggalInput->copy()->endOfMonth();
+
+                // Update semua pemakaian gas perusahaan ini yang:
+                // 1. Belum memiliki relasi pengeluaran (id_pengeluaran IS NULL)
                 PemakaianGas::where('id_perusahaan', $pengeluaran->id_perusahaan)
                     ->whereNull('id_pengeluaran')
-                    ->where('tanggal_pemakaian', '<=', $request->tanggal_pengeluaran)
+                    ->whereBetween('tanggal_pemakaian', [$awalBulan, $akhirBulan])
                     ->update(['id_pengeluaran' => $pengeluaran->id]);
             }
 
