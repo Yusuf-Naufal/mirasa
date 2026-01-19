@@ -15,10 +15,9 @@ use Illuminate\Support\Facades\DB;
 class LaporanController extends Controller
 {
     /**
-     * FIX: Menambahkan method yang hilang untuk Laporan Keuangan
-     * Berdasarkan alur bisnis PT Mirasa Food
+     * Versi 1: Laporan Keuangan (Simple Asset & Pengeluaran Produksi)
      */
-    public function laporanKeuangan(Request $request)
+    public function laporanKeuanganSimple(Request $request)
     {
         $user = auth()->user();
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->get('id_perusahaan') : $user->id_perusahaan;
@@ -43,7 +42,7 @@ class LaporanController extends Controller
         $perusahaan = Perusahaan::all();
         $dateRange = "$startDate to $endDate";
 
-        return view('pages.laporan.keuangan', compact(
+        return view('pages.laporan.keuangan-simple', compact(
             'nilaiAsetGudang', 
             'totalPengeluaranProduksi', 
             'perusahaan', 
@@ -131,7 +130,7 @@ class LaporanController extends Controller
 
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->get('id_perusahaan') : $user->id_perusahaan;
 
-        // Optimasi: Gunakan Eager Loading agar tidak N+1 Query (Penyebab timeout)
+        // Optimasi: Gunakan Eager Loading agar tidak N+1 Query
         $stokRaw = Inventory::with(['Barang.jenisBarang', 'Perusahaan'])
             ->when($idPerusahaan, fn($q) => $q->where('id_perusahaan', $idPerusahaan))
             ->get();
@@ -165,9 +164,9 @@ class LaporanController extends Controller
         ]);
     }
 
-}
-
-
+    /**
+     * Versi 2: Laporan Keuangan (Tren & Chart)
+     */
     public function laporanKeuangan(Request $request)
     {
         $filterType = $request->get('filter_type', 'month');
@@ -248,7 +247,7 @@ class LaporanController extends Controller
         $totalBulanIni = $dataPeriodeIni->sum('jumlah_pengeluaran');
         $totalBulanLalu = $queryLast->sum('jumlah_pengeluaran');
 
-        // Logika Selisih & Persentase (Requirement: Jika lalu 0, persentase 100%)
+        // Logika Selisih & Persentase
         $diff = $totalBulanIni - $totalBulanLalu;
         if ($totalBulanLalu > 0) {
             $percentage = ($diff / $totalBulanLalu) * 100;
@@ -352,7 +351,6 @@ class LaporanController extends Controller
             ->with(['DetailInventory.Inventory.Barang.JenisBarang'])
             ->get();
 
-        // --- LOGIKA DATA PERIODE SEBELUMNYA (PREVIOUS) ---
         $prevBahanRaw = BarangKeluar::whereIn('jenis_keluar', ['BAHAN BAKU', 'PRODUKSI'])
             ->whereHas('DetailInventory.Inventory', function ($q) use ($idPerusahaan) {
                 if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
@@ -360,16 +358,13 @@ class LaporanController extends Controller
             ->whereBetween('tanggal_keluar', [$prevStart, $prevEnd])
             ->get();
 
-        // Hitung Total Biaya Periode Sebelumnya
         $prevTotalHargaKeluar = $prevBahanRaw->sum('total_harga');
         $currentTotalHargaKeluar = $bahanRaw->sum('total_harga');
 
-        // Hitung Persen Perubahan Total Keluar (Baku + Penolong)
         $diffTotalKeluarPct = $prevTotalHargaKeluar > 0
             ? (($currentTotalHargaKeluar - $prevTotalHargaKeluar) / $prevTotalHargaKeluar) * 100
             : ($currentTotalHargaKeluar > 0 ? 100 : 0);
 
-        // Hitung Khusus Bahan Baku Periode Sebelumnya
         $prevHargaBaku = $prevBahanRaw->where('jenis_keluar', 'BAHAN BAKU')->sum('total_harga');
         $currentHargaBaku = $bahanRaw->where('jenis_keluar', 'BAHAN BAKU')->sum('total_harga');
 
@@ -377,19 +372,8 @@ class LaporanController extends Controller
             ? (($currentHargaBaku - $prevHargaBaku) / $prevHargaBaku) * 100
             : ($currentHargaBaku > 0 ? 100 : 0);
 
-        // Total Seluruh Biaya Barang Keluar (Baku + Penolong)
         $totalHargaBarangKeluar = $bahanRaw->sum('total_harga');
 
-        // Metrik Bahan Baku
-        $dataBaku = $bahanRaw->where('jenis_keluar', 'BAHAN BAKU');
-        $totalHargaBahanBaku = $dataBaku->sum('total_harga');
-
-        // Metrik Bahan Penolong
-        $dataPenolong = $bahanRaw->where('jenis_keluar', 'PRODUKSI');
-        $totalHargaBahanPenolong = $dataPenolong->sum('total_harga');
-        $countJenisPenolong = $dataPenolong->pluck('DetailInventory.Inventory.id_barang')->unique()->count();
-
-        // Rincian Gabungan untuk Tabel/List
         $rincianBahan = $bahanRaw->groupBy('DetailInventory.Inventory.id_barang')->map(function ($items) use ($totalHargaBarangKeluar) {
             $barang = $items->first()->DetailInventory->Inventory->Barang;
             $biayaItem = $items->sum('total_harga');
@@ -407,13 +391,13 @@ class LaporanController extends Controller
         })->sortByDesc('total_biaya')->values();
 
         $summaryBahan = [
-            'total_harga_keluar'   => $currentTotalHargaKeluar,
+            'total_harga_keluar'    => $currentTotalHargaKeluar,
             'diff_total_keluar_pct' => $diffTotalKeluarPct,
-            'total_harga_baku'     => $currentHargaBaku,
-            'diff_baku_pct'        => $diffBakuPct,
-            'total_harga_penolong' => $bahanRaw->where('jenis_keluar', 'PRODUKSI')->sum('total_harga'),
-            'total_kg_baku'        => $rincianBahan->where('jenis_keluar', 'BAHAN BAKU')->sum('total_kg'),
-            'count_jenis_penolong' => $bahanRaw->where('jenis_keluar', 'PRODUKSI')->pluck('DetailInventory.Inventory.id_barang')->unique()->count(),
+            'total_harga_baku'      => $currentHargaBaku,
+            'diff_baku_pct'         => $diffBakuPct,
+            'total_harga_penolong'  => $bahanRaw->where('jenis_keluar', 'PRODUKSI')->sum('total_harga'),
+            'total_kg_baku'         => $rincianBahan->where('jenis_keluar', 'BAHAN BAKU')->sum('total_kg'),
+            'count_jenis_penolong'  => $bahanRaw->where('jenis_keluar', 'PRODUKSI')->pluck('DetailInventory.Inventory.id_barang')->unique()->count(),
         ];
 
         // 3. DATA PENGELUARAN
@@ -431,22 +415,16 @@ class LaporanController extends Controller
             })->get();
 
         $totalBebanHpp = $pengeluaranHpp->sum('jumlah_pengeluaran');
-
         $prevTotalBebanHpp = $prevPengeluaranRaw->sum('jumlah_pengeluaran');
 
         $diffBebanHppPct = $prevTotalBebanHpp > 0
             ? (($totalBebanHpp - $prevTotalBebanHpp) / $prevTotalBebanHpp) * 100
             : ($totalBebanHpp > 0 ? 100 : 0);
 
-        // Mapping Kategori
         $bebanKategoriHpp = $pengeluaranHpp->groupBy('kategori')->map(function ($items, $key) use ($totalBebanHpp, $prevPengeluaranRaw) {
             $nominal = $items->sum('jumlah_pengeluaran');
-
             $prevNominal = $prevPengeluaranRaw->where('kategori', $key)->sum('jumlah_pengeluaran');
-
-            $diffPct = $prevNominal > 0
-                ? (($nominal - $prevNominal) / $prevNominal) * 100
-                : ($nominal > 0 ? 100 : 0);
+            $diffPct = $prevNominal > 0 ? (($nominal - $prevNominal) / $prevNominal) * 100 : ($nominal > 0 ? 100 : 0);
 
             return [
                 'nama' => $items->first()->kategori ?? 'Umum',
@@ -458,23 +436,15 @@ class LaporanController extends Controller
         })->sortByDesc('total');
 
         // 4. HITUNG HPP PER KG
-        // Total Seluruh Biaya (Bahan Baku + Bahan Penolong + Beban Operasional HPP)
         $grandTotalBiayaHpp = $summaryBahan['total_harga_keluar'] + $totalBebanHpp;
-
-        // Total Volume Hasil Produksi (Kg) dari Section 2
         $totalVolumeProduksi = $summary['current_volume'];
-
-        // Hitung HPP per Kg
         $hppPerKg = $totalVolumeProduksi > 0 ? ($grandTotalBiayaHpp / $totalVolumeProduksi) : 0;
 
-        // Perbandingan dengan periode lalu (untuk tren HPP)
         $grandTotalBiayaHppPrev = $prevTotalHargaKeluar + $prevTotalBebanHpp;
         $totalVolumeProduksiPrev = $prev['vol'];
         $hppPerKgPrev = $totalVolumeProduksiPrev > 0 ? ($grandTotalBiayaHppPrev / $totalVolumeProduksiPrev) : 0;
 
-        $diffHppPct = $hppPerKgPrev > 0
-            ? (($hppPerKg - $hppPerKgPrev) / $hppPerKgPrev) * 100
-            : ($hppPerKg > 0 ? 100 : 0);
+        $diffHppPct = $hppPerKgPrev > 0 ? (($hppPerKg - $hppPerKgPrev) / $hppPerKgPrev) * 100 : ($hppPerKg > 0 ? 100 : 0);
 
         return view('pages.laporan.hpp', compact(
             'summary',
@@ -495,4 +465,3 @@ class LaporanController extends Controller
         ) + ['perusahaan' => Perusahaan::all()]);
     }
 }
-
