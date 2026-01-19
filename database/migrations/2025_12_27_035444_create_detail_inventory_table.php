@@ -24,6 +24,7 @@ return new class extends Migration
             $table->double('jumlah_rusak')->nullable();
             $table->double('harga')->nullable();
             $table->double('total_harga')->nullable();
+            $table->double('diskon')->nullable();
             $table->string('kondisi_barang')->nullable();
             $table->string('kondisi_kendaraan')->nullable();
             $table->string('tempat_penyimpanan')->nullable();

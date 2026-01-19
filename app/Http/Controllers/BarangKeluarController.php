@@ -21,7 +21,7 @@ class BarangKeluarController extends Controller
     public function index(Request $request)
     {
         // 1. Ambil parameter filter
-        $activeTab = $request->get('tab', 'produksi');
+        $activeTab = $request->get('tab', 'PRODUKSI');
         $search = $request->get('search');
         $idPerusahaanFilter = $request->get('id_perusahaan');
         $dateRange = $request->get('date_range');
@@ -56,10 +56,10 @@ class BarangKeluarController extends Controller
         }
 
         // 5. Logika Filter berdasarkan Tab
-        if ($activeTab === 'produksi') {
+        if ($activeTab === 'PRODUKSI') {
             $query->where('jenis_keluar', 'PRODUKSI');
             $barangDropdownQuery->whereHas('jenisBarang', fn($q) => $q->where('kode', 'BP'));
-        } else if ($activeTab === 'bahan baku') {
+        } else if ($activeTab === 'BAHAN BAKU') {
             $query->where('jenis_keluar', 'BAHAN BAKU');
             $barangDropdownQuery->whereHas('jenisBarang', fn($q) => $q->where('kode', 'BB'));
         } else {
@@ -102,14 +102,14 @@ class BarangKeluarController extends Controller
         $groupedData = $dataPaginated->getCollection()->groupBy(function ($item) use ($activeTab) {
             $tanggal = $item->tanggal_keluar ?? 'no-date';
 
-            if ($activeTab === 'produksi') {
+            if ($activeTab === 'PRODUKSI') {
                 /**
                  * Grouping PRODUKSI: Berdasarkan ID Barang + Tanggal
                  * Karena produksi biasanya dipantau per jenis barang yang dihasilkan di hari tersebut
                  */
                 $barangId = $item->DetailInventory->Inventory->id_barang ?? '0';
                 return 'prod-' . $barangId . '_' . $tanggal;
-            } else if ($activeTab === 'bahan baku') {
+            } else if ($activeTab === 'BAHAN BAKU') {
                 /**
                  * Grouping BAHAN BAKU: Berdasarkan ID Barang + Tanggal
                  * Agar terlihat total pemakaian bahan baku tertentu dalam satu hari
@@ -238,7 +238,8 @@ class BarangKeluarController extends Controller
             // 3. Ambil Batch Detail Inventory menggunakan metode FIFO
             $batches = DetailInventory::where('id_inventory', $inventory->id)
                 ->where('stok', '>', 0)
-                ->orderBy('tanggal_masuk', 'asc')
+                ->orderBy('tanggal_masuk', 'asc') 
+                ->orderBy('created_at', 'asc')   
                 ->get();
 
             // 4. Cek ketersediaan stok total dari seluruh batch
@@ -276,7 +277,7 @@ class BarangKeluarController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('barang-keluar.index')
+            return redirect()->route('barang-keluar.index', ['tab' => $jenis])
                 ->with('success', "Transaksi $jenis berhasil dicatat menggunakan metode FIFO.");
         } catch (\Exception $e) {
             DB::rollBack();

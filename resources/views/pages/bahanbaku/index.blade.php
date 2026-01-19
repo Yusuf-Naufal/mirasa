@@ -1,4 +1,4 @@
-<x-layout.beranda.app>
+<x-layout.beranda.app title="Daftar Bahan Baku">
     <div class="md:px-10 py-6 flex flex-col">
         <div class="flex-1 pt-12">
 

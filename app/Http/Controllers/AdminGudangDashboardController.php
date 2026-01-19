@@ -18,6 +18,10 @@ class AdminGudangDashboardController extends Controller
         $stats = [
             'total_bahan_baku' => Inventory::where('id_perusahaan', $id_perusahaan)
                 ->whereHas('Barang.jenisBarang', fn($q) => $q->where('kode', 'BB'))->count(),
+            'total_barang_penolong' => Inventory::where('id_perusahaan', $id_perusahaan)
+                ->whereHas('Barang.jenisBarang', fn($q) => $q->where('kode', 'BP'))->count(),
+            'total_barang_produksi' => Inventory::where('id_perusahaan', $id_perusahaan)
+                ->whereHas('Barang.jenisBarang', fn($q) => $q->whereIn('kode', ['FG', 'WIP', 'EC']))->count(),
             'stok_kritis' => Inventory::where('id_perusahaan', $id_perusahaan)
                 ->where('stok', '<', 10)->count(), // Contoh ambang batas 10
             'produksi_hari_ini' => Produksi::where('id_perusahaan', $id_perusahaan)

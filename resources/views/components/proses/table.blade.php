@@ -31,8 +31,13 @@
                         </td>
 
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="text-sm font-semibold text-gray-700">{{ $i->perusahaan->nama_perusahaan }}
+                            <div class="flex flex-col">
+                                <div class="text-sm font-semibold text-gray-700">
+                                    {{ $i->perusahaan->nama_perusahaan ?? 'No Company' }}
+                                </div>
+
+                                <div class="text-xs text-gray-500">
+                                    {{ $i->perusahaan->kota ?? 'No City' }}
                                 </div>
                             </div>
                         </td>
@@ -50,18 +55,35 @@
                                 </button>
 
                                 {{-- LOGIKA DELETE --}}
-                                <form id="delete-form-{{ $i->id }}"
-                                    action="{{ route('proses.destroy', $i->id) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" onclick="confirmDelete({{ $i->id }})"
-                                        class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </form>
+                                @if ($i->deleted_at == null)
+                                    <form id="delete-form-{{ $i->id }}"
+                                        action="{{ route('proses.destroy', $i->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" onclick="confirmDelete({{ $i->id }})"
+                                            class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @else
+                                    <form id="aktif-form-{{ $i->id }}"
+                                        action="{{ route('proses.activate', $i->id) }}" method="POST">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="button" onclick="confirmActivate('{{ $i->id }}')"
+                                            class="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 p-2 rounded-lg transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 12 12">
+                                                <path fill="currentColor"
+                                                    d="M9.765 3.205a.75.75 0 0 1 .03 1.06l-4.25 4.5a.75.75 0 0 1-1.075.015L2.22 6.53a.75.75 0 0 1 1.06-1.06l1.705 1.704l3.72-3.939a.75.75 0 0 1 1.06-.03" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @endif
+
                             </div>
                         </td>
                     </tr>

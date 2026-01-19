@@ -120,24 +120,29 @@ class BahanBakuController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_perusahaan'     => 'required|exists:perusahaan,id',
-            'id_supplier'       => 'required|exists:supplier,id',
-            'id_barang'         => 'required|exists:barang,id',
-            'tanggal_masuk'     => 'required|date',
-            'jumlah_diterima'   => 'required|numeric|min:0.01',
-            'harga'             => 'required|numeric|min:0',
+            'id_perusahaan'   => 'required|exists:perusahaan,id',
+            'id_supplier'     => 'required|exists:supplier,id',
+            'id_barang'       => 'required|exists:barang,id',
+            'tanggal_masuk'   => 'required|date',
+            'jumlah_diterima' => 'required|numeric|min:0.01',
+            'harga'           => 'required|numeric|min:0',
+            'diskon'          => 'nullable|numeric|min:0|max:100',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // 1. Cari atau Buat Sesi Produksi otomatis berdasarkan tanggal masuk
+            // 0. Ambil informasi barang untuk pengecekan jenis
+            $barang = Barang::with('JenisBarang')->findOrFail($request->id_barang);
+            $isBahanBaku = ($barang->JenisBarang->kode ?? null) === 'BB';
+
+            // 1. Cari atau Buat Sesi Produksi otomatis
             $produksi = Produksi::firstOrCreate([
                 'id_perusahaan'    => $request->id_perusahaan,
                 'tanggal_produksi' => $request->tanggal_masuk,
             ]);
 
-            // 2. Update atau Buat data Master Stok di tabel Inventory
+            // 2. Update atau Buat data Master Stok
             $inventory = Inventory::firstOrCreate(
                 [
                     'id_perusahaan' => $request->id_perusahaan,
@@ -145,31 +150,40 @@ class BahanBakuController extends Controller
                 ]
             );
 
+            // --- LOGIKA KALKULASI DISKON ---
+            $jumlah       = (float) $request->jumlah_diterima;
+            $hargaSatuan  = (float) $request->harga;
+            $diskonPersen = $isBahanBaku ? (float) ($request->diskon ?? 0) : 0;
+
+            $subtotal     = $jumlah * $hargaSatuan;
+            $potongan     = $subtotal * ($diskonPersen / 100);
+            $totalHarga   = $subtotal - $potongan;
+
             // 3. Simpan Riwayat ke Detail Inventory
             $detail = DetailInventory::create([
-                'id_inventory'       => $inventory->id,
-                'id_supplier'        => $request->id_supplier,
-                'id_produksi'        => $produksi->id,
-                'tanggal_masuk'      => $request->tanggal_masuk,
-                'jumlah_diterima'    => $request->jumlah_diterima,
-                'stok'               => $request->jumlah_diterima,
-                'harga'              => $request->harga,
-                'total_harga'        => $request->jumlah_diterima * $request->harga,
-                'status'             => 'Tersedia',
+                'id_inventory'    => $inventory->id,
+                'id_supplier'     => $request->id_supplier,
+                'id_produksi'     => $produksi->id,
+                'tanggal_masuk'   => $request->tanggal_masuk,
+                'jumlah_diterima' => $jumlah,
+                'stok'            => $jumlah,
+                'harga'           => $hargaSatuan,
+                'diskon'          => $diskonPersen,
+                'total_harga'     => $totalHarga,
+                'status'          => 'Tersedia',
             ]);
 
-            // 4. SINKRONISASI (PENTING)
-
-            // A. Update total biaya di tabel Produksi
+            // 4. SINKRONISASI
             $produksi->syncTotals();
-
-            // B. Update total stok di tabel Master Inventory
             $inventory->syncTotalStock();
 
             DB::commit();
 
-            return redirect()->route('bahan-baku.index')
-                ->with('success', 'Bahan baku berhasil masuk, stok diperbarui, dan biaya produksi disinkronkan.');
+            $pesan = $isBahanBaku && $diskonPersen > 0
+                ? "Bahan baku berhasil masuk dengan diskon {$diskonPersen}%."
+                : "Barang berhasil masuk gudang dan stok diperbarui.";
+
+            return redirect()->route('bahan-baku.index')->with('success', $pesan);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()
@@ -215,17 +229,22 @@ class BahanBakuController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'id_supplier'      => 'required|exists:supplier,id',
-            'id_barang'        => 'required|exists:barang,id',
-            'tanggal_masuk'    => 'required|date',
-            'jumlah_diterima'  => 'required|numeric|min:0.01',
-            'harga'            => 'required|numeric|min:0',
+            'id_supplier'     => 'required|exists:supplier,id',
+            'id_barang'       => 'required|exists:barang,id',
+            'tanggal_masuk'   => 'required|date',
+            'jumlah_diterima' => 'required|numeric|min:0.01',
+            'harga'           => 'required|numeric|min:0',
+            'diskon'          => 'nullable|numeric|min:0|max:100', // Tambahkan validasi diskon
         ]);
 
         try {
             DB::beginTransaction();
 
             $bahanBaku = DetailInventory::findOrFail($id);
+
+            // 0. Ambil informasi barang BARU untuk pengecekan jenis
+            $barangBaru = Barang::with('JenisBarang')->findOrFail($request->id_barang);
+            $isBahanBaku = ($barangBaru->JenisBarang->kode ?? null) === 'BB';
 
             // SIMPAN STATE LAMA
             $idProduksiLama = $bahanBaku->id_produksi;
@@ -243,23 +262,31 @@ class BahanBakuController extends Controller
                 'id_barang'     => $request->id_barang,
             ], ['stok' => 0, 'minimum_stok' => 0]);
 
+            // --- LOGIKA KALKULASI DISKON ---
+            $jumlah       = (float) $request->jumlah_diterima;
+            $hargaSatuan  = (float) $request->harga;
+            $diskonPersen = $isBahanBaku ? (float) ($request->diskon ?? 0) : 0;
+
+            $subtotal     = $jumlah * $hargaSatuan;
+            $potongan     = $subtotal * ($diskonPersen / 100);
+            $totalHarga   = $subtotal - $potongan;
+
             // 3. Update Data DetailInventory
             $bahanBaku->update([
                 'id_inventory'    => $inventoryBaru->id,
                 'id_supplier'     => $request->id_supplier,
-                'id_produksi'     => $produksiBaru->id, // Pindah ke produksi/tanggal baru
+                'id_produksi'     => $produksiBaru->id,
                 'tanggal_masuk'   => $request->tanggal_masuk,
-                'jumlah_diterima' => $request->jumlah_diterima,
-                'stok'            => $request->jumlah_diterima, // Pastikan logika stok sesuai kebutuhan bisnis Anda
-                'harga'           => $request->harga,
-                'total_harga'     => $request->jumlah_diterima * $request->harga,
+                'jumlah_diterima' => $jumlah,
+                'stok'            => $jumlah,
+                'harga'           => $hargaSatuan,
+                'diskon'          => $diskonPersen,
+                'total_harga'     => $totalHarga,
             ]);
 
             // 4. SINKRONISASI PRODUKSI
-            // Refresh Produksi Baru (Tambah Qty)
             $produksiBaru->syncTotals();
 
-            // Refresh Produksi Lama (Hapus/Kurangi Qty)
             if ($idProduksiLama && $idProduksiLama != $produksiBaru->id) {
                 $oldProd = Produksi::find($idProduksiLama);
                 if ($oldProd) {
@@ -267,7 +294,7 @@ class BahanBakuController extends Controller
                 }
             }
 
-            // 5. SINKRONISASI STOK MASTER (Jika barang berubah)
+            // 5. SINKRONISASI STOK MASTER
             $inventoryBaru->syncTotalStock();
             if ($idInventoryLama && $idInventoryLama != $inventoryBaru->id) {
                 $oldInv = Inventory::find($idInventoryLama);
@@ -277,7 +304,8 @@ class BahanBakuController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('bahan-baku.index')->with('success', 'Data berhasil diperbarui dan dipindahkan ke tanggal baru.');
+            return redirect()->route('bahan-baku.index')
+                ->with('success', 'Data berhasil diperbarui' . ($isBahanBaku ? ' dengan penyesuaian diskon.' : '.'));
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal Update: ' . $e->getMessage())->withInput();

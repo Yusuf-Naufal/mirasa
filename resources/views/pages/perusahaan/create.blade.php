@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Tambah Perusahaan">
     <div class="py-2">
 
         <form action="{{ route('perusahaan.store') }}" method="POST" enctype="multipart/form-data"

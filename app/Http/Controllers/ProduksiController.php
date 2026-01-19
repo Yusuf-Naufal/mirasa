@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Produksi;
+use App\Models\Perusahaan;
 use App\Models\BarangKeluar;
 use Illuminate\Http\Request;
 use App\Models\DetailProduksi;
 use App\Models\DetailInventory;
-use App\Models\Perusahaan;
+use Illuminate\Support\Facades\Log;
 
 class ProduksiController extends Controller
 {
@@ -135,9 +136,9 @@ class ProduksiController extends Controller
         // 1. Validasi Input
         $validated = $request->validate([
             'total_kupas' => 'required|numeric|min:0',
-            'total_a'     => 'required|numeric|min:0',
-            'total_s'     => 'required|numeric|min:0',
-            'total_j'     => 'required|numeric|min:0',
+            'total_a'     => 'nullable|numeric|min:0',
+            'total_s'     => 'nullable|numeric|min:0',
+            'total_j'     => 'nullable|numeric|min:0',
         ]);
 
         try {
@@ -146,10 +147,10 @@ class ProduksiController extends Controller
 
             // 3. Update data
             $detail->update([
-                'total_kupas' => $request->total_kupas,
-                'total_a'     => $request->total_a,
-                'total_s'     => $request->total_s,
-                'total_j'     => $request->total_j,
+                'total_kupas' => $request->total_kupas ?? 0,
+                'total_a'     => $request->total_a ?? 0,
+                'total_s'     => $request->total_s ?? 0,
+                'total_j'     => $request->total_j ?? 0,
             ]);
 
             // 4. Redirect kembali dengan pesan sukses

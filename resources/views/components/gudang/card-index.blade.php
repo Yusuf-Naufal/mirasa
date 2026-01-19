@@ -15,7 +15,7 @@
             @php
                 $stokAktual = $item->stok;
                 $stokMin = $item->minimum_stok ?? 0;
-                $ambangKuning = $stokMin + 30;
+                $ambangKuning = $stokMin * 1.2;
             @endphp
 
             <a href="{{ route('inventory.show', $item->id) }}" class="flex items-center justify-between group p-2 -mx-2 rounded-xl hover:bg-gray-50 transition-all duration-200">

@@ -187,20 +187,26 @@
 
                     {{-- Laporan Produksi --}}
                     <a href="{{ route('laporan-produksi') }}"
-                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all pl-12 font-medium">
+                        class="flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium">
                         Produksi
                     </a>
 
                     {{-- Laporan Gudang --}}
                     <a href="{{ route('laporan-gudang') }}"
-                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all pl-12 font-medium">
+                        class="flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium">
                         Gudang
                     </a>
 
                     {{-- Laporan Keuangan --}}
                     <a href="{{ route('laporan-keuangan') }}"
-                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all pl-12 font-medium">
+                        class="flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium">
                         Keuangan
+                    </a>
+
+                    {{-- HPP --}}
+                    <a href="{{ route('laporan-hpp') }}"
+                        class="flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium">
+                        HPP
                     </a>
                 </div>
             </li>

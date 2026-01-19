@@ -19,11 +19,13 @@ class Barang extends Model
         'nama_barang',
         'kode',
         'satuan',
+        'nilai_konversi',
+        'isi_bungkus',
     ];
 
     public function Perusahaan()
     {
-        return $this->belongsTo(Perusahaan::class, 'id_perusahaan');
+        return $this->belongsTo(Perusahaan::class, 'id_perusahaan')->withTrashed();
     }
 
     public function JenisBarang()
@@ -34,11 +36,6 @@ class Barang extends Model
     public function Inventory()
     {
         return $this->hasMany(Inventory::class, 'id_barang');
-    }
-
-    public function BahanBaku()
-    {
-        return $this->hasMany(BahanBaku::class, 'id_barang');
     }
 
     public function DetailProduksi()

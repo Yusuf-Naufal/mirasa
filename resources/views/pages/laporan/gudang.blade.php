@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Laporan Gudang">
     <div class="space-y-6" x-data="{ tab: 'PRODUKSI' }">
 
         {{-- HEADER & FILTER --}}

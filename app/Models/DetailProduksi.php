@@ -26,6 +26,6 @@ class DetailProduksi extends Model
 
     public function Barang()
     {
-        return $this->belongsTo(Barang::class, 'id_barang');
+        return $this->belongsTo(Barang::class, 'id_barang')->withTrashed();
     }
 }

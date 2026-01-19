@@ -1,4 +1,4 @@
-<x-layout.beranda.app>
+<x-layout.beranda.app title="Edit Barang Masuk - Produksi">
     <div class="min-h-screen bg-gray-50/50 md:px-10 py-8">
         <div class="mx-auto flex flex-col pt-12" x-data="{
             // Data Input

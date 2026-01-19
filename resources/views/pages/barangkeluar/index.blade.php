@@ -1,5 +1,5 @@
-<x-layout.beranda.app>
-    <div class="md:px-10 py-6 flex flex-col" x-data="{ tab: 'produksi', menuOpen: false }">
+<x-layout.beranda.app title="Daftar Barang Keluar">
+    <div class="md:px-10 py-6 flex flex-col" x-data="{ tab: 'PRODUKSI', menuOpen: false }">
         <div class="flex-1 pt-12">
 
             {{-- 1. HEADER --}}
@@ -73,7 +73,7 @@
                         <a href="{{ route('barang-keluar.create-produksi') }}"
                             class="flex items-center gap-3 px-4 py-3 hover:bg-yellow-50 text-gray-700 transition-colors">
                             <div class="p-2 bg-yellow-100 text-yellow-600 rounded-lg">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" text-gray-600"
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                     viewBox="0 0 48 48">
                                     <path fill="currentColor" fill-rule="evenodd"
                                         d="M24 1.5q-1.847 0-3.47.019c.056 2.59.186 5.094.294 6.863l2.104-1.335a2 2 0 0 1 2.144 0l2.104 1.335c.108-1.77.238-4.273.295-6.863A313 313 0 0 0 24 1.5m-12.788.308c1.557-.089 3.647-.18 6.318-.24c.068 3.12.24 6.104.356 7.876c.125 1.903 2.235 2.939 3.82 1.932L24 9.92l2.295 1.457c1.585 1.006 3.694-.03 3.82-1.933a188 188 0 0 0 .355-7.876c2.67.06 4.76.151 6.318.24c2.793.16 5.106 2.213 5.377 5.089c.179 1.895.335 4.564.335 8.103s-.156 6.208-.335 8.103c-.271 2.876-2.584 4.93-5.377 5.089c-2.646.15-6.832.308-12.788.308s-10.142-.157-12.788-.308c-2.793-.16-5.106-2.213-5.377-5.089C5.656 21.208 5.5 18.54 5.5 15s.156-6.208.335-8.103c.271-2.876 2.584-4.93 5.377-5.089M27 20.5a1.5 1.5 0 0 0 0 3h8a1.5 1.5 0 0 0 0-3zm1.5-4.5a1.5 1.5 0 0 1 1.5-1.5h5a1.5 1.5 0 0 1 0 3h-5a1.5 1.5 0 0 1-1.5-1.5M24 46.5a735 735 0 0 1-14.19-.12C5.704 46.3 1.5 43.776 1.5 39s4.203-7.3 8.31-7.38c3.251-.063 7.921-.12 14.19-.12s10.939.057 14.189.12c4.108.08 8.311 2.603 8.311 7.38s-4.203 7.3-8.31 7.38c-3.251.063-7.921.12-14.19.12M9 39a3 3 0 1 0 6 0a3 3 0 0 0-6 0m15 3a3 3 0 1 1 0-6a3 3 0 0 1 0 6m9-3a3 3 0 1 0 6 0a3 3 0 0 0-6 0"
@@ -112,27 +112,27 @@
 
             {{-- 3. TABS NAVIGATION --}}
             <div class="flex gap-4 border-b border-gray-100 mb-6">
-                <a href="{{ route('barang-keluar.index', ['tab' => 'produksi']) }}"
-                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'produksi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
+                <a href="{{ route('barang-keluar.index', ['tab' => 'PRODUKSI']) }}"
+                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'PRODUKSI' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
                     Barang Produksi
                 </a>
 
-                <a href="{{ route('barang-keluar.index', ['tab' => 'distribusi']) }}"
-                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'distribusi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
+                <a href="{{ route('barang-keluar.index', ['tab' => 'DISTRIBUSI']) }}"
+                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'DISTRIBUSI' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
                     Distribusi
                 </a>
 
-                <a href="{{ route('barang-keluar.index', ['tab' => 'bahan baku']) }}"
-                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'bahan baku' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
+                <a href="{{ route('barang-keluar.index', ['tab' => 'BAHAN BAKU']) }}"
+                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'BAHAN BAKU' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
                     Bahan Baku
                 </a>
             </div>
 
             {{-- AREA TABEL --}}
             <div class="mt-4">
-                @if ($activeTab === 'produksi')
+                @if ($activeTab === 'PRODUKSI')
                     <x-barangkeluar.table-produksi :data="$data" />
-                @elseif ($activeTab === 'bahan baku')
+                @elseif ($activeTab === 'BAHAN BAKU')
                     <x-barangkeluar.table-bahan-baku :data="$data" />
                 @else
                     <x-barangkeluar.table-distribusi :data="$data" />
@@ -185,21 +185,23 @@
                         </div>
                     @endif
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">
-                            Pilih Barang (Tab {{ ucfirst($activeTab) }})
-                        </label>
-                        <select name="id_barang"
-                            class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500">
-                            <option value="">Semua Barang</option>
-                            @foreach ($listBarang as $b)
-                                <option value="{{ $b->id }}"
-                                    {{ request('id_barang') == $b->id ? 'selected' : '' }}>
-                                    {{ $b->nama_barang }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    @if (!auth()->user()->hasRole('Super Admin'))
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">
+                                Pilih Barang (Tab {{ ucfirst($activeTab) }})
+                            </label>
+                            <select name="id_barang"
+                                class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-blue-500">
+                                <option value="">Semua Barang</option>
+                                @foreach ($listBarang as $b)
+                                    <option value="{{ $b->id }}"
+                                        {{ request('id_barang') == $b->id ? 'selected' : '' }}>
+                                        {{ $b->nama_barang }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
                     {{-- Filter Rentang Tanggal --}}
                     <div>

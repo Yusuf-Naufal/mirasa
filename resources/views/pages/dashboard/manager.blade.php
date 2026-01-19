@@ -1,4 +1,4 @@
-<x-layout.user.app>
+<x-layout.user.app title="Manager Dashboard">
 
     <div class="space-y-2">
         

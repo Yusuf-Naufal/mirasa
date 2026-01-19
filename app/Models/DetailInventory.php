@@ -20,6 +20,7 @@ class DetailInventory extends Model
         'jumlah_rusak',
         'harga',
         'total_harga',
+        'diskon',
         'kondisi_barang',
         'kondisi_kendaraan',
         'tempat_penyimpanan',
@@ -53,11 +54,12 @@ class DetailInventory extends Model
                 $detail->Produksi->syncTotals();
             }
         });
+        
     }
 
     public function Supplier()
     {
-        return $this->belongsTo(Supplier::class, 'id_supplier');
+        return $this->belongsTo(Supplier::class, 'id_supplier')->withTrashed();
     }
 
     public function BarangKeluar()

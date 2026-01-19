@@ -1,4 +1,4 @@
-<x-layout.beranda.app>
+<x-layout.beranda.app title="Tambah Barang Keluar - Penjualan">
     <div class="min-h-screen bg-gray-50/50 md:px-10 py-8" x-data="{
         open: false,
         search: '',
@@ -20,7 +20,10 @@
                     'batches' => $inv->DetailInventory->map(
                         fn($d) => [
                             'id' => $d->id,
+                            'no_batch' => $d->nomor_batch,
                             'tgl' => \Carbon\Carbon::parse($d->tanggal_masuk)->format('d/m/y'),
+                            'tanggal_masuk_raw' => $d->tanggal_masuk,
+                            'created_at' => $d->created_at,
                             'stok' => (float) $d->stok,
                             'harga' => (float) $d->harga,
                         ],
@@ -52,18 +55,39 @@
             let rencana = [];
             let item = this.inventoryRaw.find(inv => inv.id === this.selectedInventoryId);
     
-            for (let b of item.batches) {
+            if (!item || !item.batches) return { totalNilai: 0, rencana: [] };
+    
+            // --- LOGIKA SORTING FIFO GANDA ---
+            const sortedBatches = [...item.batches].sort((a, b) => {
+                // 1. Urutkan berdasarkan Tanggal Masuk (Utama)
+                let dateA = new Date(a.tanggal_masuk_raw);
+                let dateB = new Date(b.tanggal_masuk_raw);
+    
+                if (dateA - dateB !== 0) {
+                    return dateA - dateB;
+                }
+    
+                // 2. Jika tanggal sama, urutkan berdasarkan created_at (Tambahan)
+                return new Date(a.created_at) - new Date(b.created_at);
+            });
+    
+            for (let b of sortedBatches) {
                 if (sisa <= 0) break;
+    
                 let diambil = Math.min(b.stok, sisa);
-                rencana.push({
-                    tgl: b.tgl,
-                    qty: diambil,
-                    harga: b.harga,
-                    subtotal: diambil * b.harga
-                });
-                totalNilai += diambil * b.harga;
-                sisa -= diambil;
+                if (diambil > 0) {
+                    rencana.push({
+                        no_batch: b.no_batch,
+                        tgl: b.tgl,
+                        qty: diambil,
+                        harga: b.harga,
+                        subtotal: diambil * b.harga
+                    });
+                    totalNilai += diambil * b.harga;
+                    sisa -= diambil;
+                }
             }
+    
             return { totalNilai, rencana };
         }
     }">
@@ -182,7 +206,7 @@
                                         class="flex justify-between items-center bg-white/10 p-3 rounded-xl border border-white/20">
                                         <div class="flex flex-col">
                                             <span class="text-[10px] opacity-80 font-bold uppercase">Batch: <span
-                                                    x-text="r.tgl" class="text-white"></span></span>
+                                                    x-text="r.no_batch" class="text-white"></span></span>
                                             <span class="text-xs font-medium">Rp <span
                                                     x-text="new Intl.NumberFormat('id-ID').format(r.harga)"></span></span>
                                         </div>
@@ -230,7 +254,9 @@
                                             class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none">
                                             <option value="">-- Pilih Perusahaan Tujuan --</option>
                                             @foreach ($perusahaan as $p)
-                                                <option value="{{ $p->id }}">{{ $p->nama_perusahaan }} ({{ $p->kota }})</option>
+                                                <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}
+                                                    ({{ $p->kota }})
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
