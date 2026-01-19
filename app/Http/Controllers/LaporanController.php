@@ -495,4 +495,4 @@ class LaporanController extends Controller
         ) + ['perusahaan' => Perusahaan::all()]);
     }
 }
->>>>>>> origin/yusuf
+
