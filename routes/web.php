@@ -147,6 +147,8 @@ Route::get('laporan-hpp', [LaporanController::class, 'laporanHpp'])->name('lapor
 // GRAFIK
 Route::get('grafik-bahan-baku', [GrafikController::class, 'grafikBahanBaku'])->name('grafik.bahan-baku');
 Route::get('grafik-produksi', [GrafikController::class, 'grafikProduksi'])->name('grafik.produksi');
+Route::get('grafik-pemakaian', [GrafikController::class, 'grafikPemakaian'])->name('grafik.pemakaian');
+Route::get('grafik-hpp', [GrafikController::class, 'grafikHpp'])->name('grafik.hpp');
 
 // LOG ACTIVITY
 Route::get('logs', [LogActivityController::class, 'index'])->name('logs.index');
