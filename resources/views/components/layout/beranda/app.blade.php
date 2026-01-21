@@ -6,10 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{{ $title ?? 'Beranda' }}</title>
 
-    @if(auth()->user()->perusahaan && auth()->user()->perusahaan->logo)
+    @if (auth()->user()->perusahaan && auth()->user()->perusahaan->logo)
         <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . auth()->user()->perusahaan->logo) }}">
     @else
-        <link rel="icon" type="image/x-icon" href="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}">
+        <link rel="icon" type="image/x-icon"
+            href="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}">
     @endif
 
     {{-- TAILWIND --}}
@@ -27,7 +28,9 @@
 
 <body class="bg-gray-50 font-sans antialiased group/sidebar">
 
-    <x-layout.user.nav />
+    <x-layout.beranda.nav />
+
+    <x-layout.beranda.aside />
 
     <main id="main-content" class="flex-1 overflow-y-auto p-4">
         <div>
@@ -185,5 +188,30 @@
         });
     </script>
 @endif
+
+{{-- HANDLE ASIDE --}}
+<script>
+    function openAside(id) {
+        const aside = document.getElementById(id);
+        const overlay = document.getElementById('asideOverlay');
+
+        if (aside && overlay) { // Tambahkan pengecekan ini
+            aside.classList.remove('translate-x-full');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeAside(id) {
+        const aside = document.getElementById(id);
+        const overlay = document.getElementById('asideOverlay');
+
+        if (aside && overlay) { // Tambahkan pengecekan ini
+            aside.classList.add('translate-x-full');
+            overlay.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+    }
+</script>
 
 </html>

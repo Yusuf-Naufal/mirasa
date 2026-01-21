@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Proses extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivity;
     
     protected $table = 'proses';
 
@@ -16,6 +18,14 @@ class Proses extends Model
         'nama_proses',
         'kode',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('proses');
+    }
 
     public function Perusahaan()
     {

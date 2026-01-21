@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
+use App\Models\Pemakaian;
 use App\Models\Pengeluaran;
 use Illuminate\Support\Str;
-use App\Models\PemakaianGas;
 use Illuminate\Http\Request;
+use App\Models\KategoriPemakaian;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -162,6 +163,7 @@ class PengeluaranController extends Controller
 
             $Kategori = strtoupper($request->kategori);
             $subKategori = strtoupper($request->sub_kategori);
+            $id_perusahaan = auth()->user()->id_perusahaan;
 
             // 1. Handle Upload Bukti
             $path = null;
@@ -183,18 +185,28 @@ class PengeluaranController extends Controller
             ]);
 
             // 3. Logika Khusus Gas: Hubungkan pemakaian harian yang belum terbayar
-            if (strtoupper($subKategori) === 'GAS' && strtoupper($Kategori) === 'OPERASIONAL') {
-                // Tentukan awal dan akhir bulan dari tanggal pengeluaran yang diinput
-                $tanggalInput = Carbon::parse($request->tanggal_pengeluaran);
-                $awalBulan = $tanggalInput->copy()->startOfMonth();
-                $akhirBulan = $tanggalInput->copy()->endOfMonth();
+            if ($Kategori === 'OPERASIONAL') {
+                // Cek apakah sub_kategori yang diinput terdaftar di tabel kategori_pemakaian
+                $cekKategoriPemakaian = KategoriPemakaian::where('id_perusahaan', $id_perusahaan)
+                    ->where('nama_kategori', $subKategori)
+                    ->first();
 
-                // Update semua pemakaian gas perusahaan ini yang:
-                // 1. Belum memiliki relasi pengeluaran (id_pengeluaran IS NULL)
-                PemakaianGas::where('id_perusahaan', $pengeluaran->id_perusahaan)
-                    ->whereNull('id_pengeluaran')
-                    ->whereBetween('tanggal_pemakaian', [$awalBulan, $akhirBulan])
-                    ->update(['id_pengeluaran' => $pengeluaran->id]);
+                if ($cekKategoriPemakaian) {
+                    // Tentukan awal dan akhir bulan dari tanggal pengeluaran yang diinput
+                    $tanggalInput = Carbon::parse($request->tanggal_pengeluaran);
+                    $awalBulan = $tanggalInput->copy()->startOfMonth();
+                    $akhirBulan = $tanggalInput->copy()->endOfMonth();
+
+                    // Update semua pemakaian (Listrik, Gas, Air, dll) yang:
+                    // 1. Milik kategori yang cocok
+                    // 2. Belum memiliki relasi pengeluaran (id_pengeluaran IS NULL)
+                    // 3. Dalam periode bulan yang sama
+                    Pemakaian::where('id_perusahaan', $id_perusahaan)
+                        ->where('id_kategori', $cekKategoriPemakaian->id)
+                        ->whereNull('id_pengeluaran')
+                        ->whereBetween('tanggal_pemakaian', [$awalBulan, $akhirBulan])
+                        ->update(['id_pengeluaran' => $pengeluaran->id]);
+                }
             }
 
             DB::commit();
@@ -260,7 +272,7 @@ class PengeluaranController extends Controller
 
             // 3. Sinkronisasi Gas jika kategori berubah atau data diedit
             if ($pengeluaran->sub_kategori === 'Gas' && $pengeluaran->kategori === 'OPERASIONAL') {
-                PemakaianGas::where('id_pengeluaran', $pengeluaran->id)
+                Pemakaian::where('id_pengeluaran', $pengeluaran->id)
                     ->update(['id_pengeluaran' => $pengeluaran->id]);
             }
 
@@ -290,7 +302,7 @@ class PengeluaranController extends Controller
 
             // 2. Jika pengeluaran ini adalah GAS, lepaskan kaitan di tabel pemakaian_gas
             if (strtoupper($pengeluaran->sub_kategori) === 'GAS') {
-                PemakaianGas::where('id_pengeluaran', $pengeluaran->id)
+                Pemakaian::where('id_pengeluaran', $pengeluaran->id)
                     ->update(['id_pengeluaran' => null]);
             }
 

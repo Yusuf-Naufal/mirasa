@@ -5,19 +5,21 @@ namespace App\Models;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Costumer extends Model
+class Pemakaian extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use LogsActivity;
 
-    protected $table = 'costumer';
+    protected $table = 'pemakaian';
 
     protected $fillable = [
         'id_perusahaan',
-        'nama_costumer',
-        'kode',
+        'id_pengeluaran',
+        'id_kategori',
+        'tanggal_pemakaian',
+        'jumlah',
+        'harga',
+        'total_harga',
     ];
 
     public function getActivitylogOptions(): LogOptions
@@ -25,7 +27,12 @@ class Costumer extends Model
         return LogOptions::defaults()
             ->logFillable()
             ->logOnlyDirty()
-            ->useLogName('costumer');
+            ->useLogName('pemakaian');
+    }
+
+    public function KategoriPemakaian()
+    {
+        return $this->belongsTo(KategoriPemakaian::class, 'id_kategori')->withTrashed();
     }
 
     public function Perusahaan()
@@ -33,8 +40,8 @@ class Costumer extends Model
         return $this->belongsTo(Perusahaan::class, 'id_perusahaan')->withTrashed();
     }
 
-    public function BarangKeluar()
+    public function Pengeluaran()
     {
-        return $this->hasMany(BarangKeluar::class, 'id_costumer');
+        return $this->belongsTo(Pengeluaran::class, 'id_pengeluaran');
     }
 }

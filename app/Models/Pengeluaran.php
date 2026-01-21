@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Pengeluaran extends Model
 {
+    use LogsActivity;
+
     protected $table = 'pengeluaran';
 
     protected $fillable = [
@@ -20,6 +24,14 @@ class Pengeluaran extends Model
         'keterangan',
     ];
 
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('pengeluaran');
+    }
+
     protected $casts = [
         'is_hpp' => 'boolean',
         'tanggal_pengeluaran' => 'date',
@@ -30,8 +42,8 @@ class Pengeluaran extends Model
         return $this->belongsTo(Perusahaan::class, 'id_perusahaan')->withTrashed();
     }
 
-    public function PemakaianGas()
+    public function Pemakaian()
     {
-        return $this->hasMany(PemakaianGas::class, 'id_pengeluaran');
+        return $this->hasMany(Pemakaian::class, 'id_pengeluaran');
     }
 }

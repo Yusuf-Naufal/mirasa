@@ -91,7 +91,7 @@
                         <div class="space-y-1">
                             <label for="id_jenis" class="block text-sm font-semibold text-gray-700">Jenis Barang <span
                                     class="text-red-500">*</span></label>
-                            <select id="id_jenis" name="id_jenis" required onchange="updateKodeJenis(this)"
+                            <select id="id_jenis" name="id_jenis" required onchange="handleJenisChange(this)"
                                 class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
                                 @foreach ($jenis as $j)
                                     <option value="{{ $j->id }}" data-kode="{{ $j->kode }}"
@@ -121,6 +121,74 @@
                                 <input type="text" id="kode" name="kode" required placeholder="001"
                                     value="{{ old('kode', $kodeMurni) }}"
                                     class="w-full rounded-r-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border uppercase">
+                            </div>
+                        </div>
+
+                        {{-- SELECTION CARD: Radio Button Khusus Bahan Baku (Edit Mode) --}}
+                        <div id="section-sub-bb"
+                            class="hidden space-y-4 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border border-blue-100 md:col-span-2 shadow-inner transition-all">
+
+                            <div class="flex items-center gap-2">
+                                <div class="p-1.5 bg-blue-600 rounded-lg shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M7 7h10M7 12h10m-7 5h7" />
+                                    </svg>
+                                </div>
+                                <p class="text-[11px] font-black text-blue-800 uppercase tracking-widest">
+                                    Klasifikasi Bahan Baku <span class="text-red-500">*</span>
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {{-- Opsi Bahan Baku Utama --}}
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="jenis" value="Utama" class="peer hidden"
+                                        {{ $barang->jenis == 'Utama' ? 'checked' : '' }}> {{-- Cek data lama --}}
+                                    <div
+                                        class="flex items-center gap-4 p-4 bg-white border-2 border-transparent rounded-2xl shadow-sm transition-all duration-300 
+                                                peer-checked:border-blue-600 peer-checked:bg-blue-50/50 group-hover:bg-blue-50/30">
+                                        <div
+                                            class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-blue-100 text-blue-600 transition-colors peer-checked:bg-blue-600 peer-checked:text-white">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-gray-800 tracking-tight">Bahan Baku Utama
+                                            </h4>
+                                            <p class="text-[10px] text-gray-500 font-medium uppercase italic">Bahan
+                                                Inti Produksi (Umbi)</p>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                {{-- Opsi Bahan Baku Pendukung --}}
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="jenis" value="Pendukung" class="peer hidden"
+                                        {{ $barang->jenis == 'Pendukung' ? 'checked' : '' }}> {{-- Cek data lama --}}
+                                    <div
+                                        class="flex items-center gap-4 p-4 bg-white border-2 border-transparent rounded-2xl shadow-sm transition-all duration-300 
+                                            peer-checked:border-indigo-600 peer-checked:bg-indigo-50/50 group-hover:bg-indigo-50/30">
+                                        <div
+                                            class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 transition-colors peer-checked:bg-indigo-600 peer-checked:text-white">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-gray-800 tracking-tight">Bahan Pendukung
+                                            </h4>
+                                            <p class="text-[10px] text-gray-500 font-medium uppercase italic">Minyak,
+                                                Dll</p>
+                                        </div>
+                                    </div>
+                                </label>
                             </div>
                         </div>
 
@@ -294,9 +362,8 @@
     </script>
 
     <script>
-        // Ganti fungsi updateKodeJenis lama dan tambahkan logika konversi
         function handleJenisChange(selectElement) {
-            // 1. Jalankan fungsi prefix kode
+            // 1. Jalankan fungsi prefix kode bawaan
             updateKodeJenis(selectElement);
 
             // 2. Identifikasi Pilihan
@@ -306,19 +373,40 @@
             const reqIcon = document.getElementById('req-icon');
             const helperText = document.getElementById('helper-text-konversi');
 
-            // Daftar kode yang mewajibkan konversi
-            const wajibIsi = ['FG', 'WIP', 'EC'];
+            // --- LOGIKA UNTUK BAHAN BAKU (BB) ---
+            const sectionSubBB = document.getElementById('section-sub-bb');
+            const radioBB = document.getElementsByName('jenis');
 
+            if (kodeJenis === 'BB') {
+                // Tampilkan pilihan dan buat jadi wajib diisi
+                sectionSubBB.classList.remove('hidden');
+                radioBB.forEach(radio => radio.setAttribute('required', 'required'));
+            } else {
+                // Sembunyikan pilihan
+                sectionSubBB.classList.add('hidden');
+                radioBB.forEach(radio => {
+                    radio.removeAttribute('required');
+                    radio.checked = false;
+                });
+            }
+            // ---------------------------------------------
+
+            // Logika Konversi Satuan (FG, WIP, EC) - Tetap sama
+            const wajibIsi = ['FG', 'WIP', 'EC'];
             if (wajibIsi.includes(kodeJenis)) {
                 inputNilai.setAttribute('required', 'required');
                 reqIcon.classList.remove('hidden');
-                helperText.classList.add('text-red-500', 'font-medium');
-                helperText.innerText = "* Wajib diisi untuk jenis " + kodeJenis;
+                if (helperText) {
+                    helperText.classList.add('text-red-500', 'font-medium');
+                    helperText.innerText = "* Wajib diisi untuk jenis " + kodeJenis;
+                }
             } else {
                 inputNilai.removeAttribute('required');
                 reqIcon.classList.add('hidden');
-                helperText.classList.remove('text-red-500', 'font-medium');
-                helperText.innerText = "Masukkan total berat dalam kilogram (Opsional).";
+                if (helperText) {
+                    helperText.classList.remove('text-red-500', 'font-medium');
+                    helperText.innerText = "Masukkan total berat dalam kilogram (Opsional).";
+                }
             }
 
             updateLabelSatuan();

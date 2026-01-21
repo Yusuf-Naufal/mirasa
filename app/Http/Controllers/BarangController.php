@@ -96,6 +96,7 @@ class BarangController extends Controller
             'kode'              => "required|string|unique:barang,kode,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
             'satuan'            => 'required|string',
             'nilai_konversi'    => 'nullable',
+            'jenis'             => 'nullable',
             'isi_bungkus'       => 'nullable',
             'cropped_image'     => 'nullable|string',
         ], [
@@ -108,7 +109,7 @@ class BarangController extends Controller
         $kodeFinal = strtoupper($jenis->kode . '-' . $request->kode);
 
         // 2. Persiapkan Data
-        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan', 'nilai_konversi', 'isi_bungkus']);
+        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan', 'nilai_konversi', 'isi_bungkus', 'jenis']);
         $data['kode'] = $kodeFinal;
         $data['satuan'] = strtoupper($request->satuan);
 
@@ -165,6 +166,7 @@ class BarangController extends Controller
             'nama_barang'       => "required|string|unique:barang,nama_barang,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
             'kode_gabungan'     => "required|string|unique:barang,kode,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
             'nilai_konversi'    => 'nullable',
+            'jenis'             => 'nullable',
             'isi_bungkus'       => 'nullable',
             'satuan'            => 'required|string',
             'cropped_image'     => 'nullable|string',
@@ -179,7 +181,8 @@ class BarangController extends Controller
             'nama_barang'       => $request->nama_barang,
             'nilai_konversi'    => $request->nilai_konversi,
             'isi_bungkus'       => $request->isi_bungkus,
-            'kode'              => $kodeFinal, // Simpan hasil gabungan
+            'jenis'             => $request->jenis ?? null,
+            'kode'              => $kodeFinal,
             'satuan'            => strtoupper($request->satuan),
         ];
 

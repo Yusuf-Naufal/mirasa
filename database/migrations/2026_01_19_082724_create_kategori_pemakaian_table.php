@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pemakaian_gas', function (Blueprint $table) {
+        Schema::create('kategori_pemakaian', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('id_perusahaan');
-            $table->unsignedBigInteger('id_supplier')->nullable();
-            $table->unsignedBigInteger('id_pengeluaran')->nullable();
-            $table->date('tanggal_pemakaian')->nullable();
-            $table->double('jumlah_gas')->nullable();
-            $table->double('harga')->nullable();
-            $table->double('total_harga')->nullable();
+            $table->string('nama_kategori')->nullable();
+            $table->string('satuan')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }
@@ -29,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pemakaian_gas');
+        Schema::dropIfExists('kategori_pemakaian');
     }
 };

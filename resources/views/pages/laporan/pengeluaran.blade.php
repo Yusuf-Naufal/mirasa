@@ -5,18 +5,19 @@
         <div
             class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
             <div>
-                <h1 class="text-2xl font-black text-gray-900 tracking-tight uppercase italic">Laporan Keuangan</h1>
+                <h1 class="text-2xl font-black text-gray-900 tracking-tight uppercase italic">Laporan Pengeluaran</h1>
                 <p class="text-sm text-gray-400 font-medium italic">Insight pengeluaran periode ini</p>
             </div>
 
-            <form action="{{ route('laporan-keuangan') }}" method="GET" class="flex flex-wrap items-center gap-2">
+            <form action="{{ route('laporan-pengeluaran') }}" method="GET" class="flex flex-wrap items-center gap-2">
                 @if (auth()->user()->hasRole('Super Admin'))
                     <select name="id_perusahaan"
                         class="rounded-xl border-gray-200 text-xs font-bold py-2 px-3 outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
                         <option value="">Semua Perusahaan</option>
                         @foreach ($perusahaan as $p)
                             <option value="{{ $p->id }}"
-                                {{ request('id_perusahaan') == $p->id ? 'selected' : '' }}>{{ $p->nama_perusahaan }} ({{ $p->kota }})
+                                {{ request('id_perusahaan') == $p->id ? 'selected' : '' }}>{{ $p->nama_perusahaan }}
+                                ({{ $p->kota }})
                             </option>
                         @endforeach
                     </select>
