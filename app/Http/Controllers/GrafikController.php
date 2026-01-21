@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use App\Models\Barang;
 use App\Models\Produksi;
 use App\Models\Inventory;
+use App\Models\Pemakaian;
 use App\Models\Pengeluaran;
 use App\Models\BarangKeluar;
 use Illuminate\Http\Request;
@@ -387,5 +388,236 @@ class GrafikController extends Controller
     {
         $hue = ($id * 137.508) % 360;
         return $type === 'in' ? "hsla($hue, 70%, 50%, 1)" : "hsla($hue, 40%, 40%, 0.8)";
+    }
+
+    // FOR PEMAKAIAN
+    public function grafikPemakaian(Request $request)
+    {
+        $user = auth()->user();
+        $id_perusahaan = $user->id_perusahaan;
+
+        $filterType = $request->get('filter_type', 'month');
+        $selectedMonth = (int)$request->get('month', date('m'));
+        $selectedYear = (int)$request->get('year', date('Y'));
+
+        // Ambil Summary & Perbandingan (Poin 1, 2, 5, 6)
+        $summaryData = $this->getSummaryPemakaianData($id_perusahaan, $filterType, $selectedMonth, $selectedYear);
+
+        // Ambil Data Grafik Tren (Poin 3 & 4)
+        $chartData = $this->getChartPemakaianData($id_perusahaan, $filterType, $selectedMonth, $selectedYear);
+
+        return view('pages.grafik.pemakaian', array_merge([
+            'filterType' => $filterType,
+            'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear,
+        ], $summaryData, $chartData));
+    }
+
+    private function getSummaryPemakaianData($id_perusahaan, $filterType, $month, $year)
+    {
+        // Ambil kategori dan hitung sum pemakaian
+        $categories = KategoriPemakaian::where('id_perusahaan', $id_perusahaan)
+            ->withSum(['Pemakaian' => function ($q) use ($year, $month, $filterType) {
+                $q->whereYear('tanggal_pemakaian', $year)
+                    ->when($filterType === 'month', fn($q2) => $q2->whereMonth('tanggal_pemakaian', $month));
+            }], 'total_harga')
+            ->withSum(['Pemakaian' => function ($q) use ($year, $month, $filterType) {
+                $q->whereYear('tanggal_pemakaian', $year)
+                    ->when($filterType === 'month', fn($q2) => $q2->whereMonth('tanggal_pemakaian', $month));
+            }], 'jumlah')
+            ->get();
+
+        // Bandingkan biaya pemakaian dengan pengeluaran berdasarkan sub_kategori (Poin 6)
+        $comparison = $categories->map(function ($cat) use ($id_perusahaan, $year, $month, $filterType) {
+            $biayaKeluar = Pengeluaran::where('id_perusahaan', $id_perusahaan)
+                ->where('sub_kategori', $cat->nama_kategori)
+                ->whereYear('tanggal_pengeluaran', $year)
+                ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pengeluaran', $month))
+                ->sum('jumlah_pengeluaran');
+
+            return [
+                'nama' => $cat->nama_kategori,
+                'satuan' => $cat->satuan,
+                'jumlah' => $cat->pemakaian_sum_jumlah ?? 0,
+                'biaya_pakai' => $cat->pemakaian_sum_total_harga ?? 0,
+                'biaya_keluar' => $biayaKeluar
+            ];
+        });
+
+        $totalOperasional = Pengeluaran::where('id_perusahaan', $id_perusahaan)
+            ->where('kategori', 'OPERASIONAL')
+            ->whereYear('tanggal_pengeluaran', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pengeluaran', $month))
+            ->sum('jumlah_pengeluaran');
+
+        return [
+            'dataSummary' => $comparison,
+            'totalOperasional' => $totalOperasional,
+            'totalSemuaPemakaian' => $categories->sum('pemakaian_sum_total_harga')
+        ];
+    }
+
+    private function getChartPemakaianData($id_perusahaan, $filterType, $month, $year)
+    {
+        if ($filterType === 'month') {
+            $days = \Carbon\Carbon::create($year, $month)->daysInMonth;
+            $range = range(1, $days);
+            $format = 'DD';
+        } else {
+            $range = range(1, 12);
+            $format = 'MM';
+        }
+
+        $categories = KategoriPemakaian::where('id_perusahaan', $id_perusahaan)->get();
+        $dsBiaya = [];
+        $dsJumlah = [];
+
+        foreach ($categories as $cat) {
+            $raw = Pemakaian::where('id_perusahaan', $id_perusahaan)
+                ->where('id_kategori', $cat->id)
+                ->whereYear('tanggal_pemakaian', $year)
+                ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pemakaian', $month))
+                ->select(
+                    \DB::raw("TO_CHAR(tanggal_pemakaian, '$format') as pd"),
+                    \DB::raw("SUM(total_harga) as val"),
+                    \DB::raw("SUM(jumlah) as qty")
+                )
+                ->groupBy('pd')->get()->keyBy('pd');
+
+            $valPoints = [];
+            $qtyPoints = [];
+
+            foreach ($range as $r) {
+                $key = str_pad($r, 2, '0', STR_PAD_LEFT);
+                $valPoints[] = (float)($raw[$key]->val ?? 0);
+                $qtyPoints[] = (float)($raw[$key]->qty ?? 0);
+            }
+
+            if (array_sum($valPoints) > 0) {
+                $color = $this->getRandomColor($cat->id, 'in'); // Gunakan helper warna Anda
+                $dsBiaya[] = [
+                    'label' => $cat->nama_kategori,
+                    'data' => $valPoints,
+                    'borderColor' => $color,
+                    'tension' => 0.4,
+                    'pointRadius' => 2
+                ];
+                $dsJumlah[] = [
+                    'label' => $cat->nama_kategori,
+                    'data' => $qtyPoints,
+                    'satuan' => $cat->satuan,
+                    'borderColor' => $color,
+                    'tension' => 0.4,
+                    'pointRadius' => 2
+                ];
+            }
+        }
+
+        return [
+            'labels' => $filterType === 'month' ? $range : ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+            'datasetsBiaya' => $dsBiaya,
+            'datasetsJumlah' => $dsJumlah
+        ];
+    }
+
+    // FOR HPP
+    public function grafikHpp(Request $request)
+    {
+        $user = auth()->user();
+        $id_perusahaan = $user->id_perusahaan;
+
+        $filterType = $request->get('filter_type', 'month');
+        $selectedMonth = (int)$request->get('month', date('m'));
+        $selectedYear = (int)$request->get('year', date('Y'));
+
+        $trendHpp = $this->getTrendHppHarian($id_perusahaan, $filterType, $selectedMonth, $selectedYear);
+
+        return view('pages.grafik.hpp', array_merge([
+            'filterType' => $filterType,
+            'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear,
+        ], $trendHpp));
+    }
+
+    private function getTrendHppHarian($id_perusahaan, $filterType, $month, $year)
+    {
+        if ($filterType === 'month') {
+            $days = Carbon::create($year, $month)->daysInMonth;
+            $range = range(1, $days);
+            $format = 'DD';
+            $labels = $range;
+        } else {
+            $range = range(1, 12);
+            $format = 'MM';
+            $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        }
+
+        // 1. Ambil Biaya Bahan (Baku + Penolong)
+        $biayaBahan = BarangKeluar::whereIn('jenis_keluar', ['BAHAN BAKU', 'PRODUKSI'])
+            ->where('id_perusahaan', $id_perusahaan)
+            ->whereYear('tanggal_keluar', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $month))
+            ->select(DB::raw("TO_CHAR(tanggal_keluar, '$format') as period"), DB::raw("SUM(total_harga) as total"))
+            ->groupBy('period')->pluck('total', 'period');
+
+        // 2. Ambil Biaya Operasional HPP
+        $biayaOps = Pengeluaran::where('id_perusahaan', $id_perusahaan)
+            ->whereRaw('is_hpp = true')
+            ->whereYear('tanggal_pengeluaran', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pengeluaran', $month))
+            ->select(DB::raw("TO_CHAR(tanggal_pengeluaran, '$format') as period"), DB::raw("SUM(jumlah_pengeluaran) as total"))
+            ->groupBy('period')->pluck('total', 'period');
+
+        // 3. Ambil Volume Produksi
+        $volumeProduksi = DetailInventory::whereHas('Inventory.Barang.JenisBarang', function ($q) {
+            $q->whereIn('kode', ['FG', 'WIP', 'EC']);
+        })
+            ->whereHas('Inventory', fn($q) => $q->where('id_perusahaan', $id_perusahaan))
+            ->whereYear('tanggal_masuk', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_masuk', $month))
+            ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
+            ->join('barang', 'inventory.id_barang', '=', 'barang.id')
+            ->select(
+                DB::raw("TO_CHAR(detail_inventory.tanggal_masuk, '$format') as period"),
+                DB::raw("SUM(detail_inventory.jumlah_diterima * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)) as vol")
+            )
+            ->groupBy('period')->pluck('vol', 'period');
+
+        $chartHpp = [];
+        $chartVol = [];
+        $rincianHarian = []; 
+
+        foreach ($range as $index => $r) {
+            $key = str_pad($r, 2, '0', STR_PAD_LEFT);
+
+            $bahan = (float)($biayaBahan[$key] ?? 0);
+            $ops = (float)($biayaOps[$key] ?? 0);
+            $totalBiaya = $bahan + $ops;
+            $vol = (float)($volumeProduksi[$key] ?? 0);
+
+            $hpp = $vol > 0 ? round($totalBiaya / $vol, 2) : 0;
+
+            $chartHpp[] = $hpp;
+            $chartVol[] = $vol;
+
+            $rincianHarian[] = [
+                'label' => $filterType === 'month' ? "Tgl $r" : $labels[$index],
+                'biaya_bahan' => $bahan,
+                'biaya_ops' => $ops,
+                'total_biaya' => $totalBiaya,
+                'volume' => $vol,
+                'hpp' => $hpp
+            ];
+        }
+
+        $filteredHpp = array_filter($chartHpp);
+
+        return [
+            'labels' => $labels,
+            'chartHpp' => $chartHpp,
+            'chartVol' => $chartVol,
+            'rincianHarian' => $rincianHarian,
+            'avgHpp' => count($filteredHpp) > 0 ? array_sum($filteredHpp) / count($filteredHpp) : 0
+        ];
     }
 }
