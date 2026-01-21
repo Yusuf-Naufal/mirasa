@@ -2,16 +2,28 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Produksi extends Model
 {
+    use LogsActivity;
+
     protected $table = 'produksi';
 
     protected $fillable = [
         'id_perusahaan',
         'tanggal_produksi',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('produksi');
+    }
 
     public function syncTotals()
     {

@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Perusahaan extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'perusahaan';
 
@@ -20,6 +22,14 @@ class Perusahaan extends Model
         'kota',
         'logo',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('perusahaan');
+    }
 
     public function Inventory()
     {
@@ -61,13 +71,18 @@ class Perusahaan extends Model
         return $this->hasMany(Produksi::class, 'id_perusahaan');
     }
 
-    public function PemakaianGas()
+    public function Pemakaian()
     {
-        return $this->hasMany(PemakaianGas::class, 'id_perusahaan');
+        return $this->hasMany(Pemakaian::class, 'id_perusahaan');
     }
 
     public function Pengeluaran()
     {
         return $this->hasMany(Pengeluaran::class, 'id_perusahaan');
+    }
+
+    public function KategoriPemakaian()
+    {
+        return $this->hasMany(KategoriPemakaian::class, 'id_perusahaan');
     }
 }

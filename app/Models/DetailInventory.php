@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class DetailInventory extends Model
 {
+    use LogsActivity;
+
     protected $table = 'detail_inventory';
 
     protected $fillable = [
@@ -26,6 +30,14 @@ class DetailInventory extends Model
         'tempat_penyimpanan',
         'status',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('detail_inventory');
+    }
 
     public function Inventory()
     {

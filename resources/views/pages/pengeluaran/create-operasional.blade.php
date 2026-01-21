@@ -1,4 +1,4 @@
-<x-layout.beranda.app title="Tambah Pengeluaran Operasional"> 
+<x-layout.beranda.app title="Tambah Pengeluaran Operasional">
 
     <div class="min-h-screen bg-gray-50/50 md:px-10 py-8">
         <div class="mx-auto flex flex-col pt-12">
@@ -16,7 +16,8 @@
                     </a>
                     <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Pengeluaran <span
                             class="text-blue-600">Operasional</span></h1>
-                    <p class="text-sm text-gray-500 font-medium italic">*Gunakan kategori ini untuk biaya pengeluaran operasional produksi.</p>
+                    <p class="text-sm text-gray-500 font-medium italic">*Gunakan kategori ini untuk biaya pengeluaran
+                        operasional produksi.</p>
                 </div>
             </div>
 
@@ -40,12 +41,40 @@
                                         required>
                                 </div>
 
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Layanan</label>
-                                    <input type="text" name="sub_kategori" id="sub_kategori"
-                                        placeholder="Contoh: GAS, LISTRIK, TELEPON"
-                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all uppercase"
-                                        required>
+                                <div x-data="{ selectedLayanan: '', customLayanan: '' }">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis
+                                            Layanan</label>
+
+                                        <select {{-- Atribut name akan hilang jika memilih LAINNYA --}}
+                                            :name="selectedLayanan !== 'LAINNYA' ? 'sub_kategori' : ''"
+                                            x-model="selectedLayanan"
+                                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none transition-all"
+                                            required>
+                                            <option value="" disabled selected>-- Pilih Jenis Layanan --</option>
+                                            <option value="GAS">GAS</option>
+                                            <option value="LISTRIK">LISTRIK</option>
+                                            <option value="TELEPON">TELEPON</option>
+                                            <option value="INTERNET">INTERNET</option>
+                                            <option value="AIR">AIR (PDAM)</option>
+                                            <option value="LAINNYA">LAINNYA...</option>
+                                        </select>
+                                    </div>
+
+                                    <div x-show="selectedLayanan === 'LAINNYA'"
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 -translate-y-2"
+                                        x-transition:enter-end="opacity-100 translate-y-0" class="mt-3">
+
+                                        <label
+                                            class="block text-sm font-semibold text-gray-400 mb-2 ml-1 uppercase">Sebutkan
+                                            Layanan</label>
+                                        <input type="text" {{-- Atribut name baru muncul jika memilih LAINNYA --}}
+                                            :name="selectedLayanan === 'LAINNYA' ? 'sub_kategori' : ''"
+                                            x-model="customLayanan" placeholder="Ketik layanan lainnya..."
+                                            class="w-full px-4 py-3 rounded-xl border border-blue-200 focus:ring-2 focus:ring-blue-500 outline-none uppercase bg-blue-50/30 transition-all"
+                                            :required="selectedLayanan === 'LAINNYA'">
+                                    </div>
                                 </div>
 
                                 <div>
@@ -117,11 +146,13 @@
                                                 class="text-sm font-bold text-gray-700 peer-checked:text-gray-900">Non-HPP</span>
                                             <div
                                                 class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-gray-500 flex items-center justify-center">
-                                                <div class="w-2 h-2 rounded-full bg-gray-600 hidden peer-checked:block">
+                                                <div
+                                                    class="w-2 h-2 rounded-full bg-gray-600 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak di bebankan ke
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak di bebankan
+                                            ke
                                             HPP</p>
                                     </div>
                                 </label>

@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Inventory extends Model
 {
+    use LogsActivity;
+
     protected $table = 'inventory';
 
     protected $fillable = [
@@ -14,6 +18,14 @@ class Inventory extends Model
         'stok',
         'minimum_stok',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('inventory');
+    }
 
     public function Perusahaan()
     {

@@ -194,7 +194,7 @@ class LaporanController extends Controller
         ]);
     }
 
-    public function laporanKeuangan(Request $request)
+    public function laporanPengeluaran(Request $request)
     {
         $filterType = $request->get('filter_type', 'month');
         $selectedMonth = (int) $request->get('month', date('n'));
@@ -284,7 +284,7 @@ class LaporanController extends Controller
 
         $chartData = $dataPeriodeIni->groupBy('kategori')->map(fn($row) => $row->sum('jumlah_pengeluaran'));
 
-        return view('pages.laporan.keuangan', compact(
+        return view('pages.laporan.pengeluaran', compact(
             'totalBulanIni',
             'totalBulanLalu',
             'percentage',
