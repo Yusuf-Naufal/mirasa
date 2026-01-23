@@ -59,6 +59,8 @@ Route::resource('perusahaan', PerusahaanController::class);
 
 // CRUD COSTUMER
 Route::patch('/costumer/activate/{id}', [CostumerController::class, 'activate'])->name('costumer.activate');
+Route::get('/costumer/download-template', [CostumerController::class, 'downloadTemplate'])->name('costumer.download-template');
+Route::post('/costumer/import', [CostumerController::class, 'import'])->name('costumer.import');
 Route::resource('costumer', CostumerController::class);
 
 // CRUD BARANG DAN JENIS BARANG
@@ -74,6 +76,8 @@ Route::prefix('barang')->name('barang.')->group(function () {
     Route::put('/{id}', [BarangController::class, 'update'])->name('update');
     Route::delete('/{id}', [BarangController::class, 'destroy'])->name('destroy');
     Route::patch('/activate/{id}', [BarangController::class, 'activate'])->name('activate');
+    Route::get('/download-template', [BarangController::class, 'downloadTemplate'])->name('download-template');
+    Route::post('/import', [BarangController::class, 'import'])->name('import');
 });
 
 // CRUD USER
@@ -81,6 +85,8 @@ Route::resource('user', UserController::class);
 
 // CRUD SUPLIER
 Route::patch('/supplier/activate/{id}', [SupplierController::class, 'activate'])->name('supplier.activate');
+Route::get('/supplier/download-template', [SupplierController::class, 'downloadTemplate'])->name('supplier.download-template');
+Route::post('/supplier/import', [SupplierController::class, 'import'])->name('supplier.import');
 Route::resource('supplier', SupplierController::class)->names('supplier')->except(['show']);
 
 // CRUD PROSES

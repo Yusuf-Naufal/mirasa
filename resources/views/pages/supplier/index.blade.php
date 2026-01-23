@@ -15,6 +15,15 @@
                         <span class="hidden md:block md:ml-2">Tambah Supplier</span>
                     </a>
 
+                    <button onclick="openModal('importModal')"
+                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-green-600 transition-all shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3V11h2v3h3v2zm-3-7V3.5L18.5 9H13z" />
+                        </svg>
+                        <span class="hidden md:block md:ml-2">Import Excel</span>
+                    </button>
+
                     {{-- Tombol Filter --}}
                     <button onclick="openModal('filterModal')"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
@@ -94,7 +103,8 @@
                             <option value="">Semua Jenis</option>
                             <option value="Barang" {{ request('jenis_supplier') == 'Barang' ? 'selected' : '' }}>Barang
                             </option>
-                            <option value="Bahan Baku" {{ request('jenis_supplier') == 'Bahan Baku' ? 'selected' : '' }}>
+                            <option value="Bahan Baku"
+                                {{ request('jenis_supplier') == 'Bahan Baku' ? 'selected' : '' }}>
                                 Bahan Baku</option>
                         </select>
                     </div>
@@ -125,5 +135,93 @@
             </form>
         </div>
     </div>
+
+    {{-- Import Modal --}}
+    <div id="importModal" class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto">
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div class="fixed inset-0 bg-gray-900/60 transition-opacity" onclick="closeModal('importModal')"></div>
+
+            <div
+                class="relative w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
+                <div class="border-b border-gray-100 px-8 py-5 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Import Data Supplier</h3>
+                        <p class="text-sm text-gray-500">Unggah data supplier secara massal.</p>
+                    </div>
+                    <button onclick="closeModal('importModal')"
+                        class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-8">
+                    {{-- Info Aturan --}}
+                    <div class="mb-6 rounded-xl bg-amber-50 p-4 border border-amber-100">
+                        <div class="flex">
+                            <svg class="h-5 w-5 text-amber-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            <div class="ml-3">
+                                <h4 class="text-sm font-bold text-amber-800 uppercase tracking-wider">Aturan Penting:
+                                </h4>
+                                <ul class="mt-1 text-xs text-amber-700 space-y-1 list-disc ml-4">
+                                    <li><b>Jenis Supplier</b> harus diisi: Barang atau Bahan Baku.</li>
+                                    <li><strong>Nama Supplier</strong> tidak boleh sama dengan data yang sudah ada.</li>
+                                    <li><strong>Kode Supplier</strong> harus unik (tidak boleh duplikat).</li>
+                                    <li>Pastikan menggunakan format kolom sesuai <strong>Template</strong> yang
+                                        tersedia.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form action="{{ route('supplier.import') }}" method="POST" enctype="multipart/form-data"
+                        class="space-y-6">
+                        @csrf
+                        <div class="relative group">
+                            <input type="file" name="file" id="fileImport" class="hidden" required
+                                onchange="document.getElementById('file-label').textContent = this.files[0].name">
+                            <label for="fileImport" id="file-label"
+                                class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 group-hover:bg-gray-100 group-hover:border-indigo-400 transition-all">
+                                <svg class="w-8 h-8 text-gray-400 group-hover:text-indigo-500" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <span class="mt-2 text-sm text-gray-600 font-medium">Pilih file Excel (.xlsx)</span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center gap-4">
+                            <a href="{{ route('supplier.download-template') }}"
+                                class="flex-1 inline-flex items-center justify-center px-4 py-3 text-sm font-bold text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Template
+                            </a>
+                            <button type="submit"
+                                class="flex-[2] inline-flex items-center justify-center px-4 py-3 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all">
+                                Unggah & Proses Data
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateFileName(input) {
+            const fileName = input.files[0] ? input.files[0].name : 'Klik untuk pilih file Excel (.xlsx / .xls)';
+            document.getElementById('file-name').textContent = fileName;
+        }
+    </script>
 
 </x-layout.user.app>

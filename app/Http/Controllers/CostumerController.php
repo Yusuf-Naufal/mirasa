@@ -5,7 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Costumer;
 use App\Models\Perusahaan;
 use Illuminate\Http\Request;
+use App\Imports\CostumerImport;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class CostumerController extends Controller
 {
@@ -152,5 +162,107 @@ class CostumerController extends Controller
         $costumer->save();
 
         return redirect()->back()->with('success', 'Costumer berhasil diaktifkan kembali.');
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new class implements WithHeadings, WithEvents, WithStyles, WithTitle {
+
+            public function title(): string
+            {
+                return 'Template Import Costumer';
+            }
+
+            public function headings(): array
+            {
+                return [
+                    'nama_costumer',
+                    'kode'
+                ];
+            }
+
+            public function styles(Worksheet $sheet)
+            {
+                return [
+                    // Style untuk Header (Baris 1)
+                    1 => [
+                        'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                        'fill' => [
+                            'fillType' => Fill::FILL_SOLID,
+                            'startColor' => ['rgb' => '4F46E5'], // Warna Indigo yang sama
+                        ],
+                        'alignment' => ['horizontal' => 'center']
+                    ],
+                ];
+            }
+
+            public function registerEvents(): array
+            {
+                return [
+                    AfterSheet::class => function (AfterSheet $event) {
+                        $sheet = $event->sheet->getDelegate();
+                        $rowCount = 100;
+
+                        // 1. Setup Lebar Kolom Otomatis agar rapi
+                        foreach (range('A', 'B') as $col) {
+                            $sheet->getColumnDimension($col)->setAutoSize(true);
+                        }
+
+                        // 2. Setup Pesan Input (Tooltip) agar user paham aturan validasi
+                        $validationNama = $sheet->getCell('A2')->getDataValidation();
+                        $validationNama->setShowInputMessage(true)
+                            ->setPromptTitle('Aturan Nama')
+                            ->setPrompt('Wajib diisi dan tidak boleh sama dengan costumer yang sudah ada.');
+
+                        $validationKode = $sheet->getCell('B2')->getDataValidation();
+                        $validationKode->setShowInputMessage(true)
+                            ->setPromptTitle('Aturan Kode')
+                            ->setPrompt('Wajib diisi, unik, dan disarankan menggunakan format konsisten.');
+
+                        // 3. Terapkan Border dan Tooltip ke 100 baris
+                        for ($i = 2; $i <= $rowCount; $i++) {
+                            $sheet->getCell("A$i")->setDataValidation(clone $validationNama);
+                            $sheet->getCell("B$i")->setDataValidation(clone $validationKode);
+
+                            // Beri border tipis pada area input
+                            $sheet->getStyle("A$i:B$i")->getBorders()->getAllBorders()
+                                ->setBorderStyle(Border::BORDER_THIN);
+                        }
+                    },
+                ];
+            }
+        }, 'template_costumer_v2.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls'
+        ]);
+
+        try {
+            $import = new CostumerImport;
+            Excel::import($import, $request->file('file'));
+
+            $berhasil = $import->getRowCount();
+            $gagal = $import->failures()->count();
+
+            if ($gagal > 0) {
+                $details = collect($import->failures())->map(function ($failure) {
+                    return "<li class='mb-1'><b>Baris " . $failure->row() . ":</b> " . implode(", ", $failure->errors()) . "</li>";
+                })->implode('');
+
+                return back()->with('error_import', [
+                    'title' => "Hasil Import: $berhasil Berhasil, $gagal Gagal",
+                    'success_count' => $berhasil,
+                    'fail_count' => $gagal,
+                    'html' => "<ul class='text-left text-xs list-none p-0'>" . $details . "</ul>"
+                ]);
+            }
+
+            return back()->with('success', "Berhasil mengimpor $berhasil data costumer.");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
     }
 }

@@ -552,7 +552,7 @@ class GrafikController extends Controller
             $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         }
 
-        // 1. Ambil Biaya Bahan (Baku + Penolong)
+        // 1. Ambil Biaya Bahan
         $biayaBahan = BarangKeluar::whereIn('jenis_keluar', ['BAHAN BAKU', 'PRODUKSI'])
             ->where('id_perusahaan', $id_perusahaan)
             ->whereYear('tanggal_keluar', $year)
@@ -560,15 +560,23 @@ class GrafikController extends Controller
             ->select(DB::raw("TO_CHAR(tanggal_keluar, '$format') as period"), DB::raw("SUM(total_harga) as total"))
             ->groupBy('period')->pluck('total', 'period');
 
-        // 2. Ambil Biaya Operasional HPP
-        $biayaOps = Pengeluaran::where('id_perusahaan', $id_perusahaan)
+        // 2. Ambil Biaya Operasional (Harian/Insidentil)
+        $biayaOpsHarian = Pengeluaran::where('id_perusahaan', $id_perusahaan)
             ->whereRaw('is_hpp = true')
+            ->where('kategori', '!=', 'OPERASIONAL')
             ->whereYear('tanggal_pengeluaran', $year)
             ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pengeluaran', $month))
             ->select(DB::raw("TO_CHAR(tanggal_pengeluaran, '$format') as period"), DB::raw("SUM(jumlah_pengeluaran) as total"))
             ->groupBy('period')->pluck('total', 'period');
 
-        // 3. Ambil Volume Produksi
+        // 3. Ambil Total Biaya Kategori "OPERASIONAL" (Untuk disebar)
+        $totalOpsBulanan = Pengeluaran::where('id_perusahaan', $id_perusahaan)
+            ->where('kategori', 'OPERASIONAL')
+            ->whereYear('tanggal_pengeluaran', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pengeluaran', $month))
+            ->sum('jumlah_pengeluaran');
+
+        // 4. Ambil Volume Produksi
         $volumeProduksi = DetailInventory::whereHas('Inventory.Barang.JenisBarang', function ($q) {
             $q->whereIn('kode', ['FG', 'WIP', 'EC']);
         })
@@ -583,19 +591,46 @@ class GrafikController extends Controller
             )
             ->groupBy('period')->pluck('vol', 'period');
 
+        // --- LOGIKA ALOKASI ---
+        $totalVolPeriode = array_sum($volumeProduksi->toArray());
+        $jumlahTitikData = count($range); // Jumlah hari atau bulan
+
         $chartHpp = [];
         $chartVol = [];
-        $rincianHarian = []; 
+        $rincianHarian = [];
 
         foreach ($range as $index => $r) {
             $key = str_pad($r, 2, '0', STR_PAD_LEFT);
-
-            $bahan = (float)($biayaBahan[$key] ?? 0);
-            $ops = (float)($biayaOps[$key] ?? 0);
-            $totalBiaya = $bahan + $ops;
             $vol = (float)($volumeProduksi[$key] ?? 0);
 
-            $hpp = $vol > 0 ? round($totalBiaya / $vol, 2) : 0;
+            // Alokasi Biaya Operasional Tetap
+            $opsAlokasi = 0;
+            if ($totalOpsBulanan > 0) {
+                if ($totalVolPeriode > 0) {
+                    // Jika ada produksi di periode ini, alokasikan berdasarkan porsi volume
+                    // Namun, jika hari ini volume 0, biaya operasional tetap harus dibagi rata 
+                    // agar HPP tetap terhitung (sesuai permintaan user)
+                    if ($vol > 0) {
+                        $opsAlokasi = ($vol / $totalVolPeriode) * $totalOpsBulanan;
+                    } else {
+                        // Biaya operasional tetap dibagi rata ke seluruh hari jika volume 0
+                        // agar tidak terjadi gap data yang drastis
+                        $opsAlokasi = $totalOpsBulanan / $jumlahTitikData;
+                    }
+                } else {
+                    // Jika total volume sebulan nol, bagi rata ke semua hari
+                    $opsAlokasi = $totalOpsBulanan / $jumlahTitikData;
+                }
+            }
+
+            $bahan = (float)($biayaBahan[$key] ?? 0);
+            $opsLain = (float)($biayaOpsHarian[$key] ?? 0);
+            $totalOps = $opsLain + $opsAlokasi;
+            $totalBiaya = $bahan + $totalOps;
+
+            // Hitung HPP: Jika vol 0, gunakan 1 sebagai pembagi agar angka biaya muncul sebagai HPP 
+            // atau tetap hitung apa adanya jika ingin melihat "Beban Biaya"
+            $hpp = $vol > 0 ? round($totalBiaya / $vol, 2) : $totalBiaya;
 
             $chartHpp[] = $hpp;
             $chartVol[] = $vol;
@@ -603,21 +638,19 @@ class GrafikController extends Controller
             $rincianHarian[] = [
                 'label' => $filterType === 'month' ? "Tgl $r" : $labels[$index],
                 'biaya_bahan' => $bahan,
-                'biaya_ops' => $ops,
+                'biaya_ops' => $totalOps,
                 'total_biaya' => $totalBiaya,
                 'volume' => $vol,
                 'hpp' => $hpp
             ];
         }
 
-        $filteredHpp = array_filter($chartHpp);
-
         return [
             'labels' => $labels,
             'chartHpp' => $chartHpp,
             'chartVol' => $chartVol,
             'rincianHarian' => $rincianHarian,
-            'avgHpp' => count($filteredHpp) > 0 ? array_sum($filteredHpp) / count($filteredHpp) : 0
+            'avgHpp' => count(array_filter($chartHpp)) > 0 ? array_sum($chartHpp) / count(array_filter($chartHpp)) : 0
         ];
     }
 }
