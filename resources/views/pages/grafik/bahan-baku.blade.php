@@ -1,7 +1,7 @@
 <x-layout.user.app title="Grafik Bahan Baku">
     <div class="space-y-6 md:space-y-8" x-data="{ filterType: '{{ $filterType }}' }">
 
-        <x-layout.filter.nav :selectedMonth="$selectedMonth" :selectedYear="$selectedYear" :filterType="$filterType" />
+        <x-layout.filter.nav :selectedMonth="$selectedMonth" :selectedYear="$selectedYear" :filterType="$filterType" :daftarPerusahaan="$daftarPerusahaan"/>
 
         {{-- QUICK STATS CARDS --}}
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
