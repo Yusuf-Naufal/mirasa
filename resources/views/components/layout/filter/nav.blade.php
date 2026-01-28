@@ -1,4 +1,4 @@
-@props(['selectedMonth', 'selectedYear', 'filterType'])
+@props(['selectedMonth', 'selectedYear', 'filterType', 'daftarPerusahaan' => null])
 
 <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
     {{-- TAB NAVIGATION --}}
@@ -51,6 +51,31 @@
     {{-- SEARCH/DATE FILTER --}}
     <form action="{{ url()->current() }}" method="GET"
         class="flex flex-row items-center gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm w-full sm:w-fit overflow-hidden">
+
+        {{-- Filter Perusahaan --}}
+        @if (auth()->user()->hasRole('Super Admin') && isset($daftarPerusahaan))
+            <div class="relative flex-1 sm:flex-none">
+                <select name="id_perusahaan" onchange="this.form.submit()"
+                    class="w-full appearance-none rounded-xl border-none text-[10px] sm:text-[11px] font-black py-2.5 pl-3 pr-8 outline-none {{ request('id_perusahaan') ? 'bg-blue-50 text-blue-700' : 'bg-gray-50 text-gray-500' }} cursor-pointer focus:ring-2 focus:ring-blue-200 transition-all uppercase italic">
+                    <option value="" class="not-italic">Semua Perusahaan</option>
+                    @foreach ($daftarPerusahaan as $p)
+                        <option value="{{ $p->id }}" {{ request('id_perusahaan') == $p->id ? 'selected' : '' }}
+                            class="not-italic">
+                            {{-- Menampilkan Nama Perusahaan dan Kota --}}
+                            {{ $p->nama_perusahaan }} {{ $p->kota ? "({$p->kota})" : '' }}
+                        </option>
+                    @endforeach
+                </select>
+
+                {{-- Icon Dropdown agar lebih cantik --}}
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-blue-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
+        @endif
 
         {{-- Filter Type --}}
         <div class="relative flex-1 sm:flex-none">
