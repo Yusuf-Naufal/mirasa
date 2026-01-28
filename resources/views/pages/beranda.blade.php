@@ -7,8 +7,20 @@
                 <h1 class="text-xl font-bold text-gray-800">Menu Fitur</h1>
             </div>
 
+            @php
+                if (auth()->user()->hasRole('Super Admin')) {
+                    $dashboardRoute = route('super-admin.dashboard');
+                } elseif (auth()->user()->hasRole('Manager')) {
+                    $dashboardRoute = route('manager.dashboard');
+                } elseif (auth()->user()->hasRole('Admin Gudang')) {
+                    $dashboardRoute = route('admin-gudang.dashboard');
+                } else {
+                    $dashboardRoute = '#';
+                }
+            @endphp
+
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-6 mx-auto max-w-7xl items-center">
-                <a href="{{ route('super-admin.dashboard') }}"
+                <a href="{{ $dashboardRoute }}"
                     class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-purple-50">
                     <svg class="w-12 h-12 mb-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -65,13 +77,14 @@
                     <span class="text-sm font-medium text-gray-700 group-hover:text-blue-700">Barang Masuk</span>
                 </a>
 
-                <a href="{{ route('gas.index') }}"
-                    class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-cyan-50">
+                <a href="{{ route('pemakaian.index') }}"
+                    class="group flex flex-col items-center text-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-cyan-50">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-cyan-600" viewBox="0 0 24 24">
-                        <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"
-                            d="M9 8a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v13.4a.6.6 0 0 1-.6.6H9.6a.6.6 0 0 1-.6-.6zm0 3h6m-3-6V2m0 0h-1m1 0h1" />
+                        <path fill="currentColor"
+                            d="M16.45 8.425q.3.3.7.313t.7-.288l1.4-1.4q.3-.3.3-.712t-.3-.713q-.275-.275-.7-.275t-.7.275l-1.4 1.4q-.275.275-.275.688t.275.712M3 22q-.825 0-1.412-.587T1 20V6q0-.825.588-1.412T3 4h8v8q0 .825.588 1.413T13 14h6v6q0 .825-.587 1.413T17 22zm15-10q-.75 0-1.475-.225t-1.35-.65l-.375.35q-.3.275-.713.275t-.687-.275t-.275-.7t.275-.7l.4-.4q-.4-.6-.6-1.275T13 7q0-2.075 1.463-3.537T18 2h5v5q0 2.075-1.463 3.538T18 12M5 18h2v-7H5zm4 0h2V8H9zm4 0h2v-4h-2z" />
                     </svg>
-                    <span class="text-sm font-medium text-gray-700 group-hover:text-cyan-700">Penggunaan Gas</span>
+                    <span class="text-sm font-medium text-gray-700 group-hover:text-cyan-700">Pemakaian
+                        Operasional</span>
                 </a>
 
                 <a href="{{ route('pengeluaran.index') }}"
@@ -87,15 +100,6 @@
                         </g>
                     </svg>
                     <span class="text-sm font-medium text-gray-700 group-hover:text-amber-700">Pengeluaran</span>
-                </a>
-
-                <a href=""
-                    class="group flex flex-col items-center p-6 bg-white rounded-lg shadow transition hover:shadow-lg hover:bg-emerald-50">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mb-3 text-emerald-600" viewBox="0 0 24 24">
-                        <path fill="none" stroke="currentColor" stroke-width="2"
-                            d="M1 1h3v3H1zm12 0h3v3h-3zM4 2h9m2 7h5M4 15h9M1 13h3v3H1zm12 0h3v3h-3zM2 4v9m13-9v9m5-5h3v3h-3zm-9 14h9M8 20h3v3H8zm12 0h3v3h-3zM9 16v4m13-9v9" />
-                    </svg>
-                    <span class="text-sm font-medium text-gray-700 group-hover:text-emerald-700">Asset</span>
                 </a>
 
 

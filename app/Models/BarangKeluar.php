@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class BarangKeluar extends Model
 {
+    use LogsActivity;
+
     protected $table = 'barang_keluar';
 
     protected $fillable = [
@@ -24,6 +28,14 @@ class BarangKeluar extends Model
         'no_faktur',
         'keterangan',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('barang_keluar');
+    }
 
     public function Proses()
     {

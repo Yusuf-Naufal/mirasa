@@ -15,7 +15,8 @@
                 </a>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mt-2">Pengeluaran <span
                         class="text-slate-600">Office</span></h1>
-                <p class="text-sm text-gray-500 font-medium italic">*Gunakan kategori ini untuk biaya pengeluaran perlengkapan kantor.</p>
+                <p class="text-sm text-gray-500 font-medium italic">*Gunakan kategori ini untuk biaya pengeluaran
+                    perlengkapan kantor.</p>
             </div>
 
             <form action="{{ route('pengeluaran.store') }}" method="POST" enctype="multipart/form-data">
@@ -40,13 +41,39 @@
                                         required>
                                 </div>
 
-                                <div class="text-left">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis
-                                        Barang/Jasa</label>
-                                    <input type="text" name="sub_kategori" id="sub_kategori"
-                                        placeholder="Contoh: ATK, GALON, PERLENGKAPAN"
-                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all uppercase"
-                                        required>
+                                <div x-data="{ selectedLayanan: '', customLayanan: '' }">
+                                    <div class="mb-4">
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis
+                                            Layanan</label>
+
+                                        <select {{-- Atribut name akan hilang jika memilih LAINNYA --}}
+                                            :name="selectedLayanan !== 'LAINNYA' ? 'sub_kategori' : ''"
+                                            x-model="selectedLayanan"
+                                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none transition-all"
+                                            required>
+                                            <option value="" disabled selected>-- Pilih Jenis Layanan --</option>
+                                            <option value="GALON">GALON</option>
+                                            <option value="ATK">ATK</option>
+                                            <option value="KERTAS">KERTAS</option>
+                                            <option value="FOTOCOPY">FOTOCOPY</option>
+                                            <option value="LAINNYA">LAINNYA...</option>
+                                        </select>
+                                    </div>
+
+                                    <div x-show="selectedLayanan === 'LAINNYA'"
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 -translate-y-2"
+                                        x-transition:enter-end="opacity-100 translate-y-0" class="mt-3">
+
+                                        <label
+                                            class="block text-sm font-semibold text-gray-400 mb-2 ml-1 uppercase">Sebutkan
+                                            Layanan</label>
+                                        <input type="text" {{-- Atribut name baru muncul jika memilih LAINNYA --}}
+                                            :name="selectedLayanan === 'LAINNYA' ? 'sub_kategori' : ''"
+                                            x-model="customLayanan" placeholder="Ketik layanan lainnya..."
+                                            class="w-full px-4 py-3 rounded-xl border border-blue-200 focus:ring-2 focus:ring-blue-500 outline-none uppercase bg-blue-50/30 transition-all"
+                                            :required="selectedLayanan === 'LAINNYA'">
+                                    </div>
                                 </div>
 
                                 <div class="text-left">
@@ -92,7 +119,7 @@
                             <div class="flex flex-wrap gap-4">
                                 <label class="flex-1 cursor-pointer group">
                                     <input type="radio" name="is_hpp" value="1" id="radio_hpp"
-                                        class="peer hidden" >
+                                        class="peer hidden">
                                     <div
                                         class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all group-hover:border-blue-300">
                                         <div class="flex items-center justify-between">
@@ -101,11 +128,13 @@
                                                 HPP</span>
                                             <div
                                                 class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-blue-500 flex items-center justify-center">
-                                                <div class="w-2 h-2 rounded-full bg-blue-500 hidden peer-checked:block">
+                                                <div
+                                                    class="w-2 h-2 rounded-full bg-blue-500 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">Biaya akan dibebankan untuk menghitung
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya akan dibebankan untuk
+                                            menghitung
                                             HPP</p>
                                     </div>
                                 </label>
@@ -120,11 +149,13 @@
                                                 class="text-sm font-bold text-gray-700 peer-checked:text-gray-900">Non-HPP</span>
                                             <div
                                                 class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-gray-500 flex items-center justify-center">
-                                                <div class="w-2 h-2 rounded-full bg-gray-600 hidden peer-checked:block">
+                                                <div
+                                                    class="w-2 h-2 rounded-full bg-gray-600 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak di bebankan ke
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak di bebankan
+                                            ke
                                             HPP</p>
                                     </div>
                                 </label>

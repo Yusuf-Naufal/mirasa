@@ -104,6 +104,104 @@
                                 format: KODE_JENIS-KODE_BARANG</p>
                         </div>
 
+                        <div id="section-sub-bb"
+                            class="hidden space-y-4 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border border-blue-100 md:col-span-2 shadow-inner">
+
+                            <div class="flex items-center gap-2">
+                                <div class="p-1.5 bg-blue-600 rounded-lg shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-white"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M7 7h10M7 12h10m-7 5h7" />
+                                    </svg>
+                                </div>
+                                <p class="text-[11px] font-black text-blue-800 uppercase tracking-widest">
+                                    Klasifikasi Bahan Baku <span class="text-red-500">*</span>
+                                </p>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {{-- Opsi Bahan Baku Utama --}}
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="jenis" value="Utama" class="peer hidden">
+                                    <div
+                                        class="flex items-center gap-4 p-4 bg-white border-2 border-transparent rounded-2xl shadow-sm transition-all duration-300 
+                                            peer-checked:border-blue-600 peer-checked:bg-blue-50/50 group-hover:bg-blue-50/30">
+                                        <div
+                                            class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-blue-100 text-blue-600 transition-colors peer-checked:bg-blue-600 peer-checked:text-white">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-gray-800 tracking-tight">Bahan Baku Utama
+                                            </h4>
+                                            <p class="text-[10px] text-gray-500 font-medium uppercase italic">Bahan
+                                                Inti Produksi (Umbi)</p>
+                                        </div>
+                                        <div class="ml-auto opacity-0 peer-checked:opacity-100 transition-opacity">
+                                            <div
+                                                class="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white"
+                                                    viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd"
+                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                {{-- Opsi Bahan Baku Pendukung --}}
+                                <label class="relative cursor-pointer group">
+                                    <input type="radio" name="jenis" value="Pendukung" class="peer hidden">
+                                    <div
+                                        class="flex items-center gap-4 p-4 bg-white border-2 border-transparent rounded-2xl shadow-sm transition-all duration-300 
+                                            peer-checked:border-indigo-600 peer-checked:bg-indigo-50/50 group-hover:bg-indigo-50/30">
+                                        <div
+                                            class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 transition-colors peer-checked:bg-indigo-600 peer-checked:text-white">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-sm font-bold text-gray-800 tracking-tight">Bahan Pendukung
+                                            </h4>
+                                            <p class="text-[10px] text-gray-500 font-medium uppercase italic">Minyak, Dll</p>
+                                        </div>
+                                        <div class="ml-auto opacity-0 peer-checked:opacity-100 transition-opacity">
+                                            <div
+                                                class="w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white"
+                                                    viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd"
+                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                        clip-rule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="flex items-center gap-2 px-1">
+                                <span class="relative flex h-2 w-2">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                </span>
+                                <p class="text-[9px] text-blue-500 font-bold italic tracking-wide">Pilih kategori yang
+                                    sesuai untuk memisahkan laporan</p>
+                            </div>
+                        </div>
+
                         {{-- KONVERSI --}}
                         <div id="section-konversi"
                             class="space-y-4 mt-2 p-5 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 md:col-span-2 transition-all">
@@ -289,24 +387,39 @@
             const reqIcon = document.getElementById('req-icon');
             const helperText = document.getElementById('helper-text-konversi');
 
-            // Daftar kode yang mewajibkan konversi
+            // Identifikasi section sub-bb
+            const sectionSubBB = document.getElementById('section-sub-bb');
+            const radioBB = document.getElementsByName('tipe_bahan_baku');
+
+            // Logic Tampilkan Radio Button jika kode = BB
+            if (kodeJenis === 'BB') {
+                sectionSubBB.classList.remove('hidden');
+                // Tambahkan atribut required pada radio button agar wajib diisi
+                radioBB.forEach(radio => radio.setAttribute('required', 'required'));
+            } else {
+                sectionSubBB.classList.add('hidden');
+                // Hapus atribut required jika bukan BB
+                radioBB.forEach(radio => {
+                    radio.removeAttribute('required');
+                    radio.checked = false; // Reset pilihan
+                });
+            }
+
+            // Daftar kode yang mewajibkan konversi (FG, WIP, EC)
             const wajibIsi = ['FG', 'WIP', 'EC'];
 
             if (wajibIsi.includes(kodeJenis)) {
-                // Mode Wajib
                 inputNilai.setAttribute('required', 'required');
                 reqIcon.classList.remove('hidden');
                 helperText.classList.add('text-red-500', 'font-medium');
                 helperText.innerText = "* Wajib diisi untuk jenis " + kodeJenis;
             } else {
-                // Mode Opsional
                 inputNilai.removeAttribute('required');
                 reqIcon.classList.add('hidden');
                 helperText.classList.remove('text-red-500', 'font-medium');
                 helperText.innerText = "Masukkan total berat dalam kilogram (Opsional).";
             }
 
-            // Tetap sinkronkan label satuan
             updateLabelSatuan();
         }
 

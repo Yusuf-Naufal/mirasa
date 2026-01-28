@@ -5,6 +5,7 @@ use App\Http\Controllers\GasController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BarangController;
+use App\Http\Controllers\GrafikController;
 use App\Http\Controllers\ProsesController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\CostumerController;
@@ -12,12 +13,15 @@ use App\Http\Controllers\ProduksiController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\BahanBakuController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\PemakaianController;
 use App\Http\Controllers\PerusahaanController;
 use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\JenisBarangController;
+use App\Http\Controllers\LogActivityController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\BarangKeluarController;
 use App\Http\Controllers\ManagerDashboardController;
+use App\Http\Controllers\KategoriPemakaianController;
 use App\Http\Controllers\SuperAdminDashboardController;
 use App\Http\Controllers\AdminGudangDashboardController;
 
@@ -55,6 +59,8 @@ Route::resource('perusahaan', PerusahaanController::class);
 
 // CRUD COSTUMER
 Route::patch('/costumer/activate/{id}', [CostumerController::class, 'activate'])->name('costumer.activate');
+Route::get('/costumer/download-template', [CostumerController::class, 'downloadTemplate'])->name('costumer.download-template');
+Route::post('/costumer/import', [CostumerController::class, 'import'])->name('costumer.import');
 Route::resource('costumer', CostumerController::class);
 
 // CRUD BARANG DAN JENIS BARANG
@@ -70,6 +76,8 @@ Route::prefix('barang')->name('barang.')->group(function () {
     Route::put('/{id}', [BarangController::class, 'update'])->name('update');
     Route::delete('/{id}', [BarangController::class, 'destroy'])->name('destroy');
     Route::patch('/activate/{id}', [BarangController::class, 'activate'])->name('activate');
+    Route::get('/download-template', [BarangController::class, 'downloadTemplate'])->name('download-template');
+    Route::post('/import', [BarangController::class, 'import'])->name('import');
 });
 
 // CRUD USER
@@ -77,6 +85,8 @@ Route::resource('user', UserController::class);
 
 // CRUD SUPLIER
 Route::patch('/supplier/activate/{id}', [SupplierController::class, 'activate'])->name('supplier.activate');
+Route::get('/supplier/download-template', [SupplierController::class, 'downloadTemplate'])->name('supplier.download-template');
+Route::post('/supplier/import', [SupplierController::class, 'import'])->name('supplier.import');
 Route::resource('supplier', SupplierController::class)->names('supplier')->except(['show']);
 
 // CRUD PROSES
@@ -99,7 +109,8 @@ Route::resource('inventory', InventoryController::class);
 Route::resource('bahan-baku', BahanBakuController::class);
 
 // CRUD PEMAKAIAN GAS
-Route::resource('gas', GasController::class);
+Route::resource('kategori-pemakaian', KategoriPemakaianController::class);
+Route::resource('pemakaian', PemakaianController::class);
 
 // CRUD PENGELUARAN
 Route::get('pengeluaran/create-operasional', [PengeluaranController::class, 'createOperasional'])->name('pengeluaran.create-operasional');
@@ -109,6 +120,7 @@ Route::get('pengeluaran/create-kesejahteraan', [PengeluaranController::class, 'c
 Route::get('pengeluaran/create-maintenance', [PengeluaranController::class, 'createMaintenance'])->name('pengeluaran.create-maintenance');
 Route::get('pengeluaran/create-admnisitrasi', [PengeluaranController::class, 'createAdministrasi'])->name('pengeluaran.create-admnisitrasi');
 
+// CRUD PENGELUARAN
 Route::resource('pengeluaran', PengeluaranController::class)->except(['create']);
 
 // CRUD BARANG MASUK
@@ -134,6 +146,15 @@ Route::resource('barang-keluar', BarangKeluarController::class)->except(['create
 
 // LAPORAN
 Route::get('laporan-produksi', [LaporanController::class, 'laporanProduksi'])->name('laporan-produksi');
-Route::get('laporan-keuangan', [LaporanController::class, 'laporanKeuangan'])->name('laporan-keuangan');
+Route::get('laporan-pengeluaran', [LaporanController::class, 'laporanPengeluaran'])->name('laporan-pengeluaran');
 Route::get('laporan-gudang', [LaporanController::class, 'laporanGudang'])->name('laporan-gudang');
 Route::get('laporan-hpp', [LaporanController::class, 'laporanHpp'])->name('laporan-hpp');
+
+// GRAFIK
+Route::get('grafik-bahan-baku', [GrafikController::class, 'grafikBahanBaku'])->name('grafik.bahan-baku');
+Route::get('grafik-produksi', [GrafikController::class, 'grafikProduksi'])->name('grafik.produksi');
+Route::get('grafik-pemakaian', [GrafikController::class, 'grafikPemakaian'])->name('grafik.pemakaian');
+Route::get('grafik-hpp', [GrafikController::class, 'grafikHpp'])->name('grafik.hpp');
+
+// LOG ACTIVITY
+Route::get('logs', [LogActivityController::class, 'index'])->name('logs.index');

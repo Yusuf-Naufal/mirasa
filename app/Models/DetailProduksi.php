@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class DetailProduksi extends Model
 {
+    use LogsActivity;
+
     protected $table = 'detail_produksi';
 
     protected $fillable = [
@@ -18,6 +22,14 @@ class DetailProduksi extends Model
         'total_s',
         'total_j',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('detail_produksi');
+    }
 
     public function Produksi()
     {
