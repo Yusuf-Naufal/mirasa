@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\Barang;
+use App\Models\Costumer;
 use App\Models\Produksi;
+use App\Models\Supplier;
 use App\Models\Inventory;
 use App\Models\Pemakaian;
 use App\Models\Perusahaan;
@@ -456,6 +458,165 @@ class GrafikController extends Controller
         }
 
         return ['labels' => $labels, 'chartHpp' => $chartHpp, 'chartVol' => $chartVol, 'rincianHarian' => $rincianHarian, 'avgHpp' => count(array_filter($chartHpp)) > 0 ? array_sum($chartHpp) / count(array_filter($chartHpp)) : 0];
+    }
+
+    // --- TRANSAKSI ---
+    public function grafikTransaksi(Request $request)
+    {
+        $id_perusahaan = $this->getCompanyId($request);
+        $filterType = $request->get('filter_type', 'month');
+        $selectedMonth = (int)$request->get('month', date('m'));
+        $selectedYear = (int)$request->get('year', date('Y'));
+
+        $filterSupplier = $request->get('id_supplier');
+        $filterCostumer = $request->get('id_costumer');
+
+        // 1. Tren Nilai Transaksi (Rp)
+        $trenNilai = $this->getTrenTransaksi($id_perusahaan, $filterType, $selectedMonth, $selectedYear);
+
+        // 2. Data Masuk - Dipisah berdasarkan Jenis Supplier
+        $masukBB = $this->getMasukTrendDataByJenis($id_perusahaan, $filterType, $selectedMonth, $selectedYear, $filterSupplier, 'Bahan Baku');
+        $masukBarang = $this->getMasukTrendDataByJenis($id_perusahaan, $filterType, $selectedMonth, $selectedYear, $filterSupplier, 'Barang');
+
+        // 3. Data Keluar
+        $keluarData = $this->getKeluarTrendData($id_perusahaan, $filterType, $selectedMonth, $selectedYear, $filterCostumer);
+
+        // Data Filter UI
+        $listSuppliers = Supplier::when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))->get();
+        $listCostumers = Costumer::when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))->get();
+
+        return view('pages.grafik.transaksi', array_merge([
+            'filterType' => $filterType,
+            'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear,
+            'daftarPerusahaan' => $this->getDaftarPerusahaan(),
+            'selectedIdPerusahaan' => $id_perusahaan,
+            'listSuppliers' => $listSuppliers,
+            'listCostumers' => $listCostumers,
+            'filterSupplier' => $filterSupplier,
+            'filterCostumer' => $filterCostumer,
+            'masukBB' => $masukBB,
+            'masukBarang' => $masukBarang,
+        ], $trenNilai, $keluarData));
+    }
+
+    private function getTrenTransaksi($id_perusahaan, $filterType, $month, $year)
+    {
+        $format = ($filterType === 'year') ? 'MM' : 'DD';
+        $range = ($filterType === 'year') ? range(1, 12) : range(1, Carbon::create($year, $month)->daysInMonth);
+
+        $masukHarian = DetailInventory::whereYear('tanggal_masuk', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_masuk', $month))
+            ->when($id_perusahaan, fn($q) => $q->whereHas('Inventory', fn($i) => $i->where('id_perusahaan', $id_perusahaan)))
+            ->select(DB::raw("TO_CHAR(tanggal_masuk, '$format') as period"), DB::raw("SUM(total_harga) as total"))
+            ->groupBy('period')->pluck('total', 'period');
+
+        $keluarHarian = BarangKeluar::whereYear('tanggal_keluar', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $month))
+            ->when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
+            ->select(DB::raw("TO_CHAR(tanggal_keluar, '$format') as period"), DB::raw("SUM(total_harga) as total"))
+            ->groupBy('period')->pluck('total', 'period');
+
+        $chartMasuk = [];
+        $chartKeluar = [];
+        foreach ($range as $r) {
+            $key = str_pad($r, 2, '0', STR_PAD_LEFT);
+            $chartMasuk[] = (float)($masukHarian[$key] ?? 0);
+            $chartKeluar[] = (float)($keluarHarian[$key] ?? 0);
+        }
+
+        return ['labels' => $range, 'chartMasuk' => $chartMasuk, 'chartKeluar' => $chartKeluar];
+    }
+
+    private function getMasukTrendDataByJenis($id_perusahaan, $filterType, $month, $year, $filterSupplier, $jenis)
+    {
+        $format = ($filterType === 'year') ? 'm' : 'd';
+        $range = ($filterType === 'year') ? range(1, 12) : range(1, Carbon::create($year, $month)->daysInMonth);
+
+        $data = DetailInventory::with(['Inventory.Barang', 'Supplier'])
+            ->whereYear('tanggal_masuk', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_masuk', $month))
+            ->whereHas('Supplier', fn($q) => $q->where('jenis_supplier', $jenis))
+            ->when($id_perusahaan, fn($q) => $q->whereHas('Inventory', fn($i) => $i->where('id_perusahaan', $id_perusahaan)))
+            ->when($filterSupplier, fn($q) => $q->where('id_supplier', $filterSupplier))
+            ->get();
+
+        $trend = $data->groupBy('id_supplier')->map(function ($items, $id) use ($range, $format) {
+            $points = [];
+            foreach ($range as $r) {
+                $points[] = (float)$items->filter(fn($i) => (int)Carbon::parse($i->tanggal_masuk)->format($format) === $r)->sum('jumlah_diterima');
+            }
+
+            // PERBAIKAN: Mengambil SEMUA rincian barang unik dalam satu supplier
+            $barangRincian = $items->groupBy('Inventory.id_barang')->map(function ($b) {
+                $brg = $b->first()->Inventory->Barang;
+                return [
+                    'nama' => $brg->nama_barang ?? 'Unknown',
+                    'total' => $b->sum('jumlah_diterima'),
+                    'satuan' => $brg->satuan ?? 'Unit'
+                ];
+            })->values()->toArray();
+
+            return [
+                'label' => optional($items->first()->Supplier)->nama_supplier ?? 'Tanpa Nama',
+                'data' => $points,
+                'total_volume' => $items->sum('jumlah_diterima'),
+                'barang' => $barangRincian,
+                'borderColor' => $this->getRandomColor($id, 'in')
+            ];
+        })->filter(fn($item) => $item['total_volume'] > 0);
+
+        return [
+            'chart' => $trend->values()->toArray(),
+            'table' => $trend
+        ];
+    }
+
+    private function getKeluarTrendData($id_perusahaan, $filterType, $month, $year, $filterCostumer)
+    {
+        $format = ($filterType === 'year') ? 'm' : 'd';
+        $range = ($filterType === 'year') ? range(1, 12) : range(1, Carbon::create($year, $month)->daysInMonth);
+
+        $data = BarangKeluar::with(['DetailInventory.Inventory.Barang.JenisBarang', 'Costumer'])
+            ->whereYear('tanggal_keluar', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $month))
+            ->when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
+            ->when($filterCostumer, fn($q) => $q->where('id_costumer', $filterCostumer))
+            ->get()
+            ->filter(function ($item) {
+                $kode = optional(optional(optional($item->DetailInventory)->Inventory)->Barang->JenisBarang)->kode;
+                return in_array($kode, ['FG', 'WIP', 'EC']);
+            });
+
+        $trend = $data->groupBy('id_costumer')->map(function ($items, $id) use ($range, $format) {
+            $points = [];
+            foreach ($range as $r) {
+                $points[] = (float)$items->filter(fn($i) => (int)Carbon::parse($i->tanggal_keluar)->format($format) === $r)->sum('jumlah_keluar');
+            }
+
+            // PERBAIKAN: Mengambil SEMUA rincian barang unik dalam satu costumer
+            $barangRincian = $items->groupBy('DetailInventory.Inventory.id_barang')->map(function ($b) {
+                $brg = $b->first()->DetailInventory->Inventory->Barang;
+                return [
+                    'nama' => $brg->nama_barang ?? 'Unknown',
+                    'total' => $b->sum('jumlah_keluar'),
+                    'satuan' => $brg->satuan ?? 'Unit'
+                ];
+            })->values()->toArray();
+
+            return [
+                'label' => optional($items->first()->Costumer)->nama_costumer ?? 'Tanpa Nama',
+                'data' => $points,
+                'total_volume' => $items->sum('jumlah_keluar'),
+                'barang' => $barangRincian,
+                'borderColor' => $this->getRandomColor($id, 'out')
+            ];
+        })->filter(fn($item) => $item['total_volume'] > 0);
+
+        return [
+            'dsCostumerTrend' => $trend->values()->toArray(),
+            'rincianCostumerTable' => $trend
+        ];
     }
 
     private function getRandomColor($id, $type)

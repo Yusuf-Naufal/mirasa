@@ -149,12 +149,14 @@ Route::get('laporan-produksi', [LaporanController::class, 'laporanProduksi'])->n
 Route::get('laporan-pengeluaran', [LaporanController::class, 'laporanPengeluaran'])->name('laporan-pengeluaran');
 Route::get('laporan-gudang', [LaporanController::class, 'laporanGudang'])->name('laporan-gudang');
 Route::get('laporan-hpp', [LaporanController::class, 'laporanHpp'])->name('laporan-hpp');
+Route::get('laporan-transaksi', [LaporanController::class, 'laporanTransaksi'])->name('laporan-transaksi');
 
 // GRAFIK
 Route::get('grafik-bahan-baku', [GrafikController::class, 'grafikBahanBaku'])->name('grafik.bahan-baku');
 Route::get('grafik-produksi', [GrafikController::class, 'grafikProduksi'])->name('grafik.produksi');
 Route::get('grafik-pemakaian', [GrafikController::class, 'grafikPemakaian'])->name('grafik.pemakaian');
 Route::get('grafik-hpp', [GrafikController::class, 'grafikHpp'])->name('grafik.hpp');
+Route::get('grafik-transaksi', [GrafikController::class, 'grafikTransaksi'])->name('grafik.transaksi');
 
 // LOG ACTIVITY
 Route::get('logs', [LogActivityController::class, 'index'])->name('logs.index');
