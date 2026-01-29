@@ -205,6 +205,11 @@
                         class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
                         HPP
                     </a>
+
+                    <a href="{{ route('laporan-transaksi') }}"
+                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
+                        Transaksi
+                    </a>
                 </div>
             </li>
 
