@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\BarangController;
 use App\Http\Controllers\GrafikController;
 use App\Http\Controllers\ProsesController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\CostumerController;
 use App\Http\Controllers\ProduksiController;
@@ -25,9 +26,9 @@ use App\Http\Controllers\KategoriPemakaianController;
 use App\Http\Controllers\SuperAdminDashboardController;
 use App\Http\Controllers\AdminGudangDashboardController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
 Route::get('/sj-indofood', function () {
     return view('pages.print.sj-indofood');
@@ -37,6 +38,7 @@ Route::get('/sj-biasa', function () {
     return view('pages.print.sj-biasa');
 });
 
+Route::get('/', [LandingController::class, 'index']);
 
 Route::get('/beranda', function () {
     return view('pages.beranda');
@@ -119,8 +121,6 @@ Route::get('pengeluaran/create-limbah', [PengeluaranController::class, 'createPe
 Route::get('pengeluaran/create-kesejahteraan', [PengeluaranController::class, 'createGajiKaryawan'])->name('pengeluaran.create-kesejahteraan');
 Route::get('pengeluaran/create-maintenance', [PengeluaranController::class, 'createMaintenance'])->name('pengeluaran.create-maintenance');
 Route::get('pengeluaran/create-admnisitrasi', [PengeluaranController::class, 'createAdministrasi'])->name('pengeluaran.create-admnisitrasi');
-
-// CRUD PENGELUARAN
 Route::resource('pengeluaran', PengeluaranController::class)->except(['create']);
 
 // CRUD BARANG MASUK
