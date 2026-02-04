@@ -217,6 +217,7 @@ class PengeluaranController extends Controller
             return redirect()->back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
         }
     }
+
     /**
      * Display the specified resource.
      */
@@ -230,7 +231,9 @@ class PengeluaranController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $pengeluaran = Pengeluaran::findOrFail($id);
+
+        return view('pages.pengeluaran.edit', compact('pengeluaran'));
     }
 
     /**
@@ -238,46 +241,73 @@ class PengeluaranController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $pengeluaran = Pengeluaran::findOrFail($id);
-        $Kategori = $pengeluaran->kategori;
-
         $request->validate([
             'nama_pengeluaran' => 'required|string|max:255',
+            'kategori' => 'required',
             'jumlah_pengeluaran' => 'required|numeric',
+            'tanggal_pengeluaran' => 'required|date',
             'bukti' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
         try {
             DB::beginTransaction();
 
-            // 1. Handle Update Bukti (Hapus lama & Kompres baru)
-            if ($request->hasFile('bukti')) {
-                if ($pengeluaran->bukti && Storage::disk('public')->exists($pengeluaran->bukti)) {
-                    Storage::disk('public')->delete($pengeluaran->bukti);
-                }
+            $pengeluaran = Pengeluaran::findOrFail($id);
+            $id_perusahaan = auth()->user()->id_perusahaan;
+            $Kategori = strtoupper($request->kategori);
+            $subKategori = strtoupper($request->sub_kategori);
 
-                $pengeluaran->bukti = $this->compressFile($request->file('bukti'));
+            // 1. Handle Update Bukti (Hapus file lama jika ada upload baru)
+            $path = $pengeluaran->bukti;
+            if ($request->hasFile('bukti')) {
+                // Hapus file lama dari storage
+                if ($path && Storage::disk('public')->exists($path)) {
+                    Storage::disk('public')->delete($path);
+                }
+                // Upload & compress file baru
+                $path = $this->compressFile($request->file('bukti'));
             }
 
-            // 2. Update Data Utama
+            // 2. Lepaskan kaitan Pemakaian lama (Rollback kaitan sebelum diupdate)
+            // Ini penting agar jika tanggal atau sub_kategori berubah, data lama tidak menggantung
+            Pemakaian::where('id_pengeluaran', $pengeluaran->id)
+                ->update(['id_pengeluaran' => null]);
+
+            // 3. Update Data Utama
             $pengeluaran->update([
-                'nama_pengeluaran'    => $request->nama_pengeluaran,
-                'sub_kategori'        => $request->sub_kategori,
                 'tanggal_pengeluaran' => $request->tanggal_pengeluaran,
                 'nama_pengeluaran'    => $request->nama_pengeluaran,
-                'jumlah_pengeluaran'  => $request->jumlah_pengeluaran,
-                'is_hpp'              => $request->is_hpp,
-                'keterangan'          => $request->keterangan,
+                'kategori'           => $Kategori,
+                'sub_kategori'       => $subKategori,
+                'jumlah_pengeluaran' => $request->jumlah_pengeluaran,
+                'is_hpp'             => $request->is_hpp,
+                'keterangan'         => $request->keterangan,
+                'bukti'              => $path,
             ]);
 
-            // 3. Sinkronisasi Gas jika kategori berubah atau data diedit
-            if ($pengeluaran->sub_kategori === 'Gas' && $pengeluaran->kategori === 'OPERASIONAL') {
-                Pemakaian::where('id_pengeluaran', $pengeluaran->id)
-                    ->update(['id_pengeluaran' => $pengeluaran->id]);
+            // 4. Logika Khusus Operasional (Gas, Listrik, Air, dll)
+            if ($Kategori === 'OPERASIONAL') {
+                $cekKategoriPemakaian = KategoriPemakaian::where('id_perusahaan', $id_perusahaan)
+                    ->where('nama_kategori', $subKategori)
+                    ->first();
+
+                if ($cekKategoriPemakaian) {
+                    $tanggalInput = Carbon::parse($request->tanggal_pengeluaran);
+                    $awalBulan = $tanggalInput->copy()->startOfMonth();
+                    $akhirBulan = $tanggalInput->copy()->endOfMonth();
+
+                    // Hubungkan kembali pemakaian yang sesuai dengan data baru
+                    Pemakaian::where('id_perusahaan', $id_perusahaan)
+                        ->where('id_kategori', $cekKategoriPemakaian->id)
+                        ->whereNull('id_pengeluaran') // Hanya yang belum terbayar
+                        ->whereBetween('tanggal_pemakaian', [$awalBulan, $akhirBulan])
+                        ->update(['id_pengeluaran' => $pengeluaran->id]);
+                }
             }
 
             DB::commit();
-            return redirect()->route('pengeluaran.index', ['tab' => $Kategori])->with('success', 'Data berhasil diperbarui!');
+            return redirect()->route('pengeluaran.index', ['tab' => $Kategori])
+                ->with('success', 'Data pengeluaran ' . $Kategori . ' berhasil diperbarui!');
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()->with('error', 'Gagal memperbarui: ' . $e->getMessage());
@@ -289,29 +319,30 @@ class PengeluaranController extends Controller
      */
     public function destroy($id)
     {
+        // 1. Cari data pengeluaran berdasarkan ID
         $pengeluaran = Pengeluaran::findOrFail($id);
-        $kategoriAsal = $pengeluaran->kategori; // Simpan kategori untuk redirect tab
+        $kategoriAsal = $pengeluaran->kategori;
 
         try {
             DB::beginTransaction();
 
-            // 1. Hapus file bukti dari storage jika ada
+            // 2. Hapus file bukti dari storage jika ada
             if ($pengeluaran->bukti && Storage::disk('public')->exists($pengeluaran->bukti)) {
                 Storage::disk('public')->delete($pengeluaran->bukti);
             }
 
-            // 2. Jika pengeluaran ini adalah GAS, lepaskan kaitan di tabel pemakaian_gas
-            if (strtoupper($pengeluaran->sub_kategori) === 'GAS') {
+            // 3. Logika Khusus Operasional (Gas, Listrik, Air, dll)
+            if (strtoupper($pengeluaran->kategori) === 'OPERASIONAL') {
                 Pemakaian::where('id_pengeluaran', $pengeluaran->id)
                     ->update(['id_pengeluaran' => null]);
             }
 
-            // 3. Hapus data dari database
+            // 4. Hapus data dari database
             $pengeluaran->delete();
 
             DB::commit();
 
-            // Redirect kembali ke tab kategori yang sama
+            // Redirect kembali ke tab kategori yang sama agar user tidak bingung
             return redirect()->route('pengeluaran.index', ['tab' => $kategoriAsal])
                 ->with('success', 'Data pengeluaran berhasil dihapus!');
         } catch (\Exception $e) {

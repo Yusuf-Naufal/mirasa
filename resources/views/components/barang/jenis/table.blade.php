@@ -61,7 +61,7 @@
                         </td>
                     </tr>
 
-                    <div id="editModal-{{ $k->id }}"
+                    <div id="editModal-{{ $i->id }}"
                         class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[9999] p-4">
                         <div
                             class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 text-left whitespace-normal relative">

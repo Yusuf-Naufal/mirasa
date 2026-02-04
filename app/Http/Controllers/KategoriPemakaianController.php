@@ -16,18 +16,12 @@ class KategoriPemakaianController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role === 'Super Admin') {
-            // Super Admin melihat semua data yang belum dihapus secara permanen
-            $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+        if ($user->hasRole('Super Admin')) {
+            $perusahaan = Perusahaan::whereNull('deleted_at')->get(); 
             $kategoris = KategoriPemakaian::all();
         } else {
-            // Role lain hanya melihat data milik perusahaannya sendiri
-            $perusahaan = Perusahaan::where('id', $user->id_perusahaan)
-                ->whereNull('deleted_at')
-                ->get();
-
-            $kategoris = KategoriPemakaian::where('id_perusahaan', $user->id_perusahaan)
-                ->get();
+            $perusahaan = Perusahaan::where('id', $user->id_perusahaan)->get();
+            $kategoris = KategoriPemakaian::where('id_perusahaan', $user->id_perusahaan)->get();
         }
 
         // Mengarahkan ke view sesuai struktur folder Anda

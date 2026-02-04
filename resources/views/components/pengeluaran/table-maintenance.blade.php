@@ -82,24 +82,13 @@
                         <td class="px-4 py-4 text-right">
                             <div class="flex justify-end gap-2">
                                 {{-- Tombol Edit --}}
-                                <button type="button"
-                                    @click="
-                                        editModalOpen = true; 
-                                        editUrl = '{{ route('pengeluaran.update', $item->id) }}';
-                                        editData = {
-                                            nama: '{{ $item->nama_pengeluaran }}',
-                                            sub: '{{ $item->sub_kategori }}',
-                                            tanggal: '{{ $item->tanggal_pengeluaran }}',
-                                            jumlah: '{{ $item->jumlah_pengeluaran }}',
-                                            hpp: '{{ $item->is_hpp }}'
-                                        }
-                                    "
+                                <a type="button" href="{{ route('pengeluaran.edit', $item->id) }}"
                                     class="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                     </svg>
-                                </button>
+                                </a>
                                 {{-- Tombol Hapus --}}
                                 <form action="{{ route('pengeluaran.destroy', $item->id) }}" method="POST"
                                     onsubmit="return confirm('Hapus data pengeluaran ini?')">
