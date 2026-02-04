@@ -65,7 +65,7 @@
     <nav id="main-nav"
         class="fixed w-full z-[100] transition-all duration-500 bg-white/70 backdrop-blur-xl border-b border-slate-100">
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
-            <div class="flex justify-between items-center h-24 transition-all duration-500" id="nav-container">
+            <div class="flex justify-between items-center h-20 transition-all duration-500" id="nav-container">
 
                 <div class="flex items-center gap-4 group cursor-pointer">
                     <div class="relative">
@@ -82,11 +82,11 @@
                     <div class="flex flex-col">
                         <span
                             class="block font-black text-xl leading-none text-slate-900 tracking-tighter uppercase group-hover:text-brand-red transition-colors duration-300">
-                            Mirasa <span class="font-light text-slate-400">Food</span>
+                            Mirasa Food <span class="font-light text-slate-400">Industry</span>
                         </span>
                         <span
                             class="text-[9px] font-black text-brand-red uppercase tracking-[0.4em] leading-none mt-1 opacity-70">
-                            <span class="lang-id">Industrial Excellence</span>
+                            <span class="lang-id">Industri Unggul</span>
                             <span class="lang-en">Industrial Excellence</span>
                         </span>
                     </div>
@@ -512,10 +512,10 @@
                             class="text-5xl md:text-6xl font-black font-display text-slate-900 leading-[0.9] tracking-tighter uppercase italic">
                             <span class="lang-id italic">Visi Melampaui</span>
                             <span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Ekspektasi.</span>
+                                class="lang-id text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Ekspektasi.</span>
                             <span class="lang-en italic">Vision Beyond</span>
                             <span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Expectations.</span>
+                                class="lang-en text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Expectations.</span>
                         </h3>
                     </div>
 
@@ -942,7 +942,8 @@
                         </span>
                         <ul class="space-y-4 text-[10px] font-bold uppercase tracking-widest text-slate-300">
                             <li>
-                                <a href="https://www.instagram.com/mirasafood.ind?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                                <a target="blank"
+                                    href="https://www.instagram.com/mirasafood.ind?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
                                     class="hover:text-white transition-colors">Instagram
                                 </a>
                             </li>
@@ -960,13 +961,13 @@
                             <div class="flex items-start gap-4 justify-center lg:justify-start">
                                 <i class="fa-solid fa-location-dot mt-1 text-brand-red"></i>
                                 <p class="text-xs text-slate-300 leading-relaxed font-medium">
-                                    Jl. Mungkur No. 1, Desa Kadipuro, Kec. Mungkid,<br>
-                                    Kabupaten Magelang, Jawa Tengah 56512
+                                    Jalan Munggur No. 2 Ambartawang, Japun Satu, Paremono, Kec. Mungkid, Kabupaten
+                                    Magelang, Jawa Tengah 56512
                                 </p>
                             </div>
                             <div class="flex items-center gap-4 justify-center lg:justify-start">
                                 <i class="fa-solid fa-envelope text-brand-red"></i>
-                                <p class="text-xs text-slate-300 font-medium">official@mirasafood.co.id</p>
+                                <p class="text-xs text-slate-300 font-medium">mirasafoodhrd@gmail.com</p>
                             </div>
                         </div>
 
