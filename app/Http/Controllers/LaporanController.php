@@ -130,7 +130,6 @@ class LaporanController extends Controller
 
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->get('id_perusahaan') : $user->id_perusahaan;
 
-        // Optimasi: Gunakan Eager Loading agar tidak N+1 Query
         $stokRaw = Inventory::with(['Barang.jenisBarang', 'Perusahaan'])
             ->when($idPerusahaan, fn($q) => $q->where('id_perusahaan', $idPerusahaan))
             ->get();
@@ -164,10 +163,6 @@ class LaporanController extends Controller
         ]);
     }
 
-    /**
-     * Versi 2: Laporan Keuangan (Tren & Chart)
-     */
-    public function laporanKeuangan(Request $request)
     public function laporanPengeluaran(Request $request)
     {
         $filterType = $request->get('filter_type', 'month');
@@ -179,7 +174,6 @@ class LaporanController extends Controller
 
         $queryBase = Pengeluaran::query();
 
-        // Scope Perusahaan
         if (auth()->user()->hasRole('Super Admin')) {
             if ($idPerusahaan) {
                 $queryBase->where('id_perusahaan', $idPerusahaan);
@@ -194,26 +188,21 @@ class LaporanController extends Controller
         $queryLast = (clone $queryBase);
 
         if ($filterType === 'month') {
-            // Filter Periode Ini
             $queryCurrent->whereRaw('EXTRACT(MONTH FROM tanggal_pengeluaran) = ?', [$selectedMonth])
                 ->whereRaw('EXTRACT(YEAR FROM tanggal_pengeluaran) = ?', [$selectedYear]);
 
-            // Filter Periode Lalu (Bulan Sebelumnya)
-            $lastMonthDate = \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->subMonth();
+            $lastMonthDate = Carbon::create($selectedYear, $selectedMonth, 1)->subMonth();
             $queryLast->whereRaw('EXTRACT(MONTH FROM tanggal_pengeluaran) = ?', [$lastMonthDate->month])
                 ->whereRaw('EXTRACT(YEAR FROM tanggal_pengeluaran) = ?', [$lastMonthDate->year]);
 
-            $daysInMonth = \Carbon\Carbon::create($selectedYear, $selectedMonth)->daysInMonth;
+            $daysInMonth = Carbon::create($selectedYear, $selectedMonth)->daysInMonth;
             $labels = range(1, $daysInMonth);
 
             $trendRaw = (clone $queryCurrent)
                 ->selectRaw('EXTRACT(DAY FROM tanggal_pengeluaran) as unit, kategori, SUM(jumlah_pengeluaran) as total')
                 ->groupBy('unit', 'kategori')->get();
         } else {
-            // Filter Periode Ini
             $queryCurrent->whereRaw('EXTRACT(YEAR FROM tanggal_pengeluaran) = ?', [$selectedYear]);
-
-            // Filter Periode Lalu (Tahun Sebelumnya)
             $queryLast->whereRaw('EXTRACT(YEAR FROM tanggal_pengeluaran) = ?', [$selectedYear - 1]);
 
             $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -223,7 +212,6 @@ class LaporanController extends Controller
                 ->groupBy('unit', 'kategori')->get();
         }
 
-        // Format Data untuk Line Chart
         $lineChartData = [];
         $colors = ['#1e293b', '#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
         foreach ($kategoriList as $index => $kat) {
@@ -248,28 +236,14 @@ class LaporanController extends Controller
         $totalBulanIni = $dataPeriodeIni->sum('jumlah_pengeluaran');
         $totalBulanLalu = $queryLast->sum('jumlah_pengeluaran');
 
-        // Logika Selisih & Persentase
         $diff = $totalBulanIni - $totalBulanLalu;
-        if ($totalBulanLalu > 0) {
-            $percentage = ($diff / $totalBulanLalu) * 100;
-        } else {
-            $percentage = $totalBulanIni > 0 ? 100 : 0;
-        }
+        $percentage = $totalBulanLalu > 0 ? ($diff / $totalBulanLalu) * 100 : ($totalBulanIni > 0 ? 100 : 0);
 
         $chartData = $dataPeriodeIni->groupBy('kategori')->map(fn($row) => $row->sum('jumlah_pengeluaran'));
 
         return view('pages.laporan.pengeluaran', compact(
-            'totalBulanIni',
-            'totalBulanLalu',
-            'percentage',
-            'diff',
-            'chartData',
-            'perusahaan',
-            'selectedMonth',
-            'selectedYear',
-            'filterType',
-            'lineChartData',
-            'labels'
+            'totalBulanIni', 'totalBulanLalu', 'percentage', 'diff', 'chartData', 
+            'perusahaan', 'selectedMonth', 'selectedYear', 'filterType', 'lineChartData', 'labels'
         ));
     }
 
@@ -293,22 +267,19 @@ class LaporanController extends Controller
             $prevEnd = $currentStart->copy()->subYear()->endOfYear();
         }
 
-        // 1. DATA PRODUKSI (HPP)
         $queryMain = DetailInventory::whereHas('Inventory.Barang.JenisBarang', function ($q) {
             $q->whereIn('kode', ['FG', 'WIP', 'EC']);
         })
-            ->whereHas('Inventory', function ($q) use ($idPerusahaan) {
-                if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
-            })
-            ->with(['Inventory.Barang.JenisBarang']);
+        ->whereHas('Inventory', function ($q) use ($idPerusahaan) {
+            if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
+        })
+        ->with(['Inventory.Barang.JenisBarang']);
 
         $currentRaw = (clone $queryMain)->whereBetween('tanggal_masuk', [$currentStart, $currentEnd])->get();
         $prevRaw = (clone $queryMain)->whereBetween('tanggal_masuk', [$prevStart, $prevEnd])->get();
 
         $calculate = function ($data) {
-            $vol = 0;
-            $cost = 0;
-            $skus = [];
+            $vol = 0; $cost = 0; $skus = [];
             foreach ($data as $item) {
                 $konversi = $item->Inventory->Barang->nilai_konversi ?? 1;
                 $vol += ($item->jumlah_diterima * $konversi);
@@ -343,42 +314,23 @@ class LaporanController extends Controller
             ];
         })->sortByDesc('total_biaya')->values();
 
-        // 2. DATA BAHAN KELUAR (BAHAN BAKU & PENOLONG)
         $bahanRaw = BarangKeluar::whereIn('jenis_keluar', ['BAHAN BAKU', 'PRODUKSI'])
-            ->whereHas('DetailInventory.Inventory', function ($q) use ($idPerusahaan) {
-                if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
-            })
+            ->whereHas('DetailInventory.Inventory', fn($q) => $idPerusahaan ? $q->where('id_perusahaan', $idPerusahaan) : null)
             ->whereBetween('tanggal_keluar', [$currentStart, $currentEnd])
             ->with(['DetailInventory.Inventory.Barang.JenisBarang'])
             ->get();
 
         $prevBahanRaw = BarangKeluar::whereIn('jenis_keluar', ['BAHAN BAKU', 'PRODUKSI'])
-            ->whereHas('DetailInventory.Inventory', function ($q) use ($idPerusahaan) {
-                if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
-            })
+            ->whereHas('DetailInventory.Inventory', fn($q) => $idPerusahaan ? $q->where('id_perusahaan', $idPerusahaan) : null)
             ->whereBetween('tanggal_keluar', [$prevStart, $prevEnd])
             ->get();
 
-        $prevTotalHargaKeluar = $prevBahanRaw->sum('total_harga');
         $currentTotalHargaKeluar = $bahanRaw->sum('total_harga');
-
-        $diffTotalKeluarPct = $prevTotalHargaKeluar > 0
-            ? (($currentTotalHargaKeluar - $prevTotalHargaKeluar) / $prevTotalHargaKeluar) * 100
-            : ($currentTotalHargaKeluar > 0 ? 100 : 0);
-
-        $prevHargaBaku = $prevBahanRaw->where('jenis_keluar', 'BAHAN BAKU')->sum('total_harga');
-        $currentHargaBaku = $bahanRaw->where('jenis_keluar', 'BAHAN BAKU')->sum('total_harga');
-
-        $diffBakuPct = $prevHargaBaku > 0
-            ? (($currentHargaBaku - $prevHargaBaku) / $prevHargaBaku) * 100
-            : ($currentHargaBaku > 0 ? 100 : 0);
-
-        $totalHargaBarangKeluar = $bahanRaw->sum('total_harga');
-
-        $rincianBahan = $bahanRaw->groupBy('DetailInventory.Inventory.id_barang')->map(function ($items) use ($totalHargaBarangKeluar) {
+        $prevTotalHargaKeluar = $prevBahanRaw->sum('total_harga');
+        
+        $rincianBahan = $bahanRaw->groupBy('DetailInventory.Inventory.id_barang')->map(function ($items) use ($currentTotalHargaKeluar) {
             $barang = $items->first()->DetailInventory->Inventory->Barang;
             $biayaItem = $items->sum('total_harga');
-
             return [
                 'nama_barang'  => $barang->nama_barang,
                 'satuan'       => $barang->satuan,
@@ -387,85 +339,31 @@ class LaporanController extends Controller
                 'total_qty'    => $items->sum('jumlah_keluar'),
                 'total_kg'     => $items->sum(fn($i) => $i->jumlah_keluar * ($barang->nilai_konversi ?? 1)),
                 'total_biaya'  => $biayaItem,
-                'persen'       => $totalHargaBarangKeluar > 0 ? ($biayaItem / $totalHargaBarangKeluar) * 100 : 0,
+                'persen'       => $currentTotalHargaKeluar > 0 ? ($biayaItem / $currentTotalHargaKeluar) * 100 : 0,
             ];
         })->sortByDesc('total_biaya')->values();
 
         $summaryBahan = [
             'total_harga_keluar'    => $currentTotalHargaKeluar,
-            'diff_total_keluar_pct' => $diffTotalKeluarPct,
-            'total_harga_baku'      => $currentHargaBaku,
-            'diff_baku_pct'         => $diffBakuPct,
+            'diff_total_keluar_pct' => $prevTotalHargaKeluar > 0 ? (($currentTotalHargaKeluar - $prevTotalHargaKeluar) / $prevTotalHargaKeluar) * 100 : 100,
+            'total_harga_baku'      => $bahanRaw->where('jenis_keluar', 'BAHAN BAKU')->sum('total_harga'),
             'total_harga_penolong'  => $bahanRaw->where('jenis_keluar', 'PRODUKSI')->sum('total_harga'),
             'total_kg_baku'         => $rincianBahan->where('jenis_keluar', 'BAHAN BAKU')->sum('total_kg'),
-            'count_jenis_penolong'  => $bahanRaw->where('jenis_keluar', 'PRODUKSI')->pluck('DetailInventory.Inventory.id_barang')->unique()->count(),
         ];
 
-        // 3. DATA PENGELUARAN
-        $pengeluaranHpp = Pengeluaran::whereRaw('is_hpp = true')
+        $pengeluaranHpp = Pengeluaran::where('is_hpp', true)
             ->whereBetween('tanggal_pengeluaran', [$currentStart, $currentEnd])
-            ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
-                return $q->where('id_perusahaan', $idPerusahaan);
-            })
-            ->get();
-
-        $prevPengeluaranRaw = Pengeluaran::whereRaw('is_hpp = true')
-            ->whereBetween('tanggal_pengeluaran', [$prevStart, $prevEnd])
-            ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
-                return $q->where('id_perusahaan', $idPerusahaan);
-            })->get();
+            ->when($idPerusahaan, fn($q) => $q->where('id_perusahaan', $idPerusahaan))->get();
 
         $totalBebanHpp = $pengeluaranHpp->sum('jumlah_pengeluaran');
-        $prevTotalBebanHpp = $prevPengeluaranRaw->sum('jumlah_pengeluaran');
-
-        $diffBebanHppPct = $prevTotalBebanHpp > 0
-            ? (($totalBebanHpp - $prevTotalBebanHpp) / $prevTotalBebanHpp) * 100
-            : ($totalBebanHpp > 0 ? 100 : 0);
-
-        $bebanKategoriHpp = $pengeluaranHpp->groupBy('kategori')->map(function ($items, $key) use ($totalBebanHpp, $prevPengeluaranRaw) {
-            $nominal = $items->sum('jumlah_pengeluaran');
-            $prevNominal = $prevPengeluaranRaw->where('kategori', $key)->sum('jumlah_pengeluaran');
-            $diffPct = $prevNominal > 0 ? (($nominal - $prevNominal) / $prevNominal) * 100 : ($nominal > 0 ? 100 : 0);
-
-            return [
-                'nama' => $items->first()->kategori ?? 'Umum',
-                'total' => $nominal,
-                'persen' => $totalBebanHpp > 0 ? ($nominal / $totalBebanHpp) * 100 : 0,
-                'diff_pct' => $diffPct,
-                'count' => $items->count()
-            ];
-        })->sortByDesc('total');
-
-        // 4. HITUNG HPP PER KG
-        $grandTotalBiayaHpp = $summaryBahan['total_harga_keluar'] + $totalBebanHpp;
-        $totalVolumeProduksi = $summary['current_volume'];
-        $hppPerKg = $totalVolumeProduksi > 0 ? ($grandTotalBiayaHpp / $totalVolumeProduksi) : 0;
-
-        $grandTotalBiayaHppPrev = $prevTotalHargaKeluar + $prevTotalBebanHpp;
-        $totalVolumeProduksiPrev = $prev['vol'];
-        $hppPerKgPrev = $totalVolumeProduksiPrev > 0 ? ($grandTotalBiayaHppPrev / $totalVolumeProduksiPrev) : 0;
-
-        $diffHppPct = $hppPerKgPrev > 0 ? (($hppPerKg - $hppPerKgPrev) / $hppPerKgPrev) * 100 : ($hppPerKg > 0 ? 100 : 0);
+        $grandTotalBiayaHpp = $currentTotalHargaKeluar + $totalBebanHpp;
+        $hppPerKg = $curr['vol'] > 0 ? ($grandTotalBiayaHpp / $curr['vol']) : 0;
 
         return view('pages.laporan.hpp', compact(
-            'summary',
-            'rincianProduksi',
-            'selectedMonth',
-            'selectedYear',
-            'filterType',
-            'summaryBahan',
-            'rincianBahan',
-            'pengeluaranHpp',
-            'totalBebanHpp',
-            'diffBebanHppPct',
-            'bebanKategoriHpp',
-            'grandTotalBiayaHpp',
-            'totalVolumeProduksi',
-            'hppPerKg',
-            'diffHppPct'
+            'summary', 'rincianProduksi', 'selectedMonth', 'selectedYear', 'filterType', 
+            'summaryBahan', 'rincianBahan', 'totalBebanHpp', 'grandTotalBiayaHpp', 'hppPerKg'
         ) + ['perusahaan' => Perusahaan::all()]);
     }
-}
 
     public function laporanTransaksi(Request $request)
     {
@@ -475,31 +373,18 @@ class LaporanController extends Controller
         $selectedYear = (int) $request->get('year', date('Y'));
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->get('id_perusahaan') : $user->id_perusahaan;
 
-        if ($filterType === 'month') {
-            $startDate = Carbon::create($selectedYear, $selectedMonth, 1)->startOfMonth();
-            $endDate = $startDate->copy()->endOfMonth();
-        } else {
-            $startDate = Carbon::create($selectedYear, 1, 1)->startOfYear();
-            $endDate = $startDate->copy()->endOfYear();
-        }
+        $startDate = $filterType === 'month' ? Carbon::create($selectedYear, $selectedMonth, 1)->startOfMonth() : Carbon::create($selectedYear, 1, 1)->startOfYear();
+        $endDate = $startDate->copy()->endOf($filterType === 'month' ? 'month' : 'year');
 
-        // --- BARANG MASUK ---
         $masukRaw = DetailInventory::with(['Supplier' => fn($q) => $q->withTrashed(), 'Inventory.Barang.JenisBarang'])
-            ->whereHas('Inventory', function ($q) use ($idPerusahaan) {
-                if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
-            })
+            ->whereHas('Inventory', fn($q) => $idPerusahaan ? $q->where('id_perusahaan', $idPerusahaan) : null)
             ->whereBetween('tanggal_masuk', [$startDate->toDateString(), $endDate->toDateString()])
             ->get();
 
         $masukPerSupplier = $masukRaw->groupBy('id_supplier')->map(function ($items) {
             $supplier = $items->first()->Supplier;
-            $filteredItems = $items->filter(function ($item) {
-                $kode = optional(optional($item->Inventory->Barang)->JenisBarang)->kode;
-                return !in_array($kode, ['FG', 'WIP', 'EC']);
-            });
-
+            $filteredItems = $items->filter(fn($item) => !in_array(optional($item->Inventory->Barang->JenisBarang)->kode, ['FG', 'WIP', 'EC']));
             if ($filteredItems->isEmpty()) return null;
-
             return [
                 'nama_supplier' => $supplier->nama_supplier ?? 'Tanpa Nama',
                 'jenis_supplier' => $supplier->jenis_supplier,
@@ -509,11 +394,8 @@ class LaporanController extends Controller
             ];
         })->filter()->groupBy('jenis_supplier');
 
-        // --- BARANG KELUAR ---
         $keluarRaw = BarangKeluar::with(['Costumer' => fn($q) => $q->withTrashed(), 'DetailInventory.Inventory.Barang.JenisBarang'])
-            ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
-                $q->where('id_perusahaan', $idPerusahaan);
-            })
+            ->when($idPerusahaan, fn($q) => $q->where('id_perusahaan', $idPerusahaan))
             ->whereBetween('tanggal_keluar', [$startDate->toDateString(), $endDate->toDateString()])
             ->whereNotNull('id_costumer')
             ->get();
@@ -523,25 +405,17 @@ class LaporanController extends Controller
                 'nama_costumer' => $items->first()->Costumer->nama_costumer ?? 'Tanpa Nama',
                 'total_qty' => $items->sum('jumlah_keluar'),
                 'total_nilai' => $items->sum('total_harga'),
-                'total_kg' => $items->sum(function ($item) {
-                    $barang = optional(optional($item->DetailInventory)->Inventory)->Barang;
-                    $kode = optional($barang->JenisBarang)->kode;
-                    return in_array($kode, ['FG', 'WIP', 'EC']) ? ($item->jumlah_keluar * ($barang->nilai_konversi ?? 1)) : 0;
-                }),
                 'details' => $items 
             ];
-        })->sortByDesc('total_kg');
+        })->sortByDesc('total_nilai');
 
-        $perusahaan = $user->hasRole('Super Admin') ? Perusahaan::all() : collect();
-
-        return view('pages.laporan.transaksi', compact(
-            'masukRaw',
-            'masukPerSupplier',
-            'keluarPerCostumer',
-            'perusahaan',
-            'filterType',
-            'selectedMonth',
-            'selectedYear'
-        ));
+        return view('pages.laporan.transaksi', [
+            'masukPerSupplier' => $masukPerSupplier,
+            'keluarPerCostumer' => $keluarPerCostumer,
+            'perusahaan' => Perusahaan::all(),
+            'filterType' => $filterType,
+            'selectedMonth' => $selectedMonth,
+            'selectedYear' => $selectedYear
+        ]);
     }
 }

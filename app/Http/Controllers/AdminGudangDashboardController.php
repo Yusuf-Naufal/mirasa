@@ -28,12 +28,12 @@ class AdminGudangDashboardController extends Controller
         if ($filterType === 'year') {
             $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
             $range = range(1, 12);
-            $format = 'n'; // Format angka bulan tanpa leading zero
+            $format = 'n'; 
         } else {
             $daysInMonth = Carbon::create($selectedYear, $selectedMonth)->daysInMonth;
             $labels = range(1, $daysInMonth);
             $range = $labels;
-            $format = 'j'; // Format tanggal tanpa leading zero
+            $format = 'j'; 
         }
 
         // 3. KPI Stats
@@ -52,7 +52,7 @@ class AdminGudangDashboardController extends Controller
                 ->whereDate('tanggal_keluar', today())->count(),
         ];
 
-        // --- A. Bahan Baku (Dikonversi ke KG jika ada nilai_konversi) ---
+        // --- A. Bahan Baku ---
         $bbData = DetailInventory::whereHas('Inventory', function ($q) use ($id_perusahaan) {
             $q->where('id_perusahaan', $id_perusahaan)
                 ->whereHas('Barang.JenisBarang', fn($bj) => $bj->where('kode', 'BB'));
@@ -63,11 +63,10 @@ class AdminGudangDashboardController extends Controller
             ->get()
             ->groupBy(fn($item) => Carbon::parse($item->tanggal_masuk)->format($format))
             ->map(fn($group) => $group->sum(
-                fn($item) =>
-                $item->jumlah_diterima * (float)($item->Inventory->Barang->nilai_konversi ?: 1)
+                fn($item) => $item->jumlah_diterima * (float)($item->Inventory->Barang->nilai_konversi ?: 1)
             ));
 
-        // --- B. Hasil Produksi (Konversi ke KG jika ada nilai_konversi) ---
+        // --- B. Hasil Produksi ---
         $prodData = DetailInventory::whereHas('Inventory', function ($q) use ($id_perusahaan) {
             $q->where('id_perusahaan', $id_perusahaan)
                 ->whereHas('Barang.JenisBarang', fn($bj) => $bj->whereIn('kode', ['FG', 'WIP', 'EC']));
@@ -78,11 +77,10 @@ class AdminGudangDashboardController extends Controller
             ->get()
             ->groupBy(fn($item) => Carbon::parse($item->tanggal_masuk)->format($format))
             ->map(fn($group) => $group->sum(
-                fn($item) =>
-                $item->jumlah_diterima * (float)($item->Inventory->Barang->nilai_konversi ?: 1)
+                fn($item) => $item->jumlah_diterima * (float)($item->Inventory->Barang->nilai_konversi ?: 1)
             ));
 
-        // --- C. Operasional (Multi-dataset per Kategori) ---
+        // --- C. Operasional ---
         $pemakaianDatasets = KategoriPemakaian::where('id_perusahaan', $id_perusahaan)
             ->with(['Pemakaian' => function ($q) use ($selectedYear, $selectedMonth, $filterType) {
                 $q->whereYear('tanggal_pemakaian', $selectedYear)
@@ -104,7 +102,7 @@ class AdminGudangDashboardController extends Controller
                 ];
             });
 
-        // --- D. Pengeluaran (Multi-dataset per Kategori) ---
+        // --- D. Pengeluaran ---
         $pengeluaranDatasets = Pengeluaran::where('id_perusahaan', $id_perusahaan)
             ->whereYear('tanggal_pengeluaran', $selectedYear)
             ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pengeluaran', $selectedMonth))
@@ -134,14 +132,12 @@ class AdminGudangDashboardController extends Controller
             'pengeluaran_datasets' => $pengeluaranDatasets,
         ];
 
+        // --- E. Perbaikan Bagian yang Merah ---
         $recent_stock_movements = DetailInventory::with(['Inventory.Barang'])
-            ->whereHas('Inventory.Barang') 
-            ->orderBy('created_at', 'desc')
-            ->limit(6)
-            ->get();
-
             ->whereHas('Inventory', fn($q) => $q->where('id_perusahaan', $id_perusahaan))
-            ->latest()->take(6)->get();
+            ->latest()
+            ->take(6)
+            ->get();
 
         return view('pages.dashboard.admingudang', compact('stats', 'recent_stock_movements', 'chartData', 'selectedMonth', 'selectedYear', 'filterType'));
     }
