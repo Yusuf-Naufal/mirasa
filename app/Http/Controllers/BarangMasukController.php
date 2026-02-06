@@ -143,7 +143,7 @@ class BarangMasukController extends Controller
             'id_perusahaan'      => 'required|exists:perusahaan,id',
             'id_barang'          => 'required|exists:barang,id',
             'tanggal_masuk'      => 'required|date',
-            'tanggal_exp'        => 'nullable|date|after_or_equal:tanggal_masuk',
+            'tanggal_exp'        => 'nullable|date',
             'jumlah_diterima'    => 'required|numeric|min:0.01',
             'harga'              => 'required|numeric|min:0',
             'tempat_penyimpanan' => 'nullable|string|max:255',

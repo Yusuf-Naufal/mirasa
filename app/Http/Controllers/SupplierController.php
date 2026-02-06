@@ -2,9 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Perusahaan;
 use App\Models\Supplier;
+use App\Models\Perusahaan;
 use Illuminate\Http\Request;
+use App\Imports\SupplierImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+
 
 class SupplierController extends Controller
 {
@@ -167,5 +180,127 @@ class SupplierController extends Controller
         $supplier->save();
 
         return redirect()->back()->with('success', 'Supplier berhasil diaktifkan kembali.');
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new class implements WithHeadings, WithEvents, WithStyles, WithTitle {
+
+            public function title(): string
+            {
+                return 'Template Import Supplier';
+            }
+
+            public function headings(): array
+            {
+                return [
+                    'nama_supplier',
+                    'kode',
+                    'jenis_supplier'
+                ];
+            }
+
+            public function styles(Worksheet $sheet)
+            {
+                return [
+                    // Style untuk Header (Baris 1)
+                    1 => [
+                        'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                        'fill' => [
+                            'fillType' => Fill::FILL_SOLID,
+                            'startColor' => ['rgb' => '4F46E5'],
+                        ],
+                        'alignment' => [
+                            'horizontal' => Alignment::HORIZONTAL_CENTER,
+                            'vertical' => Alignment::VERTICAL_CENTER,
+                        ]
+                    ],
+                ];
+            }
+
+            public function registerEvents(): array
+            {
+                return [
+                    AfterSheet::class => function (AfterSheet $event) {
+                        $sheet = $event->sheet->getDelegate();
+                        $rowCount = 100; // Proteksi untuk 100 baris
+
+                        // 1. Setup Kolom Otomatis
+                        foreach (range('A', 'C') as $col) {
+                            $sheet->getColumnDimension($col)->setAutoSize(true);
+                        }
+
+                        // 2. Dropdown untuk Jenis Supplier (Kolom C)
+                        $validationJenis = $sheet->getCell('C2')->getDataValidation();
+                        $validationJenis->setType(DataValidation::TYPE_LIST)
+                            ->setErrorStyle(DataValidation::STYLE_STOP)
+                            ->setAllowBlank(false)
+                            ->setShowDropDown(true)
+                            ->setShowInputMessage(true)
+                            ->setPromptTitle('Pilih Jenis')
+                            ->setPrompt('Silahkan pilih: Barang atau Bahan Baku')
+                            ->setFormula1('"Barang,Bahan Baku"');
+
+                        // 3. Input Message untuk Nama & Kode (A & B)
+                        $msgInfo = $sheet->getCell('A2')->getDataValidation();
+                        $msgInfo->setShowInputMessage(true)
+                            ->setPromptTitle('Aturan Pengisian')
+                            ->setPrompt('Wajib diisi dan tidak boleh duplikat dengan data yang sudah ada.');
+
+                        // Terapkan ke baris selanjutnya
+                        for ($i = 2; $i <= $rowCount; $i++) {
+                            $sheet->getCell("C$i")->setDataValidation(clone $validationJenis);
+                            $sheet->getCell("A$i")->setDataValidation(clone $msgInfo);
+                            $sheet->getCell("B$i")->setDataValidation(clone $msgInfo);
+
+                            // Beri border tipis agar terlihat rapi seperti form
+                            $sheet->getStyle("A$i:C$i")->getBorders()->getAllBorders()
+                                ->setBorderStyle(Border::BORDER_THIN);
+                        }
+                    },
+                ];
+            }
+        }, 'template_supplier_v2.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|mimes:xlsx,xls']);
+
+        try {
+            $import = new SupplierImport;
+            Excel::import($import, $request->file('file'));
+
+            $berhasil = $import->getRowCount();
+            $failures = $import->failures();
+
+            if ($failures->isNotEmpty()) {
+                $totalGagal = $failures->count();
+
+                // Grouping error yang sama
+                $groupedFailures = $failures->groupBy(function ($failure) {
+                    return implode(", ", $failure->errors());
+                });
+
+                $details = $groupedFailures->map(function ($group, $errorMessage) {
+                    $rows = $group->map(fn($f) => $f->row())->implode(', ');
+                    return "<li class='mb-2 text-red-600'>
+                            <b class='block'>$errorMessage:</b>
+                            <span class='text-gray-500'>Baris: $rows</span>
+                        </li>";
+                })->implode('');
+
+                return back()->with('error_import', [
+                    'title' => "Hasil Import Supplier",
+                    'success_count' => $berhasil,
+                    'fail_count' => $totalGagal,
+                    'html' => "<ul class='text-left text-xs list-none p-0'>$details</ul>"
+                ]);
+            }
+
+            return back()->with('success', "Berhasil! $berhasil data supplier telah diimpor.");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal: ' . $e->getMessage());
+        }
     }
 }

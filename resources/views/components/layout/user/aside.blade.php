@@ -167,46 +167,48 @@
                                 d="M13 9h5.5L13 3.5zM6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2m1 18h2v-6H7zm4 0h2v-8h-2zm4 0h2v-4h-2z" />
                         </svg>
                     </div>
+                    {{-- Di Mobile teks harus muncul jika sidebar terbuka (sm:translate-x-0) --}}
                     <span
-                        class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-bold uppercase text-xs tracking-widest flex-1 text-left">
+                        class="ms-4 opacity-0 sm:group-hover:opacity-100 translate-x-[-10px] sm:group-hover:translate-x-0 transition-all duration-300 font-bold uppercase text-xs tracking-widest flex-1 text-left max-sm:opacity-100 max-sm:translate-x-0">
                         Laporan
                     </span>
+
                     {{-- Indikator Panah --}}
                     <svg xmlns="http://www.w3.org/2000/svg" :class="open ? 'rotate-180' : ''"
-                        class="w-4 h-4 transition-transform duration-200 opacity-0 group-hover:opacity-100"
+                        class="w-4 h-4 transition-transform duration-200 opacity-0 sm:group-hover:opacity-100 max-sm:opacity-100"
                         fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
 
                 {{-- Sub-Menu (Children) --}}
-                <div x-show="open" x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 transform -translate-y-2"
-                    x-transition:enter-end="opacity-100 transform translate-y-0" class="mt-1 space-y-1 px-2"
-                    style="display: none;"> {{-- style display none mencegah kedipan saat refresh --}}
+                <div x-show="open" x-cloak x-collapse {{-- Gunakan plugin collapse agar transisi smooth --}}
+                    class="mt-1 space-y-1 px-2 overflow-hidden">
 
-                    {{-- Laporan Produksi --}}
+                    {{-- Link Item: Hapus opacity-0 agar langsung terlihat saat di-expand --}}
                     <a href="{{ route('laporan-produksi') }}"
-                        class="flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium">
+                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
                         Produksi
                     </a>
 
-                    {{-- Laporan Gudang --}}
                     <a href="{{ route('laporan-gudang') }}"
-                        class="flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium">
+                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
                         Gudang
                     </a>
 
-                    {{-- Laporan Keuangan --}}
-                    <a href="{{ route('laporan-keuangan') }}"
-                        class="flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium">
-                        Keuangan
+                    <a href="{{ route('laporan-pengeluaran') }}"
+                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
+                        Pengeluaran
                     </a>
 
-                    {{-- HPP --}}
                     <a href="{{ route('laporan-hpp') }}"
-                        class="flex opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium">
+                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
                         HPP
+                    </a>
+
+                    <a href="{{ route('laporan-transaksi') }}"
+                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
+                        Transaksi
                     </a>
                 </div>
             </li>
@@ -244,6 +246,40 @@
                     </button>
                 </form>
             </li>
+            <li>
+                <a href="{{ route('grafik.bahan-baku') }}"
+                    class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                    <div class="min-w-[32px] flex justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                            viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                d="M7 16a1.5 1.5 0 0 0 1.5-1.5a1 1 0 0 0 0-.15l2.79-2.79h.46l1.61 1.61v.08a1.5 1.5 0 1 0 3 0v-.08L20 9.5A1.5 1.5 0 1 0 18.5 8a1 1 0 0 0 0 .15l-3.61 3.61h-.16L13 10a1.49 1.49 0 0 0-3 0l-3 3a1.5 1.5 0 0 0 0 3m13.5 4h-17V3a1 1 0 0 0-2 0v18a1 1 0 0 0 1 1h18a1 1 0 0 0 0-2" />
+                        </svg>
+                    </div>
+                    <span
+                        class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Kurs</span>
+                </a>
+            </li>
+
+            @if (auth()->user()->hasRole('Super Admin'))
+                <li>
+                    <a href="{{ route('logs.index') }}"
+                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 640 512">
+                                <path fill="currentColor"
+                                    d="M224 0a128 128 0 1 1 0 256a128 128 0 1 1 0-256m-45.7 304h91.4c11.8 0 23.4 1.2 34.5 3.3c-2.1 18.5 7.4 35.6 21.8 44.8c-16.6 10.6-26.7 31.6-20 53.3c4 12.9 9.4 25.5 16.4 37.6s15.2 23.1 24.4 33c15.7 16.9 39.6 18.4 57.2 8.7v.9c0 9.2 2.7 18.5 7.9 26.3l-382.2.1C13.3 512 0 498.7 0 482.3C0 383.8 79.8 304 178.3 304M436 218.2c0-7 4.5-13.3 11.3-14.8c10.5-2.4 21.5-3.7 32.7-3.7s22.2 1.3 32.7 3.7c6.8 1.5 11.3 7.8 11.3 14.8v30.6c7.9 3.4 15.4 7.7 22.3 12.8l24.9-14.3c6.1-3.5 13.7-2.7 18.5 2.4c7.6 8.1 14.3 17.2 20.1 27.2s10.3 20.4 13.5 31c2.1 6.7-1.1 13.7-7.2 17.2l-25 14.4c.4 4 .7 8.1.7 12.3s-.2 8.2-.7 12.3l25 14.4c6.1 3.5 9.2 10.5 7.2 17.2c-3.3 10.6-7.8 21-13.5 31s-12.5 19.1-20.1 27.2c-4.8 5.1-12.5 5.9-18.5 2.4L546.3 442c-6.9 5.1-14.3 9.4-22.3 12.8v30.6c0 7-4.5 13.3-11.3 14.8c-10.5 2.4-21.5 3.7-32.7 3.7s-22.2-1.3-32.7-3.7c-6.8-1.5-11.3-7.8-11.3-14.8v-30.5c-8-3.4-15.6-7.7-22.5-12.9l-24.7 14.3c-6.1 3.5-13.7 2.7-18.5-2.4c-7.6-8.1-14.3-17.2-20.1-27.2s-10.3-20.4-13.5-31c-2.1-6.7 1.1-13.7 7.2-17.2l24.8-14.3c-.4-4.1-.7-8.2-.7-12.4s.2-8.3.7-12.4L343.8 325c-6.1-3.5-9.2-10.5-7.2-17.2c3.3-10.6 7.7-21 13.5-31s12.5-19.1 20.1-27.2c4.8-5.1 12.4-5.9 18.5-2.4l24.8 14.3c6.9-5.1 14.5-9.4 22.5-12.9v-30.5zm92.1 133.5a48.1 48.1 0 1 0-96.1 0a48.1 48.1 0 1 0 96.1 0" />
+                            </svg>
+                        </div>
+                        <span
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Log
+                            Aktifitas</span>
+                    </a>
+                </li>
+            @endif
 
         </ul>
     </div>

@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Barang extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, LogsActivity;
 
     protected $table = 'barang';
 
@@ -19,9 +21,18 @@ class Barang extends Model
         'nama_barang',
         'kode',
         'satuan',
+        'jenis',
         'nilai_konversi',
         'isi_bungkus',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('barang');
+    }
 
     public function Perusahaan()
     {
@@ -42,6 +53,4 @@ class Barang extends Model
     {
         return $this->hasMany(DetailProduksi::class, 'id_barang');
     }
-
-
 }

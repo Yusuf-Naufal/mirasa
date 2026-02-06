@@ -168,6 +168,7 @@ class LaporanController extends Controller
      * Versi 2: Laporan Keuangan (Tren & Chart)
      */
     public function laporanKeuangan(Request $request)
+    public function laporanPengeluaran(Request $request)
     {
         $filterType = $request->get('filter_type', 'month');
         $selectedMonth = (int) $request->get('month', date('n'));
@@ -257,7 +258,7 @@ class LaporanController extends Controller
 
         $chartData = $dataPeriodeIni->groupBy('kategori')->map(fn($row) => $row->sum('jumlah_pengeluaran'));
 
-        return view('pages.laporan.keuangan', compact(
+        return view('pages.laporan.pengeluaran', compact(
             'totalBulanIni',
             'totalBulanLalu',
             'percentage',
@@ -463,5 +464,84 @@ class LaporanController extends Controller
             'hppPerKg',
             'diffHppPct'
         ) + ['perusahaan' => Perusahaan::all()]);
+    }
+}
+
+    public function laporanTransaksi(Request $request)
+    {
+        $user = auth()->user();
+        $filterType = $request->get('filter_type', 'month');
+        $selectedMonth = (int) $request->get('month', date('n'));
+        $selectedYear = (int) $request->get('year', date('Y'));
+        $idPerusahaan = $user->hasRole('Super Admin') ? $request->get('id_perusahaan') : $user->id_perusahaan;
+
+        if ($filterType === 'month') {
+            $startDate = Carbon::create($selectedYear, $selectedMonth, 1)->startOfMonth();
+            $endDate = $startDate->copy()->endOfMonth();
+        } else {
+            $startDate = Carbon::create($selectedYear, 1, 1)->startOfYear();
+            $endDate = $startDate->copy()->endOfYear();
+        }
+
+        // --- BARANG MASUK ---
+        $masukRaw = DetailInventory::with(['Supplier' => fn($q) => $q->withTrashed(), 'Inventory.Barang.JenisBarang'])
+            ->whereHas('Inventory', function ($q) use ($idPerusahaan) {
+                if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
+            })
+            ->whereBetween('tanggal_masuk', [$startDate->toDateString(), $endDate->toDateString()])
+            ->get();
+
+        $masukPerSupplier = $masukRaw->groupBy('id_supplier')->map(function ($items) {
+            $supplier = $items->first()->Supplier;
+            $filteredItems = $items->filter(function ($item) {
+                $kode = optional(optional($item->Inventory->Barang)->JenisBarang)->kode;
+                return !in_array($kode, ['FG', 'WIP', 'EC']);
+            });
+
+            if ($filteredItems->isEmpty()) return null;
+
+            return [
+                'nama_supplier' => $supplier->nama_supplier ?? 'Tanpa Nama',
+                'jenis_supplier' => $supplier->jenis_supplier,
+                'total_qty' => $filteredItems->sum('jumlah_diterima'),
+                'total_nilai' => $filteredItems->sum('total_harga'),
+                'details' => $filteredItems
+            ];
+        })->filter()->groupBy('jenis_supplier');
+
+        // --- BARANG KELUAR ---
+        $keluarRaw = BarangKeluar::with(['Costumer' => fn($q) => $q->withTrashed(), 'DetailInventory.Inventory.Barang.JenisBarang'])
+            ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
+                $q->where('id_perusahaan', $idPerusahaan);
+            })
+            ->whereBetween('tanggal_keluar', [$startDate->toDateString(), $endDate->toDateString()])
+            ->whereNotNull('id_costumer')
+            ->get();
+
+        $keluarPerCostumer = $keluarRaw->groupBy('id_costumer')->map(function ($items) {
+            return [
+                'nama_costumer' => $items->first()->Costumer->nama_costumer ?? 'Tanpa Nama',
+                'total_qty' => $items->sum('jumlah_keluar'),
+                'total_nilai' => $items->sum('total_harga'),
+                'total_kg' => $items->sum(function ($item) {
+                    $barang = optional(optional($item->DetailInventory)->Inventory)->Barang;
+                    $kode = optional($barang->JenisBarang)->kode;
+                    return in_array($kode, ['FG', 'WIP', 'EC']) ? ($item->jumlah_keluar * ($barang->nilai_konversi ?? 1)) : 0;
+                }),
+                'details' => $items 
+            ];
+        })->sortByDesc('total_kg');
+
+        $perusahaan = $user->hasRole('Super Admin') ? Perusahaan::all() : collect();
+
+        return view('pages.laporan.transaksi', compact(
+            'masukRaw',
+            'masukPerSupplier',
+            'keluarPerCostumer',
+            'perusahaan',
+            'filterType',
+            'selectedMonth',
+            'selectedYear'
+        ));
     }
 }

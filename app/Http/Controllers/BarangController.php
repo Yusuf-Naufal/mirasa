@@ -6,8 +6,21 @@ use App\Models\Barang;
 use App\Models\Perusahaan;
 use App\Models\JenisBarang;
 use Illuminate\Http\Request;
+use App\Imports\BarangImport;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Validators\ValidationException;
 
 class BarangController extends Controller
 {
@@ -96,6 +109,7 @@ class BarangController extends Controller
             'kode'              => "required|string|unique:barang,kode,NULL,id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
             'satuan'            => 'required|string',
             'nilai_konversi'    => 'nullable',
+            'jenis'             => 'nullable',
             'isi_bungkus'       => 'nullable',
             'cropped_image'     => 'nullable|string',
         ], [
@@ -108,7 +122,7 @@ class BarangController extends Controller
         $kodeFinal = strtoupper($jenis->kode . '-' . $request->kode);
 
         // 2. Persiapkan Data
-        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan', 'nilai_konversi', 'isi_bungkus']);
+        $data = $request->only(['id_perusahaan', 'id_jenis', 'nama_barang', 'satuan', 'nilai_konversi', 'isi_bungkus', 'jenis']);
         $data['kode'] = $kodeFinal;
         $data['satuan'] = strtoupper($request->satuan);
 
@@ -165,6 +179,7 @@ class BarangController extends Controller
             'nama_barang'       => "required|string|unique:barang,nama_barang,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
             'kode_gabungan'     => "required|string|unique:barang,kode,{$id},id,id_perusahaan,{$idPerusahaan},deleted_at,NULL",
             'nilai_konversi'    => 'nullable',
+            'jenis'             => 'nullable',
             'isi_bungkus'       => 'nullable',
             'satuan'            => 'required|string',
             'cropped_image'     => 'nullable|string',
@@ -179,7 +194,8 @@ class BarangController extends Controller
             'nama_barang'       => $request->nama_barang,
             'nilai_konversi'    => $request->nilai_konversi,
             'isi_bungkus'       => $request->isi_bungkus,
-            'kode'              => $kodeFinal, // Simpan hasil gabungan
+            'jenis'             => $request->jenis ?? null,
+            'kode'              => $kodeFinal,
             'satuan'            => strtoupper($request->satuan),
         ];
 
@@ -316,5 +332,127 @@ class BarangController extends Controller
         if ($destImage !== $srcImage) imagedestroy($destImage);
 
         return $fileName;
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new class implements WithHeadings, WithEvents, WithStyles, WithTitle {
+
+            public function title(): string
+            {
+                return 'Template Import Barang';
+            }
+
+            public function headings(): array
+            {
+                return [
+                    'nama_barang',
+                    'kode_barang',
+                    'satuan',
+                    'kategori_sistem',
+                    'sub_kategori_bb',
+                    'nilai_konversi',
+                    'isi_bungkus'
+                ];
+            }
+
+            public function styles(Worksheet $sheet)
+            {
+                return [
+                    // Style untuk Header (Baris 1)
+                    1 => [
+                        'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                        'fill' => [
+                            'fillType' => Fill::FILL_SOLID,
+                            'startColor' => ['rgb' => '4F46E5'],
+                        ],
+                        'alignment' => ['horizontal' => 'center']
+                    ],
+                ];
+            }
+
+            public function registerEvents(): array
+            {
+                return [
+                    AfterSheet::class => function (AfterSheet $event) {
+                        $sheet = $event->sheet->getDelegate();
+                        $rowCount = 100;
+
+                        // 1. Setup Kolom Otomatis
+                        foreach (range('A', 'G') as $col) {
+                            $sheet->getColumnDimension($col)->setAutoSize(true);
+                        }
+
+                        // 2. Dropdown Kategori Sistem (D)
+                        $validationKategori = $sheet->getCell('D2')->getDataValidation();
+                        $validationKategori->setType(DataValidation::TYPE_LIST)
+                            ->setErrorStyle(DataValidation::STYLE_STOP)
+                            ->setAllowBlank(false)
+                            ->setShowDropDown(true)
+                            ->setShowInputMessage(true)
+                            ->setPromptTitle('Pilih Kategori')
+                            ->setPrompt('Pilih salah satu: FG, WIP, EC, BB, BP')
+                            ->setFormula1('"FG,WIP,EC,BB,BP"');
+
+                        // 3. Dropdown Sub Kategori BB (E)
+                        $validationBB = $sheet->getCell('E2')->getDataValidation();
+                        $validationBB->setType(DataValidation::TYPE_LIST)
+                            ->setShowInputMessage(true)
+                            ->setPromptTitle('Khusus BB')
+                            ->setPrompt('Isi Utama/Pendukung jika kategori adalah BB')
+                            ->setFormula1('"Utama,Pendukung"');
+
+                        // 4. Input Message untuk Konversi (F & G)
+                        $msgKonversi = $sheet->getCell('F2')->getDataValidation();
+                        $msgKonversi->setType(DataValidation::TYPE_WHOLE)
+                            ->setShowInputMessage(true)
+                            ->setPromptTitle('Info Konversi')
+                            ->setPrompt('Wajib isi angka jika kategori FG/WIP/EC. Selain itu biarkan kosong.');
+
+                        // Terapkan ke baris selanjutnya
+                        for ($i = 2; $i <= $rowCount; $i++) {
+                            $sheet->getCell("D$i")->setDataValidation(clone $validationKategori);
+                            $sheet->getCell("E$i")->setDataValidation(clone $validationBB);
+                            $sheet->getCell("F$i")->setDataValidation(clone $msgKonversi);
+                            $sheet->getCell("G$i")->setDataValidation(clone $msgKonversi);
+
+                            // Beri border tipis untuk area input agar user tahu batasnya
+                            $sheet->getStyle("A$i:G$i")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                        }
+                    },
+                ];
+            }
+        }, 'template_barang_v2.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|mimes:xlsx,xls']);
+
+        try {
+            $import = new BarangImport;
+            Excel::import($import, $request->file('file'));
+
+            $berhasil = $import->getRowCount();
+            $gagal = $import->failures()->count();
+
+            if ($gagal > 0) {
+                // Susun detail error baris demi baris
+                $details = collect($import->failures())->map(function ($failure) {
+                    return "<li class='mb-1'><b>Baris " . $failure->row() . ":</b> " . implode(", ", $failure->errors()) . "</li>";
+                })->implode('');
+
+                return back()->with('error_import', [
+                    'title' => "Hasil Import: $berhasil Berhasil, $gagal Gagal",
+                    'success_count' => $berhasil,
+                    'fail_count' => $gagal,
+                    'html' => "<ul class='text-left text-xs list-none p-0'>" . $details . "</ul>"
+                ]);
+            }
+
+            return back()->with('success', "Berhasil mengimpor $berhasil data barang.");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
     }
 }

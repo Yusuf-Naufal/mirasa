@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Supplier extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, LogsActivity;
     
     protected $table = 'supplier';
 
@@ -17,6 +19,14 @@ class Supplier extends Model
         'nama_supplier',
         'kode',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->useLogName('supplier');
+    }
 
     public function Perusahaan()
     {
@@ -28,8 +38,8 @@ class Supplier extends Model
         return $this->hasMany(DetailInventory::class, 'id_supplier');
     }
 
-    public function PemakaianGas()
+    public function Pemakaian()
     {
-        return $this->hasMany(PemakaianGas::class, 'id_supplier');
+        return $this->hasMany(Pemakaian::class, 'id_supplier');
     }
 }

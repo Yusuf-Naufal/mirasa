@@ -103,7 +103,7 @@
                     {{-- Card 4: Daftar Hasil Produksi --}}
                     <div x-data="{
                         open: false,
-                        detail: { id: '', kupas: 0, a: 0, s: 0, j: 0, nama: '' },
+                        detail: { id: '', kupas: 0, a: 0, s: 0, j: 0, nama: '', bb_masuk: 0 },
                         initEdit(item, namaBarang) {
                             this.detail = {
                                 id: item.id,
@@ -111,7 +111,8 @@
                                 a: item.total_a,
                                 s: item.total_s,
                                 j: item.total_j,
-                                nama: namaBarang
+                                nama: namaBarang,
+                                bb_masuk: item.total_bb_diterima // Ambil data dari detail_produksi
                             };
                             this.open = true;
                         }
@@ -127,8 +128,8 @@
                             </p>
 
                             <div class="space-y-6">
-                                {{-- Menggunakan @forelse untuk menangani data kosong --}}
-                                @forelse ($produksi->detailProduksi as $detail)
+                                {{-- Menggunakan @forelse dengan filter jenis barang 'Utama' --}}
+                                @forelse ($produksi->detailProduksi->filter(fn($d) => optional($d->barang)->jenis === 'Utama') as $detail)
                                     <div class="relative p-4 rounded-2xl bg-gray-50/50 border border-gray-100">
                                         <div class="flex justify-between items-start mb-3">
                                             <div>
@@ -188,7 +189,7 @@
                                         <h5 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Data
                                             Kosong</h5>
                                         <p class="text-[10px] text-gray-400 font-medium text-center">Belum ada rincian
-                                            hasil produksi yang dicatat untuk periode ini.</p>
+                                            hasil produksi Utama yang dicatat.</p>
                                     </div>
                                 @endforelse
                             </div>
@@ -217,6 +218,19 @@
                                             Output</h3>
                                         <p x-text="detail.nama" class="text-xs font-bold text-purple-500 uppercase">
                                         </p>
+                                    </div>
+
+                                    {{-- Letakkan di dalam Modal Content, sebelum elemen <form> --}}
+                                    <div class="mb-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                        <div class="flex justify-between items-center">
+                                            <span
+                                                class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Total
+                                                BB Masuk</span>
+                                            <span class="text-lg font-black text-emerald-700 italic">
+                                                <span x-text="Number(detail.bb_masuk).toLocaleString('id-ID')"></span>
+                                                <span class="text-[10px] ml-1" x-text="detail.satuan"></span>
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <form :action="'/produksi/detail/' + detail.id" method="POST" class="space-y-4">
