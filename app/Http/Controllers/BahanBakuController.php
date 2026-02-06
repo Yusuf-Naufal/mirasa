@@ -238,9 +238,14 @@ class BahanBakuController extends Controller
         ]);
 
         try {
-            DB::beginTransaction();
-
             $bahanBaku = DetailInventory::findOrFail($id);
+
+            // --- PROTEKSI UTAMA ---
+            if ($bahanBaku->BarangKeluar()->exists()) {
+                return redirect()->back()->with('error', 'Gagal! Data tidak dapat diubah karena stok dari batch ini sudah ada yang keluar/terpakai.');
+            }
+
+            DB::beginTransaction();
 
             // 0. Ambil informasi barang BARU untuk pengecekan jenis
             $barangBaru = Barang::with('JenisBarang')->findOrFail($request->id_barang);

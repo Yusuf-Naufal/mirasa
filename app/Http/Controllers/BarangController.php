@@ -427,17 +427,26 @@ class BarangController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:xlsx,xls']);
+        // 1. Validasi awal
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:10240', // Maks 10MB
+        ]);
 
         try {
+            // 2. Pastikan file benar-benar ada dan tidak rusak saat upload
+            if (!$request->hasFile('file') || !$request->file('file')->isValid()) {
+                return back()->with('error', 'File tidak ditemukan atau rusak. Silakan coba unggah ulang.');
+            }
+
             $import = new BarangImport;
-            Excel::import($import, $request->file('file'));
+
+            // 3. Gunakan path asli secara eksplisit
+            Excel::import($import, $request->file('file')->getRealPath());
 
             $berhasil = $import->getRowCount();
             $gagal = $import->failures()->count();
 
             if ($gagal > 0) {
-                // Susun detail error baris demi baris
                 $details = collect($import->failures())->map(function ($failure) {
                     return "<li class='mb-1'><b>Baris " . $failure->row() . ":</b> " . implode(", ", $failure->errors()) . "</li>";
                 })->implode('');
@@ -452,7 +461,8 @@ class BarangController extends Controller
 
             return back()->with('success', "Berhasil mengimpor $berhasil data barang.");
         } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+            // Menangkap error jika path kosong atau file tidak terbaca
+            return back()->with('error', 'Gagal memproses file: ' . $e->getMessage());
         }
     }
 }

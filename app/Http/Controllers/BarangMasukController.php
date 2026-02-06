@@ -359,12 +359,17 @@ class BarangMasukController extends Controller
             'total_harga'        => 'nullable|numeric|min:0',
             'nomor_batch'        => 'nullable|string',
             'tempat_penyimpanan' => 'nullable|string|max:255',
-        ]);
-
-        DB::beginTransaction();
+        ]);        
 
         try {
             $detail = DetailInventory::findOrFail($id);
+
+            // --- PROTEKSI UTAMA ---
+            if ($detail->BarangKeluar()->exists()) {
+                return redirect()->back()->with('error', 'Gagal! Data tidak dapat diubah karena stok dari batch ini sudah ada yang keluar/terpakai.');
+            }
+
+            DB::beginTransaction();
 
             // 1. Simpan State Lama
             $idProduksiLama = $detail->id_produksi;

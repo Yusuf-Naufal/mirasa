@@ -156,7 +156,8 @@
                     <div
                         class="relative bg-slate-50 aspect-square rounded-[2.5rem] flex items-center justify-center overflow-hidden">
                         <img src="{{ asset('assets/foto/bahtera-bg.png') }}" alt="Produk Kripik"
-                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" loading="lazy">
+                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                            loading="lazy">
 
                         <div class="absolute inset-0 bg-gradient-to-tr from-black/5 to-transparent pointer-events-none">
                         </div>
@@ -229,7 +230,8 @@
                                     @if ($product->foto)
                                         <img src="{{ asset('storage/' . $product->foto) }}"
                                             alt="{{ $product->nama_barang }}"
-                                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700" loading="lazy">
+                                            class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                                            loading="lazy">
                                     @else
                                         <div
                                             class="absolute inset-0 flex items-center justify-center text-slate-300 font-bold uppercase tracking-widest text-center p-4">
@@ -354,11 +356,12 @@
             </div>
             <div
                 class="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6 text-center">
-                <p class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">© {{ date('Y') }} CV BAHTERA MANDIRI
+                <p class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">© {{ date('Y') }} CV
+                    BAHTERA MANDIRI
                     BERSAMA. Hak Cipta Dilindungi.</p>
                 <div class="flex items-center gap-3">
                     <span class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Anggota Dari</span>
-                    <a href="http://mirasa.test" target="_blank"
+                    <a href="http://mirasa.nopaldev.my.id" target="_blank"
                         class="px-3 py-1 bg-white/5 rounded border border-white/10 text-xs font-black text-white/50 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all duration-300 tracking-wider">
                         MIRASA GROUP
                     </a>

@@ -2,7 +2,7 @@
     <div class="py-2">
 
         <form action="{{ route('supplier.store') }}" method="POST"
-            class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
+            class="form-prevent-multiple-submits bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
             @csrf
 
             <div class="p-6 md:p-8 space-y-8">
@@ -36,7 +36,8 @@
                                     class="w-full rounded-xl border-gray-300 py-2.5 px-4 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border bg-white cursor-pointer">
                                     <option value="" disabled selected>-- Pilih Perusahaan --</option>
                                     @foreach ($perusahaan as $p)
-                                        <option value="{{ $p->id }}">{{ $p->nama_perusahaan }} ({{ $p->kota }})</option>
+                                        <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}
+                                            ({{ $p->kota }})</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -45,8 +46,8 @@
                                 <label for="id_perusahaan" class="block text-sm font-semibold text-gray-700">Perusahaan
                                     <span class="text-red-500">*</span></label>
                                 <input type="text"
-                                    class="w-full rounded-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border" disabled
-                                    value="{{ auth()->user()->perusahaan->nama_perusahaan }}">
+                                    class="w-full rounded-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border"
+                                    disabled value="{{ auth()->user()->perusahaan->nama_perusahaan }}">
                                 <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
                             </div>
                         @endif
@@ -85,13 +86,21 @@
             <div class="bg-gray-50 px-6 py-4 flex flex-col sm:flex-row justify-between gap-4 border-t border-gray-100">
                 <p class="text-xs text-gray-500 italic">* Wajib diisi</p>
                 <div class="flex items-center gap-3 w-full sm:w-auto">
-                    <a href="{{ route('perusahaan.index') }}"
+                    <a href="{{ route('supplier.index') }}"
                         class="flex-1 sm:flex-none text-center border border-gray-200 px-6 py-2.5 text-sm font-semibold text-gray-600 rounded-xl hover:text-gray-800 transition">
                         Batal
                     </a>
                     <button type="submit"
-                        class="flex-1 sm:flex-none inline-flex items-center justify-center px-8 py-2.5 text-sm font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-all active:scale-95 shadow-sm">
-                        Simpan
+                        class="btn-submit flex-1 sm:flex-none inline-flex items-center justify-center px-8 py-2.5 text-sm font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-all active:scale-95 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                        <span class="btn-text">Simpan</span>
+                        <svg class="btn-spinner hidden animate-spin ml-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
                     </button>
                 </div>
             </div>

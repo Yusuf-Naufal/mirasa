@@ -108,9 +108,9 @@
                         </div>
 
                         {{-- Action Buttons --}}
-                        <div class="p-4 bg-gray-50/50 border-t border-gray-100 grid grid-cols-2 gap-3">
+                        <div class="p-4 bg-gray-50/50 border-t border-gray-100 gap-3">
                             <a href="{{ route('produksi.show', $item->id) }}"
-                                class="flex items-center justify-center gap-2 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-all">
+                                class="w-full flex items-center justify-center gap-2 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100 transition-all">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -119,15 +119,6 @@
                                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 </svg>
                                 Detail
-                            </a>
-                            <a href="{{ route('produksi.edit', $item->id) }}"
-                                class="flex items-center justify-center gap-2 py-2.5 bg-yellow-600 rounded-xl text-xs font-bold text-white hover:bg-yellow-700 shadow-sm transition-all shadow-yellow-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                                Kelola
                             </a>
                         </div>
                     </div>

@@ -186,6 +186,27 @@
     });
 </script>
 
+{{-- HANDLE SUBMIT --}}
+<script>
+    document.querySelectorAll('.form-prevent-multiple-submits').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (this.checkValidity()) {
+                const btn = this.querySelector('.btn-submit');
+                const btnText = this.querySelector('.btn-text');
+                const btnSpinner = this.querySelector('.btn-spinner');
+
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-70', 'cursor-not-allowed');
+
+                    if (btnText) btnText.innerText = "Memproses...";
+                    if (btnSpinner) btnSpinner.classList.remove('hidden');
+                }
+            }
+        });
+    });
+</script>
+
 {{-- HANDLE ALL ALERT --}}
 @if (session('success'))
     <script>
