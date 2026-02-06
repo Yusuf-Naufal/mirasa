@@ -210,14 +210,16 @@ class BarangKeluarController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validasi Input - Memperbaiki 'null' menjadi 'required'
+        // 1. Validasi Input
         $request->validate([
-            'id_inventory' => 'required|exists:inventory,id',
+            'id_inventory'   => 'required|exists:inventory,id',
             'tanggal_keluar' => 'required|date',
-            'jenis_keluar' => 'required|in:PRODUKSI,PENJUALAN,TRANSFER,BAHAN BAKU',
-            'jumlah_keluar' => 'required|numeric|min:0.001',
-            'keterangan' => 'nullable|string',
-
+            'jenis_keluar'   => 'required|in:PRODUKSI,PENJUALAN,TRANSFER,BAHAN BAKU',
+            'jumlah_keluar'  => 'required|numeric|min:0.001',
+            'id_costumer'    => 'required_if:jenis_keluar,PENJUALAN|nullable|exists:costumers,id',
+            'id_tujuan'      => 'required_if:jenis_keluar,TRANSFER|nullable|exists:perusahaan,id',
+            'id_proses'      => 'required_if:jenis_keluar,PRODUKSI|nullable|exists:proses,id',
+            'keterangan'     => 'nullable|string',
         ]);
 
         try {
@@ -228,24 +230,24 @@ class BarangKeluarController extends Controller
             $id_perusahaan_auth = auth()->user()->id_perusahaan;
             $jenis = $request->jenis_keluar;
 
-            // 2. Buat "Header" Transaksi (Model Produksi)
-            // Header ini digunakan untuk mengelompokkan pengeluaran di hari yang sama
+            // 2. Ambil Batch Detail Inventory menggunakan metode FIFO
+            $batches = DetailInventory::where('id_inventory', $inventory->id)
+                ->where('stok', '>', 0)
+                ->orderBy('tanggal_masuk', 'asc')
+                ->orderBy('created_at', 'asc')
+                ->lockForUpdate()
+                ->get();
+
+            // 3. Cek ketersediaan stok total dari seluruh batch
+            if ($batches->sum('stok') < $jumlahDibutuhkan) {
+                throw new \Exception('Stok total tidak mencukupi. Tersedia: ' . $batches->sum('stok'));
+            }
+
+            // 4. Header Transaksi (Produksi)
             $produksi = Produksi::firstOrCreate([
                 'id_perusahaan'    => $id_perusahaan_auth,
                 'tanggal_produksi' => $request->tanggal_keluar,
             ]);
-
-            // 3. Ambil Batch Detail Inventory menggunakan metode FIFO
-            $batches = DetailInventory::where('id_inventory', $inventory->id)
-                ->where('stok', '>', 0)
-                ->orderBy('tanggal_masuk', 'asc') 
-                ->orderBy('created_at', 'asc')   
-                ->get();
-
-            // 4. Cek ketersediaan stok total dari seluruh batch
-            if ($batches->sum('stok') < $jumlahDibutuhkan) {
-                return back()->withInput()->with('error', 'Stok total batch tidak mencukupi untuk permintaan ini.');
-            }
 
             $sisaKebutuhan = $jumlahDibutuhkan;
 
@@ -256,31 +258,34 @@ class BarangKeluarController extends Controller
                 $jumlahDiambil = min($batch->stok, $sisaKebutuhan);
 
                 // Simpan ke tabel barang_keluar
-                // Note: Model BarangKeluar::booted() akan memotong stok di DetailInventory secara otomatis
                 BarangKeluar::create([
                     'id_perusahaan'       => $id_perusahaan_auth,
                     'id_produksi'         => $produksi->id,
-                    'id_costumer'         => $request->id_costumer ?? null,
-                    'id_tujuan'           => $request->id_tujuan ?? null,
-                    'id_proses'           => $request->id_proses ?? null,
+                    'id_costumer'         => $request->id_costumer,
+                    'id_tujuan'           => $request->id_tujuan,
+                    'id_proses'           => $request->id_proses,
                     'id_detail_inventory' => $batch->id,
                     'tanggal_keluar'      => $request->tanggal_keluar,
                     'jenis_keluar'        => $jenis,
                     'jumlah_keluar'       => $jumlahDiambil,
                     'harga'               => $batch->harga,
                     'total_harga'         => $jumlahDiambil * $batch->harga,
-                    'no_faktur'           => $request->no_faktur ?? null,
-                    'no_jalan'           => $request->no_jalan ?? null,
+                    'no_faktur'           => $request->no_faktur,
+                    'no_jalan'            => $request->no_jalan,
+                    'keterangan'          => $request->keterangan,
                 ]);
 
                 $sisaKebutuhan -= $jumlahDiambil;
             }
 
             DB::commit();
+
+            // Sesuaikan parameter redirect agar tab yang aktif sesuai
             return redirect()->route('barang-keluar.index', ['tab' => $jenis])
                 ->with('success', "Transaksi $jenis berhasil dicatat menggunakan metode FIFO.");
         } catch (\Exception $e) {
             DB::rollBack();
+            // Pastikan error dikirim kembali ke session 'error'
             return back()->withInput()->with('error', 'Gagal memproses transaksi: ' . $e->getMessage());
         }
     }

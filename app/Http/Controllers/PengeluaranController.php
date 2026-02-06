@@ -82,7 +82,6 @@ class PengeluaranController extends Controller
         foreach ($kategoriList as $kat) {
             $pageName = 'page_' . strtolower(str_replace(' ', '_', $kat));
 
-            // Gunakan clone agar base filter tidak berubah saat iterasi berikutnya
             $items = (clone $queryAll)->where('kategori', $kat)
                 ->latest('tanggal_pengeluaran')
                 ->paginate(10, ['*'], $pageName)

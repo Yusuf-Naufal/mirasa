@@ -276,7 +276,7 @@ class InventoryController extends Controller
             'stok'               => 'nullable|numeric|min:0',
             'harga'              => 'nullable|numeric|min:0',
             'total_harga'        => 'nullable|numeric|min:0',
-            'diskon'      => 'nullable|numeric|min:0|max:100', // Validasi diskon persen
+            'diskon'             => 'nullable|numeric|min:0|max:100',
         ], [
             'id_barang.required' => 'Silahkan pilih barang terlebih dahulu.',
             'jumlah_diterima.required' => 'Jumlah barang masuk harus diisi.',
@@ -292,7 +292,7 @@ class InventoryController extends Controller
 
             // --- LOGIKA DISKON ---
             $hargaSatuan = (float) ($request->harga ?? 0);
-            $diskonPersen = (float) ($request->diskon_persen ?? 0);
+            $diskonPersen = (float) ($request->diskon ?? 0);
 
             // Hitung total harga jika tidak dikirim dari frontend (Back-end safety calculation)
             $subtotal = $jumlahMasuk * $hargaSatuan;
@@ -323,7 +323,7 @@ class InventoryController extends Controller
                 'jumlah_rusak'       => $jumlahRusak,
                 'stok'               => $stokBersih,
                 'harga'              => $hargaSatuan,
-                'diskon'      => $diskonPersen, // Pastikan kolom ini ada di database
+                'diskon'             => $diskonPersen,
                 'total_harga'        => $totalFinal,
                 'tempat_penyimpanan' => $request->tempat_penyimpanan,
                 'status'             => 'Tersedia',
@@ -371,15 +371,34 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function allRiwayat(string $id)
+    public function allRiwayat(Request $request, string $id)
     {
         // Mengambil data inventory beserta barangnya
         $inventory = Inventory::with('barang')->findOrFail($id);
 
-        // Mengambil details dengan filter: urutan terbaru (desc) dan paginasi
-        $details = $inventory->DetailInventory()
-            ->orderBy('tanggal_masuk', 'desc')
-            ->paginate(30);
+        // Inisialisasi query dari DetailInventory milik inventory ini
+        $query = $inventory->DetailInventory()->with('Supplier');
+
+        // Filter Pencarian (Supplier atau Nomor Batch)
+        if ($request->filled('search')) {
+            $search = strtolower($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(nomor_batch) LIKE ?', ["%{$search}%"])
+                    ->orWhereHas('Supplier', function ($sq) use ($search) {
+                        $sq->whereRaw('LOWER(nama_supplier) LIKE ?', ["%{$search}%"]);
+                    });
+            });
+        }
+
+        // Filter Rentang Tanggal Masuk
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_masuk', [$request->start_date, $request->end_date]);
+        }
+
+        // Urutan terbaru dan paginasi dengan mempertahankan query string
+        $details = $query->orderBy('tanggal_masuk', 'desc')
+            ->paginate(30)
+            ->withQueryString();
 
         return view('pages.gudang.riwayat', [
             'inventory' => $inventory,
@@ -408,7 +427,10 @@ class InventoryController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $barang = DetailInventory::findOrFail($id);
+        $barang->delete();
+
+        return redirect()->back()->with('success', 'Data Berhasil dihapus');
     }
 
     public function updateMinimum(Request $request, $id)
@@ -460,10 +482,15 @@ class InventoryController extends Controller
             'tempat_penyimpanan' => 'nullable|string|max:255',
         ]);
 
-        DB::beginTransaction();
-
         try {
             $detail = DetailInventory::with('Inventory.Barang.JenisBarang')->findOrFail($id);
+
+            // --- PROTEKSI UTAMA ---
+            if ($detail->BarangKeluar()->exists()) {
+                return redirect()->back()->with('error', 'Gagal! Data tidak dapat diubah karena stok dari batch ini sudah ada yang keluar/terpakai.');
+            }
+
+            DB::beginTransaction();
 
             // 1. Identifikasi Jenis Barang
             // Cek apakah kode jenis barang adalah 'BB' (Bahan Baku)
@@ -491,7 +518,7 @@ class InventoryController extends Controller
 
             if ($isBahanBaku) {
                 // Jika BB, hitung diskon
-                $diskonPersen = (float) ($request->diskon_persen ?? 0);
+                $diskonPersen = (float) ($request->diskon ?? 0);
                 $subtotal     = $diterima * $hargaSatuan;
                 $potongan     = $subtotal * ($diskonPersen / 100);
                 $totalHarga   = $request->total_harga ?? ($subtotal - $potongan);
@@ -541,7 +568,7 @@ class InventoryController extends Controller
     public function quickUpdate(Request $request)
     {
         // Menggunakan Model DetailInventory
-        $item = \App\Models\DetailInventory::findOrFail($request->id);
+        $item = DetailInventory::findOrFail($request->id);
 
         DB::beginTransaction();
         try {
@@ -553,24 +580,36 @@ class InventoryController extends Controller
                     $item->stok += (float) $request->qty;
                     $item->jumlah_diterima += (float) $request->qty;
 
-                    // 2. Kalkulasi harga setelah diskon (jika ada)
+                    // 2. Kalkulasi harga setelah diskon
                     $hargaSatuan = (float) $item->harga;
                     $diskonPersen = (float) ($item->diskon ?? 0);
 
                     // Rumus: (Total Qty * Harga Satuan) - Potongan Diskon
                     $subtotal = $item->jumlah_diterima * $hargaSatuan;
                     $potongan = $subtotal * ($diskonPersen / 100);
-
                     $item->total_harga = $subtotal - $potongan;
 
-                    $item->save();
+                    $item->save(); // Save DetailInventory
 
+                    // 3. CEK DAN UPDATE BARANG KELUAR
+                    // Hitung Harga Netto baru setelah diskon & penambahan qty
+                    $hargaNettoBaru = $item->jumlah_diterima > 0
+                        ? ($item->total_harga / $item->jumlah_diterima)
+                        : $item->harga;
+
+                    $barangsKeluar = BarangKeluar::where('id_detail_inventory', $item->id)->get();
+
+                    foreach ($barangsKeluar as $keluar) {
+                        $keluar->harga = $hargaNettoBaru;
+                        $keluar->total_harga = $keluar->jumlah_keluar * $hargaNettoBaru;
+                        $keluar->save();
+                    }
 
                     if ($item->Produksi) {
                         $item->Produksi->syncTotals();
                     }
 
-                    $message = "Stok berhasil ditambahkan dan total biaya telah disesuaikan dengan diskon {$diskonPersen}%.";
+                    $message = "Stok dan seluruh riwayat barang keluar berhasil diperbarui dengan harga netto Rp " . number_format($hargaNettoBaru, 0, ',', '.');
                     break;
 
                 case 'reduce':

@@ -79,8 +79,8 @@
                                     <thead>
                                         <tr
                                             class="text-[9px] font-black text-emerald-600 uppercase tracking-widest border-b border-emerald-100">
-                                            <th class="py-2 text-left">Tujuan</th>
-                                            <th class="py-2 text-center">No Batch</th>
+                                            <th class="py-2 text-left">Keluar dari</th>
+                                            <th class="py-2 text-center">Supplier</th>
                                             <th class="py-2 text-right">Qty</th>
                                             <th class="py-2 text-right">Subtotal</th>
                                             <th class="py-2 text-right w-20">Aksi</th>
@@ -93,7 +93,7 @@
                                                     {{ $item->jenis_keluar === 'PENJUALAN' ? $item->Costumer->nama_costumer ?? 'Umum' : $item->Perusahaan->nama_perusahaan ?? 'Cabang' }}
                                                 </td>
                                                 <td class="py-3 text-center font-mono text-[10px] text-gray-400">
-                                                    {{ $item->DetailInventory->nomor_batch ?? 'Batch-' . $item->id_detail_inventory }}
+                                                    {{ $item->DetailInventory->Supplier->nama_supplier ?? 'Lainnya' }}
                                                 </td>
                                                 <td class="py-3 text-right text-xs font-bold text-gray-700">
                                                     {{ number_format($item->jumlah_keluar, 0) }}
