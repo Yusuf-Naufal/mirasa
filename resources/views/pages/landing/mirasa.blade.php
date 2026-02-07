@@ -1,211 +1,6 @@
-<!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
+<x-layout.landing.mirasa.app>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PT Mirasa Food Industry</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" type="image/x-icon" href="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap"
-        rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'brand-red': '#E30613',
-                        'brand-dark': '#0F172A',
-                    },
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif']
-                    },
-                }
-            }
-        }
-    </script>
-    <style>
-        .lang-en {
-            display: none;
-        }
-
-        .active-en .lang-en {
-            display: block;
-        }
-
-        .active-en .lang-id {
-            display: none;
-        }
-
-        .mobile-menu-open {
-            overflow: hidden;
-        }
-
-        .img-border {
-            border: 8px solid white;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            border-radius: 1.5rem;
-        }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .red-gradient {
-            background: linear-gradient(135deg, #E30613 0%, #9b040d 100%);
-        }
-    </style>
-</head>
-
-<body class="bg-white text-slate-900 transition-all duration-500">
-
-    <nav id="main-nav"
-        class="fixed w-full z-[100] transition-all duration-500 bg-white/70 backdrop-blur-xl border-b border-slate-100">
-        <div class="max-w-7xl mx-auto px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20 transition-all duration-500" id="nav-container">
-
-                <div class="flex items-center gap-4 group cursor-pointer">
-                    <div class="relative">
-                        <div
-                            class="absolute inset-0 bg-brand-red/20 blur-xl rounded-full scale-0 group-hover:scale-125 transition-transform duration-500">
-                        </div>
-                        <div
-                            class="relative bg-white p-2 rounded-2xl shadow-sm border border-slate-100 group-hover:border-brand-red/20 transition-all duration-500">
-                            <img src="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}"
-                                alt="Logo Mirasa"
-                                class="w-10 h-10 object-contain transform group-hover:rotate-12 transition-transform duration-500">
-                        </div>
-                    </div>
-                    <div class="flex flex-col">
-                        <span
-                            class="block font-black text-xl leading-none text-slate-900 tracking-tighter uppercase group-hover:text-brand-red transition-colors duration-300">
-                            Mirasa Food <span class="font-light text-slate-400">Industry</span>
-                        </span>
-                        <span
-                            class="text-[9px] font-black text-brand-red uppercase tracking-[0.4em] leading-none mt-1 opacity-70">
-                            <span class="lang-id">Industri Unggul</span>
-                            <span class="lang-en">Industrial Excellence</span>
-                        </span>
-                    </div>
-                </div>
-
-                <div class="hidden md:flex items-center gap-12">
-                    <div class="flex gap-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
-                        <a href="#history" class="relative hover:text-brand-red transition-all duration-300 group">
-                            <span class="lang-id">Sejarah</span><span class="lang-en">History</span>
-                            <span
-                                class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
-                        </a>
-                        <a href="#owner" class="relative hover:text-brand-red transition-all duration-300 group">
-                            <span class="lang-id">Pemilik</span><span class="lang-en">Owner</span>
-                            <span
-                                class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
-                        </a>
-                        <a href="#vision" class="relative hover:text-brand-red transition-all duration-300 group">
-                            <span class="lang-id">Visi</span><span class="lang-en">Vision</span>
-                            <span
-                                class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
-                        </a>
-                        <a href="#stats" class="relative hover:text-brand-red transition-all duration-300 group">
-                            <span class="lang-id">Produksi</span><span class="lang-en">Production</span>
-                            <span
-                                class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
-                        </a>
-                    </div>
-
-                    <div class="flex items-center gap-6 border-l border-slate-200 pl-8">
-                        <button onclick="toggleLang()"
-                            class="group flex items-center gap-2 text-slate-400 hover:text-brand-red transition-all duration-300">
-                            <span class="text-[10px] font-black tracking-widest" id="lang-label">EN</span>
-                            <div
-                                class="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-brand-red group-hover:bg-brand-red group-hover:text-white transition-all duration-500">
-                                <i class="fa-solid fa-globe text-[10px]"></i>
-                            </div>
-                        </button>
-
-                        <a href="#partners"
-                            class="bg-slate-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-red hover:shadow-[0_10px_20px_-5px_rgba(227,6,19,0.4)] transition-all duration-500">
-                            <span class="lang-id">Mitra</span><span class="lang-en">Partners</span>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" onclick="toggleMobileMenu()"
-                        class="relative w-12 h-12 flex items-center justify-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-900 hover:border-brand-red transition-all duration-300">
-                        <i class="fa-solid fa-bars-staggered text-xl" id="menu-icon-font"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div id="mobile-menu"
-            class="hidden fixed inset-x-0 top-[80px] bg-white/95 backdrop-blur-2xl border-b border-slate-200 px-8 py-10 space-y-8 shadow-2xl transition-all duration-500 origin-top transform scale-y-0 opacity-0 z-[90]">
-
-            <div class="grid grid-cols-1 gap-4">
-                <a href="#history" onclick="toggleMobileMenu()"
-                    class="group flex justify-between items-center py-4 border-b border-slate-50 transition-all">
-                    <span
-                        class="text-xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-brand-red transition-colors">
-                        <span class="lang-id">Sejarah</span><span class="lang-en">History</span>
-                    </span>
-                    <i
-                        class="fa-solid fa-arrow-right text-brand-red opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
-                </a>
-
-                <a href="#owner" onclick="toggleMobileMenu()"
-                    class="group flex justify-between items-center py-4 border-b border-slate-50 transition-all">
-                    <span
-                        class="text-xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-brand-red transition-colors">
-                        <span class="lang-id">Pemilik</span><span class="lang-en">Owner</span>
-                    </span>
-                    <i
-                        class="fa-solid fa-arrow-right text-brand-red opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
-                </a>
-
-                <a href="#vision" onclick="toggleMobileMenu()"
-                    class="group flex justify-between items-center py-4 border-b border-slate-50 transition-all">
-                    <span
-                        class="text-xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-brand-red transition-colors">
-                        <span class="lang-id">Visi</span><span class="lang-en">Vision</span>
-                    </span>
-                    <i
-                        class="fa-solid fa-arrow-right text-brand-red opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
-                </a>
-
-                <a href="#stats" onclick="toggleMobileMenu()"
-                    class="group flex justify-between items-center py-4 border-b border-slate-50 transition-all">
-                    <span
-                        class="text-xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-brand-red transition-colors">
-                        <span class="lang-id">Produksi</span><span class="lang-en">Production</span>
-                    </span>
-                    <i
-                        class="fa-solid fa-arrow-right text-brand-red opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
-                </a>
-
-                <a href="#partners" onclick="toggleMobileMenu()"
-                    class="group flex justify-between items-center py-4 transition-all">
-                    <span
-                        class="text-xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-brand-red transition-colors">
-                        <span class="lang-id">Mitra</span><span class="lang-en">Partners</span>
-                    </span>
-                    <i
-                        class="fa-solid fa-arrow-right text-brand-red opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
-                </a>
-            </div>
-
-            <div class="pt-6 border-t border-slate-100">
-                <button onclick="toggleLang()"
-                    class="w-full flex items-center justify-center gap-3 bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-slate-200 active:scale-95 transition-all">
-                    <i class="fa-solid fa-globe"></i>
-                    <span>Switch Language (ID/EN)</span>
-                </button>
-            </div>
-        </div>
-    </nav>
+    <x-layout.landing.mirasa.nav />
 
     <section
         class="relative min-h-[95vh] flex items-center pt-32 pb-16 md:pt-40 md:pb-24 px-6 overflow-hidden bg-[#FCFCFC]">
@@ -245,8 +40,7 @@
                         </span>
                     </h1>
 
-                    <p
-                        class="text-base md:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                    <p class="text-base md:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
                         <span class="lang-id">Membawa cita rasa Nusantara ke panggung internasional melalui inovasi
                             teknologi dan integritas mutu tanpa kompromi.</span>
                         <span class="lang-en">Bringing Nusantara's flavors to the international stage through
@@ -891,6 +685,96 @@
         </div>
     </section>
 
+    <section id="news" class="py-32 bg-[#FCFCFC] relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6 relative z-10">
+
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+                <div class="space-y-4">
+                    <div class="inline-flex items-center gap-3">
+                        <span class="w-12 h-[2px] bg-brand-red"></span>
+                        <h2 class="text-brand-red font-black tracking-[0.4em] uppercase text-[10px] italic">
+                            <span class="lang-id">Kabar Terkini</span>
+                            <span class="lang-en">Latest News</span>
+                        </h2>
+                    </div>
+                    <h3
+                        class="text-4xl md:text-5xl font-black font-display text-slate-900 leading-[1] tracking-tighter uppercase italic">
+                        <span class="lang-id">Wawasan & <br><span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Pembaruan
+                                Mirasa.</span></span>
+                        <span class="lang-en">Insights & <br><span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Mirasa
+                                Updates.</span></span>
+                    </h3>
+                </div>
+
+                <a href="{{ route('allBerita') }}"
+                    class="group inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-brand-red transition-all">
+                    <span class="lang-id">Lihat Semua Berita</span>
+                    <span class="lang-en">View All News</span>
+                    <div
+                        class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-brand-red group-hover:bg-brand-red transition-all">
+                        <i
+                            class="fa-solid fa-arrow-right text-[10px] group-hover:text-white transition-transform group-hover:translate-x-1"></i>
+                    </div>
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                @foreach ($berita as $item)
+                    <article
+                        class="group bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2">
+                        <div class="aspect-[16/10] overflow-hidden relative">
+                            <img src="{{ asset('storage/' . $item->gambar_utama) }}" alt="{{ $item->judul }}"
+                                class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+
+                            <div class="absolute top-6 left-6">
+                                <span
+                                    class="px-4 py-2 bg-white/90 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-widest text-brand-red shadow-sm">
+                                    {{ $item->kategori }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-8 space-y-4">
+                            <div
+                                class="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-regular fa-calendar text-brand-red"></i>
+                                    <span>{{ $item->tanggal_publish->format('d M, Y') }}</span>
+                                </div>
+                                <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                <span>{{ $item->penulis }}</span>
+                            </div>
+
+                            <h4
+                                class="text-xl font-black text-slate-900 leading-tight uppercase tracking-tighter italic group-hover:text-brand-red transition-colors line-clamp-2">
+                                {{ $item->judul }}
+                            </h4>
+
+                            <p class="text-slate-500 text-sm leading-relaxed line-clamp-3 italic font-medium">
+                                {{ $item->ringkasan }}
+                            </p>
+
+                            <div class="pt-4">
+                                <a href="{{ route('berita.show', $item->slug) }}"
+                                    class="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-brand-dark group/link">
+                                    <span class="lang-id">Baca Selengkapnya</span>
+                                    <span class="lang-en">Read More</span>
+                                    <i
+                                        class="fa-solid fa-chevron-right text-[8px] group-hover/link:translate-x-1 transition-transform"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        </div>
+        <div
+            class="absolute bottom-0 right-0 w-96 h-96 bg-brand-red/[0.02] rounded-full blur-3xl translate-y-1/2 translate-x-1/2">
+        </div>
+    </section>
+
     <footer class="bg-[#0A0F1A] text-white pt-24 pb-12 px-6 relative overflow-hidden">
         <div
             class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-red to-transparent opacity-50">
@@ -1016,47 +900,4 @@
         </div>
     </footer>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const currentYear = new Date().getFullYear();
-            const startYear = 1979;
-            const experience = currentYear - startYear;
-            const expElement = document.getElementById('experience-years');
-            if (expElement) expElement.innerText = experience + '+';
-        });
-
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobile-menu');
-            const menuIcon = document.getElementById('menu-icon-font');
-            const isHidden = menu.classList.contains('hidden');
-
-            if (isHidden) {
-                menu.classList.remove('hidden');
-
-                setTimeout(() => {
-                    menu.classList.remove('scale-y-0', 'opacity-0');
-                    menu.classList.add('scale-y-100', 'opacity-100');
-                }, 10);
-
-                menuIcon.classList.replace('fa-bars-staggered', 'fa-xmark');
-                document.body.style.overflow = 'hidden';
-            } else {
-                menu.classList.remove('scale-y-100', 'opacity-100');
-                menu.classList.add('scale-y-0', 'opacity-0');
-                menuIcon.classList.replace('fa-xmark', 'fa-bars-staggered');
-                setTimeout(() => {
-                    menu.classList.add('hidden');
-                }, 500);
-                document.body.style.overflow = 'auto';
-            }
-        }
-
-        function toggleLang() {
-            document.body.classList.toggle('active-en');
-            const label = document.getElementById('lang-label');
-            label.innerText = document.body.classList.contains('active-en') ? 'ID' : 'EN';
-        }
-    </script>
-</body>
-
-</html>
+</x-layout.landing.mirasa.app>

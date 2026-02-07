@@ -1,123 +1,6 @@
-<!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
+<x-layout.landing.bahtera.app>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bahtera Mandiri Bersama</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="icon" type="image/x-icon" href="{{ asset('assets/logo/logo-BMB-removebg-preview.png') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'bmb-blue': '#003399',
-                        'bmb-orange': '#FF6600',
-                    },
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
-    <style>
-        .hero-pattern {
-            background-color: #f8fafc;
-            background-image: radial-gradient(#FF6600 0.5px, transparent 0.5px), radial-gradient(#003399 0.5px, #f8fafc 0.5px);
-            background-size: 24px 24px;
-            background-position: 0 0, 12px 12px;
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        /* Mengatur pagination agar benar-benar bulat sempurna */
-        .product-swiper .swiper-pagination-bullet {
-            width: 12px !important;
-            height: 12px !important;
-            background: #cbd5e1 !important;
-            /* Warna Slate-300 */
-            opacity: 1 !important;
-            border-radius: 9999px !important;
-            /* Full Circle */
-            transition: all 0.3s ease;
-        }
-
-        /* Mengatur titik yang sedang aktif */
-        .product-swiper .swiper-pagination-bullet-active {
-            width: 30px !important;
-            /* Membuat efek pil/lonjong untuk yang aktif */
-            background: #f97316 !important;
-            /* Warna bmb-orange (Orange-500) */
-            border-radius: 10px !important;
-        }
-
-        /* Memberi jarak antara slider dan pagination */
-        .product-swiper {
-            padding-bottom: 50px !important;
-        }
-    </style>
-</head>
-
-<body class="bg-slate-50 text-slate-900 antialiased overflow-x-hidden">
-
-    <nav class="fixed w-full z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <div class="flex items-center gap-3">
-                    <div class="bg-white p-1.5 rounded-xl shadow-sm border border-slate-100">
-                        <img src="{{ asset('assets/logo/logo-BMB-removebg-preview.png') }}" alt="Logo Cap Payung"
-                            class="w-10 h-10 rounded-lg flex items-center justify-center">
-                    </div>
-                    <div>
-                        <span
-                            class="block font-extrabold text-xl leading-none text-bmb-blue tracking-tight">BAHTERA</span>
-                        <span class="text-[10px] font-bold text-bmb-orange uppercase tracking-[0.2em]">Mandiri
-                            Bersama</span>
-                    </div>
-                </div>
-
-                <div class="hidden md:flex items-center gap-10">
-                    <div class="flex gap-8 text-sm font-bold uppercase tracking-wide text-slate-600">
-                        <a href="#home" class="hover:text-bmb-orange transition-colors">Beranda</a>
-                        <a href="#about" class="hover:text-bmb-orange transition-colors">Visi</a>
-                        <a href="#products" class="hover:text-bmb-orange transition-colors">Varian Rasa</a>
-                        <a href="#contact" class="hover:text-bmb-orange transition-colors">Kontak</a>
-                    </div>
-                    <button
-                        class="bg-bmb-orange text-white px-7 py-3 rounded-full text-sm font-extrabold hover:bg-orange-600 transition shadow-lg shadow-orange-200 uppercase">
-                        E-Katalog
-                    </button>
-                </div>
-
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-slate-600 focus:outline-none">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16m-7 6h7"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 px-6 py-8 space-y-6 shadow-xl">
-            <a href="#home" class="block text-lg font-bold text-slate-800">Beranda</a>
-            <a href="#about" class="block text-lg font-bold text-slate-800">Tentang Kami</a>
-            <a href="#products" class="block text-lg font-bold text-slate-800">Varian Rasa</a>
-            <a href="#contact" class="block text-lg font-bold text-slate-800">Kontak</a>
-            <button class="w-full bg-bmb-blue text-white py-4 rounded-2xl font-bold">E-Katalog</button>
-        </div>
-    </nav>
+    <x-layout.landing.bahtera.nav />
 
     <section id="home" class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 hero-pattern overflow-hidden">
         <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
@@ -227,44 +110,65 @@
                             <div class="group cursor-pointer">
                                 <div
                                     class="aspect-[4/5] bg-slate-50 rounded-[2.5rem] mb-6 overflow-hidden relative border border-slate-100 group-hover:shadow-2xl transition-all duration-500">
+
+                                    @if ($product->is_unggulan)
+                                        <div class="absolute top-6 left-6 z-10">
+                                            <span
+                                                class="bg-bmb-orange text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-lg">
+                                                Top Pick
+                                            </span>
+                                        </div>
+                                    @endif
+
                                     @if ($product->foto)
                                         <img src="{{ asset('storage/' . $product->foto) }}"
-                                            alt="{{ $product->nama_barang }}"
+                                            alt="{{ $product->nama_produk }}"
                                             class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                                             loading="lazy">
                                     @else
                                         <div
                                             class="absolute inset-0 flex items-center justify-center text-slate-300 font-bold uppercase tracking-widest text-center p-4">
-                                            No Image<br>{{ $product->kode }}
+                                            No Image<br>{{ $product->nama_produk }}
                                         </div>
                                     @endif
 
                                     <div
-                                        class="absolute bottom-0 left-0 right-0 p-8 translate-y-full group-hover:translate-y-0 transition-transform duration-500 bg-gradient-to-t from-bmb-blue to-transparent text-white">
-                                        <button
-                                            class="w-full bg-white text-bmb-blue py-3 rounded-xl font-bold hover:bg-slate-100 transition-colors">
-                                            Lihat Detail
-                                        </button>
+                                        class="absolute inset-0 bg-gradient-to-t from-bmb-blue/90 via-bmb-blue/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-8">
+                                        <a href="{{ route('produk.show', $product->slug) }}"
+                                            class="w-full bg-white text-bmb-blue py-4 rounded-2xl font-black uppercase text-xs tracking-widest text-center hover:bg-bmb-orange hover:text-white transition-colors shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                                            Detail Produk
+                                        </a>
                                     </div>
                                 </div>
 
-                                <div class="text-center">
+                                <div class="text-center px-2">
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                                        {{ $product->kategori ?? 'Camilan' }}
+                                    </span>
+
                                     <h3
-                                        class="text-xl font-black text-slate-900 uppercase tracking-tight line-clamp-1">
-                                        {{ $product->nama_barang }}</h3>
-                                    <p class="text-bmb-orange font-bold uppercase text-[10px] tracking-widest mt-1">
-                                        {{ $product->JenisBarang->nama_jenis ?? 'Camilan' }}
-                                    </p>
+                                        class="text-xl font-black text-slate-900 uppercase tracking-tight line-clamp-1 mt-1">
+                                        {{ $product->nama_produk }}
+                                    </h3>
+
+                                    <div class="flex items-center justify-center gap-2 mt-2">
+                                        <div class="h-px w-4 bg-slate-200"></div>
+                                        <p class="text-bmb-blue font-bold uppercase text-[10px] tracking-widest">
+                                            Rasa: {{ $product->rasa ?? 'Original' }}
+                                        </p>
+                                        <div class="h-px w-4 bg-slate-200"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div class="text-center py-10 w-full">
-                            <p class="text-slate-400 italic">Belum ada produk tersedia.</p>
+                        <div class="w-full text-center py-20">
+                            <p class="text-slate-400 italic font-bold uppercase tracking-widest">
+                                Maaf, Produk belum tersedia.
+                            </p>
                         </div>
                     @endforelse
                 </div>
-
                 <div class="swiper-pagination"></div>
             </div>
         </div>
@@ -287,8 +191,7 @@
                                 <a href="https://www.instagram.com/bahtera.food"
                                     class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#E1306C] hover:border-[#E1306C] transition-all duration-300 group"
                                     title="Instagram">
-                                    <i
-                                        class="fa-brands fa-instagram text-lg text-slate-400 group-hover:text-white"></i>
+                                    <i class="fa-brands fa-instagram text-lg text-slate-400 group-hover:text-white"></i>
                                 </a>
                                 <a href="https://www.tiktok.com/@bahterafood"
                                     class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#000000] hover:border-slate-700 transition-all duration-300 group"
@@ -369,48 +272,4 @@
             </div>
         </div>
     </footer>
-
-    <script>
-        const btn = document.getElementById('mobile-menu-button');
-        const menu = document.getElementById('mobile-menu');
-
-        btn.addEventListener('click', () => {
-            menu.classList.toggle('hidden');
-        });
-
-        document.querySelectorAll('#mobile-menu a').forEach(link => {
-            link.addEventListener('click', () => {
-                menu.classList.add('hidden');
-            });
-        });
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-    <script>
-        new Swiper(".product-swiper", {
-            slidesPerView: 1,
-            spaceBetween: 20,
-            loop: true,
-            autoplay: {
-                delay: 3000,
-                disableOnInteraction: false,
-            },
-            pagination: {
-                el: ".swiper-pagination",
-                clickable: true,
-            },
-            breakpoints: {
-                640: {
-                    slidesPerView: 2,
-                    spaceBetween: 20
-                },
-                1024: {
-                    slidesPerView: 3,
-                    spaceBetween: 30
-                },
-            },
-        });
-    </script>
-</body>
-
-</html>
+</x-layout.landing.bahtera.app>

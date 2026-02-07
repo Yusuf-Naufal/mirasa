@@ -170,6 +170,8 @@ class PengeluaranController extends Controller
                 $path = $this->compressFile($request->file('bukti'));
             }
 
+            $is_hpp = ($request->is_hpp == '1' || $request->is_hpp == 'on') ? 'true' : 'false';
+
             // 2. Simpan Data ke Tabel Pengeluaran
             $pengeluaran = Pengeluaran::create([
                 'id_perusahaan'      => auth()->user()->id_perusahaan,
@@ -178,7 +180,7 @@ class PengeluaranController extends Controller
                 'kategori'           => $Kategori,
                 'sub_kategori'       => $subKategori,
                 'jumlah_pengeluaran' => $request->jumlah_pengeluaran,
-                'is_hpp'             => $request->is_hpp,
+                'is_hpp'             => $is_hpp,
                 'keterangan'         => $request->keterangan,
                 'bukti'              => $path,
             ]);
@@ -272,6 +274,8 @@ class PengeluaranController extends Controller
             Pemakaian::where('id_pengeluaran', $pengeluaran->id)
                 ->update(['id_pengeluaran' => null]);
 
+            $is_hpp = ($request->is_hpp == '1' || $request->is_hpp == 'on') ? 'true' : 'false';
+
             // 3. Update Data Utama
             $pengeluaran->update([
                 'tanggal_pengeluaran' => $request->tanggal_pengeluaran,
@@ -279,7 +283,7 @@ class PengeluaranController extends Controller
                 'kategori'           => $Kategori,
                 'sub_kategori'       => $subKategori,
                 'jumlah_pengeluaran' => $request->jumlah_pengeluaran,
-                'is_hpp'             => $request->is_hpp,
+                'is_hpp'             => $is_hpp,
                 'keterangan'         => $request->keterangan,
                 'bukti'              => $path,
             ]);

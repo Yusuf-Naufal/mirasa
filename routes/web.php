@@ -25,6 +25,8 @@ use App\Http\Controllers\ManagerDashboardController;
 use App\Http\Controllers\KategoriPemakaianController;
 use App\Http\Controllers\SuperAdminDashboardController;
 use App\Http\Controllers\AdminGudangDashboardController;
+use App\Http\Controllers\BeritaController;
+use App\Http\Controllers\ProdukController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -39,6 +41,10 @@ Route::get('/sj-biasa', function () {
 });
 
 Route::get('/', [LandingController::class, 'index']);
+Route::get('/katalog', [LandingController::class, 'katalog'])->name('katalog');
+Route::get('/news', [LandingController::class, 'allBerita'])->name('allBerita');
+Route::get('/product/{slug}', [LandingController::class, 'showProduk'])->name('produk.show');
+Route::get('/news/{slug}', [LandingController::class, 'showBerita'])->name('berita.show');
 
 Route::get('/beranda', function () {
     return view('pages.beranda');
@@ -143,6 +149,12 @@ Route::get('barang-keluar/create-bahan-baku', [BarangKeluarController::class, 'c
 Route::get('barang-keluar/create-penjualan', [BarangKeluarController::class, 'createPenjualan'])->name('barang-keluar.create-penjualan');
 Route::get('/barang-keluar/print-group', [BarangKeluarController::class, 'printGroup'])->name('barang-keluar.print-group');
 Route::resource('barang-keluar', BarangKeluarController::class)->except(['create']);
+
+// CRUD PRODUK
+Route::resource('produk', ProdukController::class);
+
+// CRUD BERITA
+Route::resource('berita', BeritaController::class);
 
 // LAPORAN
 Route::get('laporan-produksi', [LaporanController::class, 'laporanProduksi'])->name('laporan-produksi');
