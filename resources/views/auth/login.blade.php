@@ -3,8 +3,10 @@
         <!-- Login Card -->
         <div class="bg-white rounded-2xl shadow-xl p-6 space-y-4 w-full max-w-xs md:max-w-md mx-auto">
 
-            <img src="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}" alt="Logo"
-                class="mx-auto h-20 object-contain mb-2">
+            <img src="{{ str_contains(request()->getHost(), 'bahtera')
+                ? asset('assets/logo/logo-BMB-removebg-preview.png')
+                : asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}"
+                alt="Logo" class="mx-auto h-20 object-contain mb-2">
 
             <!-- Login Form -->
             <form action="{{ route('login') }}" method="POST" class="space-y-4">
@@ -129,10 +131,21 @@
             @endif
 
             <!-- Footer -->
+            @php
+                $host = request()->getHost();
+
+                // Tentukan Nama PT berdasarkan domain
+                if (str_contains($host, 'bahtera')) {
+                    $namaPT = 'CV Bahtera Mandiri Bersama';
+                } else {
+                    $namaPT = 'PT Mirasa Food Industry';
+                }
+            @endphp
+
             <div class="text-center text-sm text-gray-500 border-t pt-6">
                 <p>&copy; {{ now()->year }}
-                    PT Mirasa Food Industry
-                    . Semua hak dilindungi.
+                    {{ $namaPT }}.
+                    Semua hak dilindungi.
                 </p>
             </div>
         </div>

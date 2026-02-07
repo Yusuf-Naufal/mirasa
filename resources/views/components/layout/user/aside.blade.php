@@ -1,8 +1,36 @@
+<style>
+    /* Custom Scrollbar untuk Sidebar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 5px;
+        /* Sangat tipis */
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        /* Warna abu-abu terang (gray-200) */
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #d1d5db;
+        /* Warna gray-300 saat hover */
+    }
+
+    /* Sembunyikan scrollbar jika tidak sedang di-hover (opsional) */
+    .scrollbar-minimal {
+        scrollbar-width: thin;
+        scrollbar-color: #e5e7eb transparent;
+    }
+</style>
 <aside id="logo-sidebar"
     class="fixed top-0 left-0 z-40 h-screen pt-20 transition-all duration-300 ease-in-out bg-white border-r border-gray-200 overflow-hidden group shadow-sm -translate-x-full w-64 sm:translate-x-0 sm:w-20 sm:hover:w-64"
     aria-label="Sidebar">
 
-    <div class="h-full px-4 pb-4 overflow-y-auto overflow-x-hidden bg-white scrollbar-hide">
+    <div class="h-full px-4 pb-4 overflow-y-auto overflow-x-hidden bg-white custom-scrollbar">
         <ul class="space-y-2 font-medium">
 
             @if (auth()->user()->hasRole('Super Admin') ||
@@ -230,6 +258,36 @@
             </li>
 
             @if (auth()->user()->hasRole('Super Admin'))
+                <li>
+                    <a href="{{ route('produk.index') }}"
+                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 1024 1024">
+                                <path fill="currentColor" fill-rule="evenodd"
+                                    d="M160 144h304c8.837 0 16 7.163 16 16v304c0 8.837-7.163 16-16 16H160c-8.837 0-16-7.163-16-16V160c0-8.837 7.163-16 16-16m564.314-25.333l181.019 181.02c6.248 6.248 6.248 16.378 0 22.627l-181.02 181.019c-6.248 6.248-16.378 6.248-22.627 0l-181.019-181.02c-6.248-6.248-6.248-16.378 0-22.627l181.02-181.019c6.248-6.248 16.378-6.248 22.627 0M160 544h304c8.837 0 16 7.163 16 16v304c0 8.837-7.163 16-16 16H160c-8.837 0-16-7.163-16-16V560c0-8.837 7.163-16 16-16m400 0h304c8.837 0 16 7.163 16 16v304c0 8.837-7.163 16-16 16H560c-8.837 0-16-7.163-16-16V560c0-8.837 7.163-16 16-16" />
+                            </svg>
+                        </div>
+                        <span
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Produk</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('berita.index') }}"
+                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 2048 2048">
+                                <path fill="currentColor"
+                                    d="M2048 512v896q0 53-20 99t-55 81t-82 55t-99 21H249q-51 0-96-20t-79-53t-54-79t-20-97V256h1792v256zm-128 128h-128v704q0 26-19 45t-45 19t-45-19t-19-45V384H128v1031q0 25 9 47t26 38t39 26t47 10h1543q27 0 50-10t40-27t28-41t10-50zm-384 0H256V512h1280zm0 768h-512v-128h512zm0-256h-512v-128h512zm0-256h-512V768h512zm-640 512H256V765h640zm-512-128h384V893H384z" />
+                            </svg>
+                        </div>
+                        <span
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Berita</span>
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('logs.index') }}"
                         class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
