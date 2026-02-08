@@ -109,22 +109,43 @@
 
                             <div x-show="open" x-transition
                                 class="absolute bottom-full mb-4 left-0 w-full bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.2)] border border-slate-100 overflow-hidden z-50 p-2 space-y-1">
-                                <a href="https://wa.me/6285120666420?text=Halo%20Bahtera,%20saya%20tertarik%20dengan%20produk%20{{ $product->nama_produk }}"
-                                    target="_blank"
+                                <a href="https://www.tokopedia.com/bahterafood" target="_blank"
                                     class="flex items-center gap-4 p-4 rounded-xl hover:bg-green-50 transition-colors">
                                     <div
                                         class="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center text-xl">
-                                        <i class="fa-brands fa-whatsapp"></i></div>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                            viewBox="0 0 48 48">
+                                            <path fill="none" stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M27.043 12.942c-3.43-2.897-16.85-2.247-16.85-2.247l-.473 32.65s17.855.134 23.353 0s9.341-4.508 9.4-7.878s0-24.18 0-24.18c-6.858-.829-11.942-.178-15.43 1.655"
+                                                stroke-width="1" />
+                                            <circle cx="19.531" cy="24.172" r="6.976" fill="none"
+                                                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                stroke-width="1" />
+                                            <path fill="none" stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M32.043 29.33a6.272 6.272 0 1 0-2.3-1.786m-19.55-16.849l-4.494 3.252L5.5 39.369l4.22 3.977m23.975-32.251a7.796 7.796 0 0 0-15.318-.299"
+                                                stroke-width="1" />
+                                            <path fill="none" stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M34.396 19.662a2.36 2.36 0 0 1-3.878 2.59a4.194 4.194 0 1 0 3.878-2.59m-13.872.345a2.424 2.424 0 0 1-4.251 2.211a4.31 4.31 0 1 0 4.25-2.21m3.838 11.41c0-2.817 2.031-3.962 4.721-3.962c2.395 0 3.755 3.252 3.755 3.252a18.2 18.2 0 0 1-7.45 1.449a9.9 9.9 0 0 0 5.321 2.542s-.827.62-3.665.62c-2.306.001-2.682-2.453-2.682-3.902"
+                                                stroke-width="1" />
+                                            <path fill="none" stroke="currentColor" stroke-linecap="round"
+                                                stroke-linejoin="round" d="M30.317 31.569a10.4 10.4 0 0 1-.258 3.008"
+                                                stroke-width="1" />
+                                        </svg>
+                                    </div>
                                     <div class="text-left"><span
-                                            class="block font-black text-slate-800 uppercase text-xs tracking-wider">WhatsApp</span><span
-                                            class="text-[9px] text-slate-400 font-bold uppercase">Respon Cepat</span>
+                                            class="block font-black text-slate-800 uppercase text-xs tracking-wider">Tokopedia</span><span
+                                            class="text-[9px] text-slate-400 font-bold uppercase">Official Store</span>
                                     </div>
                                 </a>
                                 <a href="https://shopee.co.id/bahtera.food" target="_blank"
                                     class="flex items-center gap-4 p-4 rounded-xl hover:bg-orange-50 transition-colors">
                                     <div
                                         class="w-12 h-12 bg-orange-100 text-[#EE4D2D] rounded-xl flex items-center justify-center text-xl">
-                                        <i class="fa-solid fa-bag-shopping"></i></div>
+                                        <i class="fa-solid fa-bag-shopping"></i>
+                                    </div>
                                     <div class="text-left"><span
                                             class="block font-black text-slate-800 uppercase text-xs tracking-wider">Shopee</span><span
                                             class="text-[9px] text-slate-400 font-bold uppercase">Official Store</span>

@@ -5,7 +5,9 @@ use App\Http\Controllers\GasController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BarangController;
+use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\GrafikController;
+use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\ProsesController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LaporanController;
@@ -15,6 +17,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\BahanBakuController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PemakaianController;
+use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\PerusahaanController;
 use App\Http\Controllers\BarangMasukController;
 use App\Http\Controllers\JenisBarangController;
@@ -25,8 +28,6 @@ use App\Http\Controllers\ManagerDashboardController;
 use App\Http\Controllers\KategoriPemakaianController;
 use App\Http\Controllers\SuperAdminDashboardController;
 use App\Http\Controllers\AdminGudangDashboardController;
-use App\Http\Controllers\BeritaController;
-use App\Http\Controllers\ProdukController;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -45,6 +46,9 @@ Route::get('/katalog', [LandingController::class, 'katalog'])->name('katalog');
 Route::get('/news', [LandingController::class, 'allBerita'])->name('allBerita');
 Route::get('/product/{slug}', [LandingController::class, 'showProduk'])->name('produk.show');
 Route::get('/news/{slug}', [LandingController::class, 'showBerita'])->name('berita.show');
+
+Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring');
+Route::get('/api/monitoring-data', [MonitoringController::class, 'data']);
 
 Route::get('/beranda', function () {
     return view('pages.beranda');
