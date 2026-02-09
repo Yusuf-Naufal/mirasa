@@ -3,7 +3,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* Animasi Peringatan Merah */
+        /* Kunci layar agar tidak bisa scroll */
+        body,
+        html {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Animasi tetap dipertahankan namun lebih halus */
         @keyframes pulse-red {
 
             0%,
@@ -12,68 +19,35 @@
             }
 
             50% {
-                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+                box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
             }
         }
 
         .low-stock-animate {
             animation: pulse-red 2s infinite;
-            border: 2px solid #fee2e2;
+            border: 1px solid #fee2e2;
         }
 
-        /* Animasi Angka Melayang (+ / -) */
-        @keyframes floatUp {
-            0% {
-                transform: translateY(0);
-                opacity: 0;
-            }
-
-            20% {
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-        }
-
-        .anim-indicator {
-            position: absolute;
-            right: 1.5rem;
-            top: 40%;
-            font-weight: 900;
-            font-size: 1.8rem;
-            pointer-events: none;
-            z-index: 20;
-        }
-
-        .animate-plus {
-            animation: floatUp 1.2s ease-out;
-            color: #10b981;
-        }
-
-        .animate-minus {
-            animation: floatUp 1.2s ease-out;
-            color: #ef4444;
-        }
-
-        /* Card Styling */
+        /* Glass Card lebih compact */
         .glass-card {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: all 0.2s;
         }
 
-        .glass-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        /* Custom Scrollbar untuk grid jika item terlalu banyak */
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
         }
 
-        .grid-header {
-            position: relative;
-            padding-left: 1rem;
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
         }
 
         .grid-header::before {
@@ -82,124 +56,124 @@
             left: 0;
             top: 0;
             bottom: 0;
-            width: 4px;
+            width: 3px;
             border-radius: 2px;
         }
     </style>
 
-    {{-- Wrapper agar tidak tertutup NAV --}}
+    {{-- Container Utama Setinggi Layar --}}
     <div class="md:px-10 py-6 flex flex-col">
         <div class="flex-1 pt-12">
 
-            {{-- Top Navigation & Filter Bar --}}
-            <div
-                class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 mb-8 rounded-2xl shadow-sm">
-                <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 class="text-2xl font-black text-slate-800 tracking-tight">Live Monitoring</h1>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="relative flex h-2 w-2">
-                                <span
-                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                            </span>
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                                Sync Terakhir: <span id="lastUpdated" class="text-slate-800">Menghubungkan...</span>
-                            </p>
-                        </div>
+            {{-- Header: Dibuat lebih tipis --}}
+            <header
+                class="flex items-center justify-between bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center gap-4">
+                    <h1 class="text-xl font-black text-slate-800 tracking-tight">Live Monitoring</h1>
+                    <div class="flex items-center gap-2 border-l pl-4 border-slate-200">
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                            Sync: <span id="lastUpdated" class="text-slate-800 italic">...</span>
+                        </p>
                     </div>
-
-                    @if (auth()->user()->hasRole('Super Admin'))
-                        <div class="flex items-center gap-3 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-                            <span class="pl-3 text-[10px] font-black text-slate-400 uppercase">Unit:</span>
-                            <select id="filterPerusahaan" onchange="fetchMonitoring()"
-                                class="bg-white px-4 py-2 rounded-xl shadow-sm border-none text-xs font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer">
-                                <option value="">Semua Perusahaan</option>
-                                @foreach ($perusahaans as $p)
-                                    <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <div class="max-w-7xl mx-auto px-6">
-                {{-- SECTION 1: CRITICAL ALERTS (Stok < Minimum) --}}
-                <div id="lowStockAlert" class="hidden mb-12">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="bg-red-500 p-2 rounded-lg shadow-lg shadow-red-200">
-                            <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Stok Kritis (Low Stock)
-                        </h3>
-                    </div>
-                    <div id="lowStockContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
                 </div>
 
-                {{-- SECTION 2: ANALYTICS CARDS --}}
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
-                    <div class="grid grid-cols-1 gap-4">
-                        <div class="glass-card p-6 rounded-[2.5rem] bg-white border-slate-200">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Pembelian
-                                Hari Ini</p>
-                            <h2 id="totalHargaMasuk" class="text-3xl font-black text-slate-800 tracking-tighter italic">
-                                Rp 0</h2>
-                            <div class="mt-4 h-1 w-12 bg-blue-500 rounded-full"></div>
+                @if (auth()->user()->hasRole('Super Admin'))
+                    <select id="filterPerusahaan" onchange="fetchMonitoring()"
+                        class="bg-slate-100 px-3 py-1.5 rounded-xl border-none text-[10px] font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                        <option value="">Semua Unit</option>
+                        @foreach ($perusahaans as $p)
+                            <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
+                        @endforeach
+                    </select>
+                @endif
+            </header>
+
+            {{-- Main Content: Flex Grow agar mengisi sisa layar --}}
+            <main class="flex-1 mt-2 flex flex-col gap-4 overflow-hidden">
+
+                {{-- Row 1: Stats & Chart --}}
+                <div class="grid grid-cols-12 gap-4 h-1/3 min-h-[180px]">
+                    {{-- Stats --}}
+                    <div class="col-span-3 flex flex-col gap-3">
+                        <div class="flex-1 glass-card p-4 rounded-3xl flex flex-col justify-center">
+                            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Pembelian
+                                Hari
+                                Ini</p>
+                            <h2 id="totalHargaMasuk" class="text-xl font-black text-blue-600 tracking-tighter italic">Rp
+                                0
+                            </h2>
                         </div>
-                        <div class="glass-card p-6 rounded-[2.5rem] bg-white border-slate-200">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Pengeluaran
-                                Hari Ini</p>
+                        <div class="flex-1 glass-card p-4 rounded-3xl flex flex-col justify-center">
+                            <p class="text-[8px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Pengeluaran
+                                Hari
+                                Ini</p>
                             <h2 id="totalHargaKeluar"
-                                class="text-3xl font-black text-slate-800 tracking-tighter italic">Rp 0</h2>
-                            <div class="mt-4 h-1 w-12 bg-emerald-500 rounded-full"></div>
+                                class="text-xl font-black text-emerald-600 tracking-tighter italic">Rp
+                                0</h2>
                         </div>
                     </div>
 
-                    <div class="lg:col-span-2 glass-card p-8 rounded-[2.5rem] bg-white border-slate-200">
-                        <div class="flex items-center justify-between mb-6">
-                            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
-                                Aktivitas 7 Hari Terakhir</h3>
-                        </div>
-                        <div class="h-44">
+                    {{-- Chart --}}
+                    <div class="col-span-6 glass-card p-4 rounded-3xl relative">
+                        <p
+                            class="text-[8px] font-black text-slate-400 uppercase tracking-widest absolute top-4 right-6">
+                            Aktivitas 7 Hari</p>
+                        <div class="h-full w-full pt-4">
                             <canvas id="trendChart"></canvas>
                         </div>
                     </div>
+
+                    {{-- Low Stock (Compact View) --}}
+                    <div id="lowStockAlert"
+                        class="col-span-3 glass-card p-4 rounded-3xl flex flex-col overflow-hidden bg-red-50/30 border-red-100">
+                        <h3
+                            class="text-[9px] font-black text-red-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <span class="flex h-1.5 w-1.5 rounded-full bg-red-500"></span> Stok Kritis
+                        </h3>
+                        <div id="lowStockContainer" class="flex-1 overflow-y-auto custom-scroll space-y-2 pr-1">
+                            {{-- Item Low Stock --}}
+                        </div>
+                    </div>
                 </div>
 
-                {{-- SECTION 3: INVENTORY CATEGORIES (Termasuk Stok 0) --}}
-                <div class="space-y-16">
-                    <section>
-                        <div class="grid-header border-blue-500 mb-8">
-                            <h3 class="text-base font-black text-slate-800 uppercase tracking-tighter">Hasil Produksi
-                            </h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">FG, WIP, & EC</p>
+                {{-- Row 2: Inventory Grids --}}
+                <div class="flex-1 grid grid-cols-3 gap-4 overflow-hidden min-h-0">
+                    {{-- Kolom Produksi --}}
+                    <div class="flex flex-col gap-2 overflow-hidden">
+                        <div class="grid-header border-blue-500 pl-3">
+                            <h3 class="text-[10px] font-black text-slate-800 uppercase italic">Produksi (FG/WIP)</h3>
                         </div>
-                        <div id="grid-produksi" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-                    </section>
+                        <div id="grid-produksi"
+                            class="flex-1 overflow-y-auto custom-scroll pr-1 grid grid-cols-1 gap-2 contents-start">
+                        </div>
+                    </div>
 
-                    <section>
-                        <div class="grid-header border-emerald-500 mb-8">
-                            <h3 class="text-base font-black text-slate-800 uppercase tracking-tighter">Bahan Baku</h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Material Utama
-                                (BB)</p>
+                    {{-- Kolom Bahan Baku --}}
+                    <div class="flex flex-col gap-2 overflow-hidden border-x border-slate-200 px-2">
+                        <div class="grid-header border-emerald-500 pl-3">
+                            <h3 class="text-[10px] font-black text-slate-800 uppercase italic">Bahan Baku (BB)</h3>
                         </div>
-                        <div id="grid-bahan_baku" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-                    </section>
+                        <div id="grid-bahan_baku"
+                            class="flex-1 overflow-y-auto custom-scroll pr-1 grid grid-cols-1 gap-2 contents-start">
+                        </div>
+                    </div>
 
-                    <section>
-                        <div class="grid-header border-orange-500 mb-8">
-                            <h3 class="text-base font-black text-slate-800 uppercase tracking-tighter">Barang Penolong
-                            </h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Supplies (BP)</p>
+                    {{-- Kolom Penolong --}}
+                    <div class="flex flex-col gap-2 overflow-hidden">
+                        <div class="grid-header border-orange-500 pl-3">
+                            <h3 class="text-[10px] font-black text-slate-800 uppercase italic">Penolong (BP)</h3>
                         </div>
-                        <div id="grid-penolong" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-                    </section>
+                        <div id="grid-penolong"
+                            class="flex-1 overflow-y-auto custom-scroll pr-1 grid grid-cols-1 gap-2 contents-start">
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </main>
         </div>
     </div>
 
@@ -232,7 +206,18 @@
 
         function renderChart(chartData) {
             const ctx = document.getElementById('trendChart').getContext('2d');
+
+            // Membuat Gradient untuk efek visual yang lebih dalam
+            const gradientIn = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientIn.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); // Blue
+            gradientIn.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+            const gradientOut = ctx.createLinearGradient(0, 0, 0, 300);
+            gradientOut.addColorStop(0, 'rgba(16, 185, 129, 0.5)'); // Emerald
+            gradientOut.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
             if (myChart) myChart.destroy();
+
             myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -241,35 +226,72 @@
                             label: 'Masuk',
                             data: chartData.masuk,
                             borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            backgroundColor: gradientIn,
                             fill: true,
-                            tension: 0.4,
-                            borderWidth: 3,
-                            pointRadius: 0
+                            tension: 0.45, // Sedikit lebih melengkung agar elegan
+                            borderWidth: 4,
+                            pointRadius: 2,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
                         },
                         {
                             label: 'Keluar',
                             data: chartData.keluar,
                             borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            backgroundColor: gradientOut,
                             fill: true,
-                            tension: 0.4,
-                            borderWidth: 3,
-                            pointRadius: 0
+                            tension: 0.45,
+                            borderWidth: 4,
+                            pointRadius: 2,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
                     plugins: {
                         legend: {
-                            display: false
+                            display: false // Tetap false untuk menjaga kebersihan single-page
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1e293b',
+                            bodyColor: '#1e293b',
+                            borderColor: '#e2e8f0',
+                            borderWidth: 1,
+                            padding: 12,
+                            boxPadding: 6,
+                            usePointStyle: true,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('id-ID', {
+                                            style: 'currency',
+                                            currency: 'IDR',
+                                            maximumFractionDigits: 0
+                                        }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
-                            display: false
+                            display: false,
+                            beginAtZero: true
                         },
                         x: {
                             grid: {
@@ -277,10 +299,11 @@
                             },
                             ticks: {
                                 font: {
-                                    size: 9,
-                                    weight: 'bold'
+                                    size: 10,
+                                    weight: '600'
                                 },
-                                color: '#94a3b8'
+                                color: '#94a3b8',
+                                padding: 10
                             }
                         }
                     }
@@ -288,84 +311,60 @@
             });
         }
 
+        function renderGrid(containerId, items) {
+            const grid = document.getElementById(containerId);
+            if (!Array.isArray(items) || items.length === 0) {
+                grid.innerHTML =
+                    `<div class="text-[8px] text-slate-300 py-4 text-center font-bold uppercase tracking-widest border border-dashed rounded-xl">Kosong</div>`;
+                return;
+            }
+
+            grid.innerHTML = items.map(item => {
+                const currentVal = parseInt(item.stok);
+                const textStokClass = currentVal === 0 ? 'text-red-400' : 'text-slate-800';
+                const opacityClass = currentVal === 0 ? 'bg-red-50/50' : 'bg-white';
+
+                return `
+            <div id="inv-card-${item.id}" class="glass-card ${opacityClass} p-3 rounded-2xl flex items-center justify-between relative group">
+                <div class="flex-1 overflow-hidden mr-2">
+                    <p class="text-[7px] font-black text-slate-400 uppercase truncate">${item.barang.kode}</p>
+                    <h4 class="text-[10px] font-extrabold text-slate-700 leading-tight truncate">${item.barang.nama_barang}</h4>
+                </div>
+                <div class="text-right flex flex-col items-end">
+                    <span id="stok-val-${item.id}" class="text-lg font-black ${textStokClass} italic leading-none">${currentVal}</span>
+                    <span class="text-[7px] font-bold text-slate-400 uppercase">${item.barang.satuan}</span>
+                </div>
+                <div id="anim-${item.id}" class="anim-indicator !right-2 !top-2"></div>
+            </div>
+        `;
+            }).join('');
+        }
+
+        // Update fungsi renderLowStock untuk menyesuaikan tampilan list
         function renderLowStock(items) {
             const container = document.getElementById('lowStockContainer');
             const alertBox = document.getElementById('lowStockAlert');
             if (!items || items.length === 0) {
-                alertBox.classList.add('hidden');
+                alertBox.classList.add('opacity-30');
+                container.innerHTML = `<p class="text-[8px] text-slate-400 text-center py-4 italic">Semua stok aman</p>`;
                 return;
             }
-            alertBox.classList.remove('hidden');
-            container.innerHTML = items.map(item => `
-                <div class="bg-white p-5 rounded-[2rem] flex justify-between items-center low-stock-animate">
-                    <div>
-                        <h4 class="text-xs font-black text-slate-800 leading-tight">${item.barang.nama_barang}</h4>
-                        <p class="text-[9px] font-bold text-red-500 mt-1 uppercase">Sisa: ${item.stok} / Limit: ${item.minimum_stok}</p>
-                    </div>
-                    <div class="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center">
-                        <svg class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path d="M13 17h8m-8-4h8m-8-4h8M5.636 18.364a9 9 0 1112.728 0 9 9 0 01-12.728 0z" />
-                        </svg>
-                    </div>
-                </div>
-            `).join('');
-        }
+            alertBox.classList.remove('opacity-30');
+            container.innerHTML = items.map(item => {
+                const isOut = parseInt(item.stok) <= 0;
+                const statusText = isOut ? 'HABIS' : `Sisa: ${item.stok}`;
+                const bgBadge = isOut ? 'bg-red-600 text-white' : 'bg-red-100 text-red-600';
 
-        function renderGrid(containerId, items) {
-            const grid = document.getElementById(containerId);
-            // Perbaikan: Jika data null atau tidak ada array
-            if (!Array.isArray(items) || items.length === 0) {
-                grid.innerHTML =
-                    `<div class="col-span-full py-10 text-center text-slate-300 font-bold uppercase tracking-widest text-[10px] border-2 border-dashed border-slate-200 rounded-[2.5rem]">Tidak ada data barang</div>`;
-                return;
-            }
-
-            items.forEach(item => {
-                let card = document.getElementById(`inv-card-${item.id}`);
-                const currentVal = parseInt(item.stok);
-                const oldVal = previousStok[item.id];
-
-                // Logic Warna Stok: Jika 0, beri warna abu-abu/merah
-                const textStokClass = currentVal === 0 ? 'text-red-300' : 'text-slate-900';
-                const opacityClass = currentVal === 0 ? 'opacity-60' : 'opacity-100';
-
-                if (!card) {
-                    grid.insertAdjacentHTML('beforeend', `
-                        <div id="inv-card-${item.id}" class="glass-card bg-white p-6 rounded-[2.5rem] relative overflow-hidden h-40 flex flex-col justify-between ${opacityClass}">
-                            <div>
-                                <div class="bg-slate-100 w-fit px-2 py-0.5 rounded-lg mb-2">
-                                    <p class="text-[8px] font-black text-slate-500 uppercase">${item.barang.kode}</p>
+                return `
+                            <div class="bg-white/80 p-2 rounded-xl flex justify-between items-center border border-red-100">
+                                <div class="w-2/3">
+                                    <h4 class="text-[9px] font-bold text-slate-700 truncate">${item.barang.nama_barang}</h4>
+                                    <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Min: ${item.minimum_stok}</p>
                                 </div>
-                                <h4 class="text-sm font-extrabold text-slate-800 leading-snug line-clamp-2">${item.barang.nama_barang}</h4>
+                                <span class="text-[8px] font-black px-2 py-0.5 rounded-md ${bgBadge}">${statusText}</span>
                             </div>
-                            <div class="flex items-end justify-between border-t border-slate-50 pt-3">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${item.barang.satuan}</span>
-                                <span id="stok-val-${item.id}" class="text-3xl font-black ${textStokClass} tracking-tighter italic">${currentVal}</span>
-                            </div>
-                            <div id="anim-${item.id}" class="anim-indicator"></div>
-                        </div>
-                    `);
-                } else {
-                    // Update nilai stok jika berbeda
-                    const stokElement = document.getElementById(`stok-val-${item.id}`);
-                    if (oldVal !== undefined && currentVal !== oldVal) {
-                        stokElement.innerText = currentVal;
-
-                        // Update class jika dari 0 ke berisi atau sebaliknya
-                        if (currentVal === 0) {
-                            stokElement.classList.replace('text-slate-900', 'text-slate-300');
-                            card.classList.add('opacity-60');
-                        } else {
-                            stokElement.classList.replace('text-slate-300', 'text-slate-900');
-                            card.classList.remove('opacity-60');
-                        }
-
-                        triggerAnimation(card, document.getElementById(`anim-${item.id}`), currentVal > oldVal ?
-                            '+' : '-', currentVal > oldVal ? 'animate-plus' : 'animate-minus');
-                    }
-                }
-                previousStok[item.id] = currentVal;
-            });
+                        `;
+            }).join('');
         }
 
         function triggerAnimation(card, animEl, symbol, animClass) {
