@@ -216,7 +216,7 @@ class BarangKeluarController extends Controller
             'tanggal_keluar' => 'required|date',
             'jenis_keluar'   => 'required|in:PRODUKSI,PENJUALAN,TRANSFER,BAHAN BAKU',
             'jumlah_keluar'  => 'required|numeric|min:0.001',
-            'id_costumer'    => 'required_if:jenis_keluar,PENJUALAN|nullable|exists:costumers,id',
+            'id_costumer'    => 'required_if:jenis_keluar,PENJUALAN|nullable|exists:costumer,id',
             'id_tujuan'      => 'required_if:jenis_keluar,TRANSFER|nullable|exists:perusahaan,id',
             'id_proses'      => 'required_if:jenis_keluar,PRODUKSI|nullable|exists:proses,id',
             'keterangan'     => 'nullable|string',
