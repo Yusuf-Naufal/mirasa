@@ -59,6 +59,54 @@
             width: 3px;
             border-radius: 2px;
         }
+
+        /* Animasi Melayang untuk + / - */
+        @keyframes float-up {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+        }
+
+        .animate-float {
+            position: absolute;
+            right: 10px;
+            top: 5px;
+            font-weight: 900;
+            font-size: 1.2rem;
+            pointer-events: none;
+            animation: float-up 1s ease-out forwards;
+        }
+
+        /* Scrollbar Otomatis untuk Inventory Grids */
+        .inventory-scroll-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            overflow-y: auto;
+            max-height: 100%;
+            /* Memastikan scroll bekerja dalam kontainer parent */
+            padding-right: 4px;
+        }
+
+        /* Percantik Scrollbar */
+        .inventory-scroll-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .inventory-scroll-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .inventory-scroll-container::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
     </style>
 
     {{-- Container Utama Setinggi Layar --}}
@@ -87,7 +135,7 @@
                         class="bg-slate-100 px-3 py-1.5 rounded-xl border-none text-[10px] font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer">
                         <option value="">Semua Unit</option>
                         @foreach ($perusahaans as $p)
-                            <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}</option>
+                            <option value="{{ $p->id }}">{{ $p->nama_perusahaan }} ({{ $p->kota }})</option>
                         @endforeach
                     </select>
                 @endif
@@ -187,6 +235,7 @@
                 const response = await fetch(`/api/monitoring-data?id_perusahaan=${perusahaanId}`);
                 const data = await response.json();
 
+                // Update Stats & Chart
                 document.getElementById('totalHargaMasuk').innerText = formatIDR(data.stats.totalMasuk);
                 document.getElementById('totalHargaKeluar').innerText = formatIDR(data.stats.totalKeluar);
                 document.getElementById('lastUpdated').innerText = new Date().toLocaleTimeString('id-ID');
@@ -194,7 +243,7 @@
                 renderChart(data.chart);
                 renderLowStock(data.lowStock);
 
-                // Perbaikan: Tetap tampilkan meski stok 0
+                // Render Grids
                 renderGrid('grid-produksi', data.inventory.produksi);
                 renderGrid('grid-bahan_baku', data.inventory.bahan_baku);
                 renderGrid('grid-penolong', data.inventory.penolong);
@@ -315,29 +364,54 @@
             const grid = document.getElementById(containerId);
             if (!Array.isArray(items) || items.length === 0) {
                 grid.innerHTML =
-                    `<div class="text-[8px] text-slate-300 py-4 text-center font-bold uppercase tracking-widest border border-dashed rounded-xl">Kosong</div>`;
+                    `<div class="text-[8px] text-slate-300 py-4 text-center font-bold uppercase border border-dashed rounded-xl">Kosong</div>`;
                 return;
             }
 
             grid.innerHTML = items.map(item => {
                 const currentVal = parseInt(item.stok);
+                const prevVal = previousStok[item.id] !== undefined ? previousStok[item.id] : currentVal;
+
+                let animTag = '';
+                let ringClass = '';
+
+                // Deteksi Perubahan
+                if (currentVal > prevVal) {
+                    animTag = `<span class="animate-float text-emerald-500">+</span>`;
+                    ringClass = 'ring-2 ring-emerald-400';
+                } else if (currentVal < prevVal) {
+                    animTag = `<span class="animate-float text-red-500">-</span>`;
+                    ringClass = 'ring-2 ring-red-400';
+                }
+
+                // Simpan stok saat ini untuk pengecekan berikutnya
+                previousStok[item.id] = currentVal;
+
                 const textStokClass = currentVal === 0 ? 'text-red-400' : 'text-slate-800';
                 const opacityClass = currentVal === 0 ? 'bg-red-50/50' : 'bg-white';
 
                 return `
-            <div id="inv-card-${item.id}" class="glass-card ${opacityClass} p-3 rounded-2xl flex items-center justify-between relative group">
-                <div class="flex-1 overflow-hidden mr-2">
-                    <p class="text-[7px] font-black text-slate-400 uppercase truncate">${item.barang.kode}</p>
-                    <h4 class="text-[10px] font-extrabold text-slate-700 leading-tight truncate">${item.barang.nama_barang}</h4>
-                </div>
-                <div class="text-right flex flex-col items-end">
-                    <span id="stok-val-${item.id}" class="text-lg font-black ${textStokClass} italic leading-none">${currentVal}</span>
-                    <span class="text-[7px] font-bold text-slate-400 uppercase">${item.barang.satuan}</span>
-                </div>
-                <div id="anim-${item.id}" class="anim-indicator !right-2 !top-2"></div>
-            </div>
-        `;
+                            <div id="inv-card-${item.id}" class="glass-card ${opacityClass} ${ringClass} p-3 rounded-2xl flex items-center justify-between relative overflow-hidden">
+                                ${animTag}
+                                <div class="flex-1 overflow-hidden mr-2">
+                                    <p class="text-[7px] font-black text-slate-400 uppercase truncate">${item.barang.kode}</p>
+                                    <h4 class="text-[10px] font-extrabold text-slate-700 leading-tight truncate">${item.barang.nama_barang}</h4>
+                                </div>
+                                <div class="text-right flex flex-col items-end">
+                                    <span class="text-lg font-black ${textStokClass} italic leading-none">${currentVal}</span>
+                                    <span class="text-[7px] font-bold text-slate-400 uppercase">${item.barang.satuan}</span>
+                                </div>
+                            </div>
+                        `;
             }).join('');
+
+            // Hapus efek ring setelah 2 detik agar tidak permanen
+            setTimeout(() => {
+                items.forEach(item => {
+                    const el = document.getElementById(`inv-card-${item.id}`);
+                    if (el) el.classList.remove('ring-2', 'ring-emerald-400', 'ring-red-400');
+                });
+            }, 2000);
         }
 
         // Update fungsi renderLowStock untuk menyesuaikan tampilan list
