@@ -61,7 +61,7 @@
                         [
                             'route' => route('barang-masuk.index'),
                             'label' => 'Barang Masuk',
-                            'color' => 'blue',
+                            'color' => 'emerald',
                             'svg_type' => 'masuk',
                         ],
                         [

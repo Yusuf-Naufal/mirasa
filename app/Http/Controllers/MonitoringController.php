@@ -31,8 +31,10 @@ class MonitoringController extends Controller
         // --- 1. LOW STOCK ALERT ---
         $lowStock = Inventory::with(['Barang'])
             ->when($idPerusahaan, fn($q) => $q->where('id_perusahaan', $idPerusahaan))
-            ->whereColumn('stok', '<', 'minimum_stok')
-            ->where('minimum_stok', '>', 0)
+            ->where(function ($query) {
+                $query->whereColumn('stok', '<', 'minimum_stok')
+                    ->orWhere('stok', '<=', 0);
+            })
             ->get();
 
         // --- 2. TREND CHART DATA (Last 7 Days) ---

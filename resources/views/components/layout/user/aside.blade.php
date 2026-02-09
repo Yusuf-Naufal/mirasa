@@ -253,7 +253,7 @@
                         </svg>
                     </div>
                     <span
-                        class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Kurs</span>
+                        class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Kurva</span>
                 </a>
             </li>
 
