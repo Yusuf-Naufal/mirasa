@@ -149,9 +149,14 @@ class BarangController extends Controller
      */
     public function edit(string $id)
     {
+        $user = auth()->user();
         $barang = Barang::withTrashed()->findOrFail($id);
         $perusahaan = Perusahaan::whereNull('deleted_at')->get();
         $jenis = JenisBarang::get();
+
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $barang->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit barang dari perusahaan lain.');
+        }
 
         return view('pages.barang.edit', compact('perusahaan', 'jenis', 'barang'));
     }
@@ -163,6 +168,10 @@ class BarangController extends Controller
     {
         $barang = Barang::withTrashed()->findOrFail($id);
         $user = auth()->user();
+
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $barang->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengubah data barang dari perusahaan lain.');
+        }
 
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->id_perusahaan : $user->id_perusahaan;
         $jenis = JenisBarang::findOrFail($request->id_jenis);

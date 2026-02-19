@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
+use App\Models\KategoriPemakaian;
 use App\Models\Pemakaian;
 use App\Models\Pengeluaran;
-use Illuminate\Support\Str;
+use App\Models\Perusahaan;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\KategoriPemakaian;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PengeluaranController extends Controller
 {
@@ -18,33 +19,56 @@ class PengeluaranController extends Controller
      */
     public function index(Request $request)
     {
-        // 1. Inisialisasi Filter
+        $user = auth()->user();
+
+        // 1. Filter Kategori Berdasarkan Permission User
+        $allKategori = [
+            'OPERASIONAL' => 'pengeluaran.operasional',
+            'OFFICE' => 'pengeluaran.office',
+            'LIMBAH' => 'pengeluaran.limbah',
+            'KESEJAHTERAAN' => 'pengeluaran.kesejahtraan',
+            'MAINTENANCE' => 'pengeluaran.maintenance',
+            'ADMINISTRASI' => 'pengeluaran.administrasi',
+        ];
+
+        $kategoriList = [];
+        foreach ($allKategori as $katName => $permission) {
+            if ($user->can($permission)) {
+                $kategoriList[] = $katName;
+            }
+        }
+
+        // Jika user sama sekali tidak punya akses ke kategori manapun
+        if (empty($kategoriList)) {
+            abort(403, 'Anda tidak memiliki izin untuk melihat data pengeluaran.');
+        }
+
+        // 2. Inisialisasi Filter
         $search = $request->get('search');
         $id_perusahaan = $request->get('id_perusahaan');
         $is_hpp = $request->get('is_hpp');
         $date_range = $request->get('date_range');
-
-        // Default bulan/tahun
         $month = $request->get('month', date('m'));
         $year = $request->get('year', date('Y'));
 
-        $kategoriList = ['OPERASIONAL', 'OFFICE', 'LIMBAH', 'KESEJAHTERAAN', 'MAINTENANCE', 'ADMINISTRASI'];
-
-        // 2. Base Query
+        // 3. Base Query
         $queryAll = Pengeluaran::query();
 
-        // KEAMANAN: Filter Perusahaan harus menjadi scope utama
-        $queryAll->where(function ($q) use ($id_perusahaan) {
-            if (auth()->user()->hasRole('Super Admin')) {
+        // KEAMANAN: Filter Perusahaan
+        $queryAll->where(function ($q) use ($id_perusahaan, $user) {
+            if ($user->hasRole('Super Admin')) {
                 if ($id_perusahaan) {
                     $q->where('id_perusahaan', $id_perusahaan);
                 }
             } else {
-                $q->where('id_perusahaan', auth()->user()->id_perusahaan);
+                $q->where('id_perusahaan', $user->id_perusahaan);
             }
         });
 
-        // Filter Pencarian (Dibungkus closure agar logic OR tidak merusak filter AND lainnya)
+        // Filter Kategori (Hanya ambil data yang user boleh lihat)
+        $queryAll->whereIn('kategori', $kategoriList);
+
+        // Filter Pencarian
         if ($search) {
             $searchUpper = strtoupper($search);
             $queryAll->where(function ($q) use ($searchUpper) {
@@ -73,11 +97,11 @@ class PengeluaranController extends Controller
                 ->whereYear('tanggal_pengeluaran', $year);
         }
 
-        // Eksekusi data untuk perhitungan total (tanpa pagination)
+        // Eksekusi data untuk perhitungan total (Hanya kategori yang diizinkan)
         $allData = $queryAll->get();
         $totalPengeluaran = $allData->sum('jumlah_pengeluaran');
 
-        // 3. Looping Kategori
+        // 4. Looping Kategori Berdasarkan Izin
         $perKategori = [];
         foreach ($kategoriList as $kat) {
             $pageName = 'page_' . strtolower(str_replace(' ', '_', $kat));
@@ -96,8 +120,15 @@ class PengeluaranController extends Controller
             ];
         }
 
+        // Tentukan Tab Aktif (Pastikan tab default adalah kategori yang user boleh lihat)
         $activeTab = $request->get('tab', $kategoriList[0]);
-        $perusahaan = auth()->user()->hasRole('Super Admin') ? \App\Models\Perusahaan::all() : collect();
+
+        // Validasi ulang activeTab jika user mencoba memasukkan tab manual via URL
+        if (!in_array($activeTab, $kategoriList)) {
+            $activeTab = $kategoriList[0];
+        }
+
+        $perusahaan = $user->hasRole('Super Admin') ? Perusahaan::all() : collect();
 
         return view('pages.pengeluaran.index', compact(
             'totalPengeluaran',
@@ -232,7 +263,11 @@ class PengeluaranController extends Controller
      */
     public function edit(string $id)
     {
+        $user = auth()->user();
         $pengeluaran = Pengeluaran::findOrFail($id);
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $pengeluaran->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         return view('pages.pengeluaran.edit', compact('pengeluaran'));
     }
@@ -253,7 +288,11 @@ class PengeluaranController extends Controller
         try {
             DB::beginTransaction();
 
+            $user = auth()->user();
             $pengeluaran = Pengeluaran::findOrFail($id);
+            if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $pengeluaran->id_perusahaan) {
+                abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+            }
             $id_perusahaan = auth()->user()->id_perusahaan;
             $Kategori = strtoupper($request->kategori);
             $subKategori = strtoupper($request->sub_kategori);

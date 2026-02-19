@@ -107,6 +107,11 @@ class ProsesController extends Controller
     public function update(Request $request, string $id)
     {
         $proses = Proses::withTrashed()->findOrFail($id);
+        $user = auth()->user();
+
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $proses->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         $request->validate([
             'id_perusahaan' => 'required|exists:perusahaan,id',

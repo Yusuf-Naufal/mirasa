@@ -144,6 +144,10 @@ class ProduksiController extends Controller
         try {
             // 2. Cari data detail produksi berdasarkan ID
             $detail = DetailProduksi::findOrFail($id);
+            $user = auth()->user();
+            if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $detail->Produksi->id_perusahaan) {
+                abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+            }
 
             // 3. Update data
             $detail->update([

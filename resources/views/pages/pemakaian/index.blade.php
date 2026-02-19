@@ -51,21 +51,25 @@
                     </button>
 
                     {{-- Kelola Kategori --}}
-                    <a href="{{ route('kategori-pemakaian.index') }}"
-                        class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all shadow-md shadow-amber-100 font-bold text-sm">
-                        <span class="whitespace-nowrap">Kelola Kategori</span>
-                    </a>
+                    @can('kategori-pemakaian.index')
+                        <a href="{{ route('kategori-pemakaian.index') }}"
+                            class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all shadow-md shadow-amber-100 font-bold text-sm">
+                            <span class="whitespace-nowrap">Kelola Kategori</span>
+                        </a>
+                    @endcan
 
                     {{-- Tombol Utama --}}
-                    <button onclick="toggleModal('modalPilihKategori')"
-                        class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-100 font-bold text-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span class="whitespace-nowrap">Catat Pemakaian</span>
-                    </button>
+                    @can('pemakaian.create')
+                        <button onclick="toggleModal('modalPilihKategori')"
+                            class="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-100 font-bold text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                            <span class="whitespace-nowrap">Catat Pemakaian</span>
+                        </button>
+                    @endcan
                 </div>
             </div>
 
@@ -186,30 +190,34 @@
                                                 </span>
                                             @else
                                                 {{-- Edit --}}
-                                                <button
-                                                    onclick="openEditPemakaian({{ json_encode($firstItem) }}, '{{ $firstItem->KategoriPemakaian->nama_kategori }}', '{{ $satuan }}')"
-                                                    class="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                </button>
-                                                {{-- Delete --}}
-                                                <form action="{{ route('pemakaian.destroy', $firstItem->id) }}"
-                                                    method="POST" onsubmit="return confirm('Hapus data ini?')">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit"
-                                                        class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                @can('pemakaian.edit')
+                                                    <button
+                                                        onclick="openEditPemakaian({{ json_encode($firstItem) }}, '{{ $firstItem->KategoriPemakaian->nama_kategori }}', '{{ $satuan }}')"
+                                                        class="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors">
                                                         <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                                 stroke-width="2"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
                                                     </button>
-                                                </form>
+                                                @endcan
+                                                {{-- Delete --}}
+                                                @can('pemakaian.delete')
+                                                    <form action="{{ route('pemakaian.destroy', $firstItem->id) }}"
+                                                        method="POST" onsubmit="return confirm('Hapus data ini?')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit"
+                                                            class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                        </button>
+                                                    </form>
+                                                @endcan
                                             @endif
                                         </div>
                                     </td>

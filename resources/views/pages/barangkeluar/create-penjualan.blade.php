@@ -153,11 +153,11 @@
                                     class="flex-1 py-3 rounded-xl text-sm font-bold transition-all">
                                     Penjualan
                                 </button>
-                                <button type="button" @click="jenisKeluar = 'TRANSFER'" disabled
+                                {{-- <button type="button" @click="jenisKeluar = 'TRANSFER'" disabled
                                     :class="jenisKeluar === 'TRANSFER' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'"
                                     class="flex-1 py-3 rounded-xl text-sm font-bold transition-all cursor-not-allowed">
                                     Transfer
-                                </button>
+                                </button> --}}
                             </div>
                         </div>
 

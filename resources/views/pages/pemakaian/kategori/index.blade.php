@@ -15,10 +15,12 @@
                     <h1 class="text-3xl font-extrabold text-gray-900 mt-2">Kategori Pemakaian</h1>
                     <p class="text-sm text-gray-500">Kelola master data kategori seperti Listrik, Gas, atau Air.</p>
                 </div>
-                <button onclick="toggleModal('modalTambahKategori')"
-                    class="bg-cyan-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-cyan-700 transition-all">
-                    + Tambah Kategori
-                </button>
+                @can('kategori-pemakaian.create')
+                    <button onclick="toggleModal('modalTambahKategori')"
+                        class="bg-cyan-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-cyan-700 transition-all">
+                        + Tambah Kategori
+                    </button>
+                @endcan
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -41,28 +43,32 @@
                                 </td>
                                 <td class="px-6 py-4 text-center flex justify-center gap-3">
                                     {{-- TOMBOL EDIT --}}
-                                    <button type="button" onclick="openEditModal({{ json_encode($k) }})"
-                                        class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 hover:bg-yellow-100 p-2 rounded-lg transition-colors"
-                                        title="Edit Data">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                        </svg>
-                                    </button>
-
-                                    {{-- TOMBOL DELETE (Soft Delete) --}}
-                                    <form action="{{ route('kategori-pemakaian.destroy', $k->id) }}" method="POST"
-                                        onsubmit="return confirm('Hapus kategori ini?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit"
-                                            class="text-red-400 hover:text-red-600 p-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                                viewBox="0 0 24 24" stroke="currentColor">
+                                    @can('kategori-pemakaian.edit')
+                                        <button type="button" onclick="openEditModal({{ json_encode($k) }})"
+                                            class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 hover:bg-yellow-100 p-2 rounded-lg transition-colors"
+                                            title="Edit Data">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                             </svg>
                                         </button>
-                                    </form>
+                                    @endcan
+
+                                    {{-- TOMBOL DELETE (Soft Delete) --}}
+                                    @can('kategori-pemakaian.delete')
+                                        <form action="{{ route('kategori-pemakaian.destroy', $k->id) }}" method="POST"
+                                            onsubmit="return confirm('Hapus kategori ini?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit"
+                                                class="text-red-400 hover:text-red-600 p-2 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty

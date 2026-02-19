@@ -206,8 +206,11 @@ class BahanBakuController extends Controller
     public function edit($id)
     {
         $user = auth()->user();
-
         $bahanBaku = DetailInventory::findOrFail($id);
+
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $bahanBaku->Inventory->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
             ->whereHas('jenisBarang', function ($query) {

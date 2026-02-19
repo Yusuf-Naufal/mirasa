@@ -20,42 +20,62 @@ class BarangKeluarController extends Controller
      */
     public function index(Request $request)
     {
-        // 1. Ambil parameter filter
-        $activeTab = $request->get('tab', 'PRODUKSI');
+        $user = auth()->user();
+
+        // --- 1. VALIDASI AKSES AWAL ---
+        // User harus punya minimal satu akses untuk melihat halaman ini
+        $canProduksi = $user->can('barang-keluar.produksi');
+        $canBahanBaku = $user->can('barang-keluar.bahan-baku');
+        $canPenjualan = $user->can('barang-keluar.penjualan');
+
+        if (!$canProduksi && !$canBahanBaku && !$canPenjualan) {
+            abort(403, 'Anda tidak memiliki akses ke modul Barang Keluar.');
+        }
+
+        // --- 2. LOGIKA DEFAULT TAB BERDASARKAN PERMISSION ---
+        // Jika tidak ada parameter tab di URL, tentukan berdasarkan permission pertama yang dimiliki
+        $defaultTab = 'PRODUKSI';
+        if (!$canProduksi) {
+            if ($canBahanBaku) $defaultTab = 'BAHAN BAKU';
+            elseif ($canPenjualan) $defaultTab = 'DISTRIBUSI';
+        }
+
+        $activeTab = $request->get('tab', $defaultTab);
+
+        // --- 3. SECURITY CHECK: Mencegah user ganti Tab via URL manual tanpa permission ---
+        if ($activeTab === 'PRODUKSI' && !$canProduksi) abort(403);
+        if ($activeTab === 'BAHAN BAKU' && !$canBahanBaku) abort(403);
+        if ($activeTab === 'DISTRIBUSI' && !$canPenjualan) abort(403);
+
+        // --- 4. PARAMETER FILTER ---
         $search = $request->get('search');
         $idPerusahaanFilter = $request->get('id_perusahaan');
         $dateRange = $request->get('date_range');
         $idBarang = $request->get('id_barang');
         $perPage = 30;
 
-        $user = auth()->user();
         $perusahaan = Perusahaan::whereNull('deleted_at')->get();
 
-        // 2. Bangun Query Utama BarangKeluar
+        // --- 5. QUERY UTAMA ---
         $query = BarangKeluar::query()
             ->whereHas('DetailInventory')
             ->with(['DetailInventory.Inventory.Barang', 'Produksi', 'Costumer', 'Perusahaan', 'Proses']);
 
-        // 3. Filter Keamanan & Perusahaan
+        // Filter Perusahaan (Keamanan Data)
         if ($user->hasRole('Super Admin')) {
-            if ($idPerusahaanFilter) {
-                $query->where('id_perusahaan', $idPerusahaanFilter);
-            }
+            if ($idPerusahaanFilter) $query->where('id_perusahaan', $idPerusahaanFilter);
         } else {
             $query->where('id_perusahaan', $user->id_perusahaan);
         }
 
-        // 4. Bangun Query Dropdown Barang (Dinamis sesuai Tab)
+        // --- 6. DROPDOWN BARANG & FILTER TAB ---
         $barangDropdownQuery = Barang::query();
-        if ($user->hasRole('Super Admin')) {
-            if ($idPerusahaanFilter) {
-                $barangDropdownQuery->where('id_perusahaan', $idPerusahaanFilter);
-            }
-        } else {
+        if (!$user->hasRole('Super Admin')) {
             $barangDropdownQuery->where('id_perusahaan', $user->id_perusahaan);
+        } elseif ($idPerusahaanFilter) {
+            $barangDropdownQuery->where('id_perusahaan', $idPerusahaanFilter);
         }
 
-        // 5. Logika Filter berdasarkan Tab
         if ($activeTab === 'PRODUKSI') {
             $query->where('jenis_keluar', 'PRODUKSI');
             $barangDropdownQuery->whereHas('jenisBarang', fn($q) => $q->where('kode', 'BP'));
@@ -63,20 +83,15 @@ class BarangKeluarController extends Controller
             $query->where('jenis_keluar', 'BAHAN BAKU');
             $barangDropdownQuery->whereHas('jenisBarang', fn($q) => $q->where('kode', 'BB'));
         } else {
-            // Tab Distribusi (Penjualan/Transfer)
             $query->whereIn('jenis_keluar', ['PENJUALAN', 'TRANSFER']);
-            $barangDropdownQuery->whereHas('jenisBarang', function ($q) {
-                $q->whereNotIn('kode', ['BP', 'BB']);
-            });
+            $barangDropdownQuery->whereHas('jenisBarang', fn($q) => $q->whereNotIn('kode', ['BP', 'BB']));
         }
 
         $listBarang = $barangDropdownQuery->get();
 
-        // 6. Terapkan Filter Tambahan
+        // --- 7. FILTER TAMBAHAN (Search, Date, dll) ---
         if ($idBarang) {
-            $query->whereHas('DetailInventory.Inventory', function ($q) use ($idBarang) {
-                $q->where('id_barang', $idBarang);
-            });
+            $query->whereHas('DetailInventory.Inventory', fn($q) => $q->where('id_barang', $idBarang));
         }
 
         if ($search) {
@@ -94,37 +109,19 @@ class BarangKeluarController extends Controller
             }
         }
 
-        // 7. Pagination & Grouping (Disesuaikan berdasarkan Tipe Tab)
-        $dataPaginated = $query->orderBy('tanggal_keluar', 'desc')
-            ->paginate($perPage)
-            ->withQueryString();
+        // --- 8. PAGINATION & GROUPING ---
+        $dataPaginated = $query->orderBy('tanggal_keluar', 'desc')->paginate($perPage)->withQueryString();
 
         $groupedData = $dataPaginated->getCollection()->groupBy(function ($item) use ($activeTab) {
             $tanggal = $item->tanggal_keluar ?? 'no-date';
-
-            if ($activeTab === 'PRODUKSI') {
-                /**
-                 * Grouping PRODUKSI: Berdasarkan ID Barang + Tanggal
-                 * Karena produksi biasanya dipantau per jenis barang yang dihasilkan di hari tersebut
-                 */
+            if ($activeTab === 'PRODUKSI' || $activeTab === 'BAHAN BAKU') {
                 $barangId = $item->DetailInventory->Inventory->id_barang ?? '0';
-                return 'prod-' . $barangId . '_' . $tanggal;
-            } else if ($activeTab === 'BAHAN BAKU') {
-                /**
-                 * Grouping BAHAN BAKU: Berdasarkan ID Barang + Tanggal
-                 * Agar terlihat total pemakaian bahan baku tertentu dalam satu hari
-                 */
-                $barangId = $item->DetailInventory->Inventory->id_barang ?? '0';
-                return 'bb-' . $barangId . '_' . $tanggal;
+                $prefix = ($activeTab === 'PRODUKSI') ? 'prod-' : 'bb-';
+                return $prefix . $barangId . '_' . $tanggal;
             } else {
-                /**
-                 * Grouping DISTRIBUSI (PENJUALAN & TRANSFER): Berdasarkan Penerima + Tanggal
-                 * Penjualan grouping ke Customer, Transfer grouping ke Perusahaan/Gudang Cabang
-                 */
                 $receiverId = ($item->jenis_keluar === 'PENJUALAN')
                     ? 'cust-' . ($item->id_costumer ?? '0')
                     : 'comp-' . ($item->id_perusahaan ?? '0');
-
                 return $receiverId . '_' . $tanggal;
             }
         });
@@ -320,7 +317,12 @@ class BarangKeluarController extends Controller
         try {
             DB::beginTransaction();
 
+            $user = auth()->user();
             $keluar = BarangKeluar::findOrFail($id);
+            if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $keluar->id_perusahaan) {
+                abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+            }
+
             $detail = $keluar->DetailInventory;
             $id_perusahaan = auth()->user()->id_perusahaan;
 

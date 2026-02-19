@@ -122,7 +122,12 @@ class CostumerController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $user = auth()->user();
         $costumer = Costumer::withTrashed()->findOrFail($id);
+
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $costumer->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         $validated = $request->validate([
             'id_perusahaan' => 'required|exists:perusahaan,id',

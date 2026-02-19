@@ -72,27 +72,31 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex justify-center gap-3">
                                 {{-- TOMBOL EDIT --}}
-                                <a type="button" href="{{ route('berita.edit', $i->id) }}"
-                                    class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 hover:bg-yellow-100 p-2 rounded-lg transition-colors"
-                                    title="Edit Data">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                    </svg>
-                                </a>
-
-                                <form id="delete-form-{{ $i->id }}"
-                                    action="{{ route('berita.destroy', $i->id) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" onclick="confirmDelete({{ $i->id }})"
-                                        class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
+                                @can('berita.edit')
+                                    <a type="button" href="{{ route('berita.edit', $i->id) }}"
+                                        class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 hover:bg-yellow-100 p-2 rounded-lg transition-colors"
+                                        title="Edit Data">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                         </svg>
-                                    </button>
-                                </form>
+                                    </a>
+                                @endcan
+
+                                @can('berita.delete')
+                                    <form id="delete-form-{{ $i->id }}"
+                                        action="{{ route('berita.destroy', $i->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" onclick="confirmDelete({{ $i->id }})"
+                                            class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @endcan
                             </div>
                         </td>
                     </tr>
@@ -106,9 +110,11 @@
                                         d="M2048 512v896q0 53-20 99t-55 81t-82 55t-99 21H249q-51 0-96-20t-79-53t-54-79t-20-97V256h1792v256zm-128 128h-128v704q0 26-19 45t-45 19t-45-19t-19-45V384H128v1031q0 25 9 47t26 38t39 26t47 10h1543q27 0 50-10t40-27t28-41t10-50zm-384 0H256V512h1280zm0 768h-512v-128h512zm0-256h-512v-128h512zm0-256h-512V768h512zm-640 512H256V765h640zm-512-128h384V893H384z" />
                                 </svg>
                                 <p class="text-gray-500 text-sm font-medium">Berita belum tersedia</p>
-                                <a href="{{ route('berita.create') }}"
-                                    class="mt-4 text-blue-500 text-xs font-bold uppercase tracking-wider hover:underline">Tambah
-                                    Sekarang</a>
+                                @can('berita.create')
+                                    <a href="{{ route('berita.create') }}"
+                                        class="mt-4 text-blue-500 text-xs font-bold uppercase tracking-wider hover:underline">Tambah
+                                        Sekarang</a>
+                                @endcan
                             </div>
                         </td>
                     </tr>

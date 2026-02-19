@@ -30,8 +30,7 @@
             {{-- 2. SEARCH & DROPDOWN BUTTON --}}
             <div class="mb-8 flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div class="w-full flex gap-2 items-center">
-                    <form action="{{ route('pengeluaran.index') }}" method="GET"
-                        class="relative w-full md:max-w-md">
+                    <form action="{{ route('pengeluaran.index') }}" method="GET" class="relative w-full md:max-w-md">
 
                         <input type="hidden" name="tab" value="{{ $activeTab }}">
                         @if (request('id_perusahaan'))
@@ -66,124 +65,140 @@
                 </div>
 
                 {{-- Dropdown Button Section --}}
-                <div class="relative w-full md:w-64" x-data="{ menuOpen: false }">
-                    <button @click="menuOpen = !menuOpen" @click.away="menuOpen = false"
-                        class="w-full md:w-64 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                                clip-rule="evenodd" />
-                        </svg>
-                        Tambah Pengeluaran
-                        <svg class="w-4 h-4 transition-transform" :class="menuOpen ? 'rotate-180' : ''" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
+                @canany(['pengeluaran.create-operasional', 'pengeluaran.create-office', 'pengeluaran.create-limbah',
+                    'pengeluaran.create-kesejahtraan', 'pengeluaran.create-maintenance', 'pengeluaran.create-administrasi'])
+                    <div class="relative w-full md:w-64" x-data="{ menuOpen: false }">
+                        <button @click="menuOpen = !menuOpen" @click.away="menuOpen = false"
+                            class="w-full md:w-64 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                            Tambah Pengeluaran
+                            <svg class="w-4 h-4 transition-transform" :class="menuOpen ? 'rotate-180' : ''" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
 
-                    {{-- Dropdown Menu --}}
-                    <div x-show="menuOpen" x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                        class="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 z-[70] overflow-hidden"
-                        x-cloak>
+                        {{-- Dropdown Menu --}}
+                        <div x-show="menuOpen" x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                            class="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 z-[70] overflow-hidden"
+                            x-cloak>
 
-                        {{-- Kategori: Operasional --}}
-                        <a href="{{ route('pengeluaran.create-operasional') }}"
-                            class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 text-gray-700 transition-colors border-b border-gray-50">
-                            <div class="p-2 bg-blue-100 text-blue-600 rounded-xl">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold">Operasional</span>
-                                <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Biaya energi
-                                    (listrik/air), BBM gudang, & aktivitas harian pabrik.</span>
-                            </div>
-                        </a>
+                            {{-- Kategori: Operasional --}}
+                            @can('pengeluaran.create-operasional')
+                                <a href="{{ route('pengeluaran.create-operasional') }}"
+                                    class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 text-gray-700 transition-colors border-b border-gray-50">
+                                    <div class="p-2 bg-blue-100 text-blue-600 rounded-xl">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold">Operasional</span>
+                                        <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Biaya energi
+                                            (listrik/air)
+                                            , BBM gudang, & aktivitas harian pabrik.</span>
+                                    </div>
+                                </a>
+                            @endcan
 
-                        {{-- Kategori: Office --}}
-                        <a href="{{ route('pengeluaran.create-office') }}"
-                            class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-gray-700 transition-colors border-b border-gray-50">
-                            <div class="p-2 bg-slate-100 text-slate-600 rounded-xl">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                </svg>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold">Keperluan Kantor</span>
-                                <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Pengadaan ATK,
-                                    cetak form administrasi, & perlengkapan kerja.</span>
-                            </div>
-                        </a>
+                            {{-- Kategori: Office --}}
+                            @can('pengeluaran.create-office')
+                                <a href="{{ route('pengeluaran.create-office') }}"
+                                    class="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-gray-700 transition-colors border-b border-gray-50">
+                                    <div class="p-2 bg-slate-100 text-slate-600 rounded-xl">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold">Keperluan Kantor</span>
+                                        <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Pengadaan ATK,
+                                            cetak form administrasi, & perlengkapan kerja.</span>
+                                    </div>
+                                </a>
+                            @endcan
 
-                        {{-- Kategori: Limbah --}}
-                        <a href="{{ route('pengeluaran.create-limbah') }}"
-                            class="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 text-gray-700 transition-colors border-b border-gray-50">
-                            <div class="p-2 bg-emerald-100 text-emerald-600 rounded-xl">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold">Pengolahan Limbah</span>
-                                <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Retribusi
-                                    kebersihan, pengangkutan limbah, & biaya sanitasi.</span>
-                            </div>
-                        </a>
+                            {{-- Kategori: Limbah --}}
+                            @can('pengeluaran.create-limbah')
+                                <a href="{{ route('pengeluaran.create-limbah') }}"
+                                    class="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 text-gray-700 transition-colors border-b border-gray-50">
+                                    <div class="p-2 bg-emerald-100 text-emerald-600 rounded-xl">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold">Pengolahan Limbah</span>
+                                        <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Retribusi
+                                            kebersihan, pengangkutan limbah, & biaya sanitasi.</span>
+                                    </div>
+                                </a>
+                            @endcan
 
-                        {{-- Kategori: Maintenance --}}
-                        <a href="{{ route('pengeluaran.create-maintenance') }}"
-                            class="flex items-center gap-3 px-4 py-3 hover:bg-amber-50 text-gray-700 transition-colors border-b border-gray-50">
-                            <div class="p-2 bg-amber-100 text-amber-600 rounded-xl">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                </svg>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold">Maintenance / Perbaikan</span>
-                                <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Pemeliharaan rutin
-                                    mesin produksi, AC, & aset fisik perusahaan.</span>
-                            </div>
-                        </a>
+                            {{-- Kategori: Gaji --}}
+                            @can('pengeluaran.create-kesejahtraan')
+                                <a href="{{ route('pengeluaran.create-kesejahteraan') }}"
+                                    class="flex items-center gap-3 px-4 py-3 hover:bg-purple-50 text-gray-700 transition-colors border-b border-gray-50">
+                                    <div class="p-2 bg-purple-100 text-purple-600 rounded-xl">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold">Gaji & Kesejahteraan</span>
+                                        <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Pembayaran gaji
+                                            staf, uang lembur, & tunjangan karyawan.</span>
+                                    </div>
+                                </a>
+                            @endcan
 
-                        {{-- Kategori: Gaji --}}
-                        <a href="{{ route('pengeluaran.create-kesejahteraan') }}"
-                            class="flex items-center gap-3 px-4 py-3 hover:bg-purple-50 text-gray-700 transition-colors border-b border-gray-50">
-                            <div class="p-2 bg-purple-100 text-purple-600 rounded-xl">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold">Gaji & Kesejahteraan</span>
-                                <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Pembayaran gaji
-                                    staf, uang lembur, & tunjangan karyawan.</span>
-                            </div>
-                        </a>
+                            {{-- Kategori: Maintenance --}}
+                            @can('pengeluaran.create-maintenance')
+                                <a href="{{ route('pengeluaran.create-maintenance') }}"
+                                    class="flex items-center gap-3 px-4 py-3 hover:bg-amber-50 text-gray-700 transition-colors border-b border-gray-50">
+                                    <div class="p-2 bg-amber-100 text-amber-600 rounded-xl">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold">Maintenance / Perbaikan</span>
+                                        <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Pemeliharaan rutin
+                                            mesin produksi, AC, & aset fisik perusahaan.</span>
+                                    </div>
+                                </a>
+                            @endcan
 
-                        {{-- Kategori: Administrasi Umum --}}
-                        <a href="{{ route('pengeluaran.create-admnisitrasi') }}"
-                            class="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 text-gray-700 transition-colors">
-                            <div class="p-2 bg-orange-100 text-orange-600 rounded-xl">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold">Administrasi / Umum</span>
-                                <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Biaya perizinan,
-                                    legalitas dokumen, & pengeluaran tak terduga.</span>
-                            </div>
-                        </a>
+                            {{-- Kategori: Administrasi Umum --}}
+                            @can('pengeluaran.create-administrasi')
+                                <a href="{{ route('pengeluaran.create-administrasi') }}"
+                                    class="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 text-gray-700 transition-colors">
+                                    <div class="p-2 bg-orange-100 text-orange-600 rounded-xl">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold">Administrasi / Umum</span>
+                                        <span class="text-[10px] text-gray-400 leading-tight tracking-tight">Biaya perizinan,
+                                            legalitas dokumen, & pengeluaran tak terduga.</span>
+                                    </div>
+                                </a>
+                            @endcan
+                        </div>
                     </div>
-                </div>
+                @endcanany
             </div>
 
             {{-- 3. TABS --}}

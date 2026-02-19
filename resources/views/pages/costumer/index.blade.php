@@ -5,24 +5,27 @@
 
             <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
                 <div class="flex gap-2">
-                    <button type="button" onclick="openModal('addModal')"
-                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
-                        </svg>
-                        <span class="hidden md:block md:ml-2">Tambah Costumer</span>
-                    </button>
+                    @can('costumer.create')
+                        <button type="button" onclick="openModal('addModal')"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
+                            </svg>
+                            <span class="hidden md:block md:ml-2">Tambah Costumer</span>
+                        </button>
+                    @endcan
 
-
-                    <button onclick="openModal('importModal')"
-                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-green-600 transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3V11h2v3h3v2zm-3-7V3.5L18.5 9H13z" />
-                        </svg>
-                        <span class="hidden md:block md:ml-2">Import Excel</span>
-                    </button>
+                    @can('costumer.import')
+                        <button onclick="openModal('importModal')"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-green-600 transition-all shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3V11h2v3h3v2zm-3-7V3.5L18.5 9H13z" />
+                            </svg>
+                            <span class="hidden md:block md:ml-2">Import Excel</span>
+                        </button>
+                    @endcan
 
                     <button onclick="openModal('filterModal')"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
@@ -124,63 +127,65 @@
     </div>
 
     {{-- Modal Tambah --}}
-    <div id="addModal"
-        class="p-2 fixed inset-0 bg-black/50 bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
-            <h2 class="text-lg font-semibold mb-4">Tambah Costumer</h2>
-            <form class="form-prevent-multiple-submits" action="{{ route('costumer.store') }}" method="POST">
-                @csrf
-                <div class="space-y-3">
-                    @if (auth()->user()->hasRole('Super Admin'))
+    @can('costumer.create')
+        <div id="addModal"
+            class="p-2 fixed inset-0 bg-black/50 bg-opacity-50 hidden flex items-center justify-center z-50">
+            <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
+                <h2 class="text-lg font-semibold mb-4">Tambah Costumer</h2>
+                <form class="form-prevent-multiple-submits" action="{{ route('costumer.store') }}" method="POST">
+                    @csrf
+                    <div class="space-y-3">
+                        @if (auth()->user()->hasRole('Super Admin'))
+                            <div>
+                                <label for="id_perusahaan"
+                                    class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
+                                <select name="id_perusahaan" id="id_perusahaan"
+                                    class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
+                                    @foreach ($perusahaan as $p)
+                                        <option value="{{ $p->id }}">
+                                            {{ $p->nama_perusahaan }} ({{ $p->kota }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @else
+                            <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
+                        @endif
                         <div>
-                            <label for="id_perusahaan"
-                                class="block text-sm font-semibold text-gray-700 mb-1">Perusahaan</label>
-                            <select name="id_perusahaan" id="id_perusahaan"
-                                class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] outline-none">
-                                @foreach ($perusahaan as $p)
-                                    <option value="{{ $p->id }}">
-                                        {{ $p->nama_perusahaan }} ({{ $p->kota }})
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700">Nama Costumer</label>
+                            <input type="text" name="nama_costumer" required
+                                class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                    @else
-                        <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
-                    @endif
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Nama Costumer</label>
-                        <input type="text" name="nama_costumer" required
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Kode</label>
+                            <input type="text" name="kode" required
+                                class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Kode</label>
-                        <input type="text" name="kode" required
-                            class="w-full border border-gray-200 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                </div>
 
-                <div class="flex justify-end gap-2 mt-5">
-                    <button type="button" onclick="closeModal('addModal')"
-                        class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
-                        Batal
-                    </button>
-                    <button
-                        class="btn-submit flex-1 sm:flex-none inline-flex items-center justify-center px-8 py-2.5 text-sm font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-all active:scale-95 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
-                        type="submit">
-                        <span class="btn-text">Simpan</span>
-                        <svg class="btn-spinner hidden animate-spin ml-2 h-4 w-4 text-white"
-                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                            </path>
-                        </svg>
-                    </button>
-                </div>
-            </form>
+                    <div class="flex justify-end gap-2 mt-5">
+                        <button type="button" onclick="closeModal('addModal')"
+                            class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
+                            Batal
+                        </button>
+                        <button
+                            class="btn-submit flex-1 sm:flex-none inline-flex items-center justify-center px-8 py-2.5 text-sm font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-all active:scale-95 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+                            type="submit">
+                            <span class="btn-text">Simpan</span>
+                            <svg class="btn-spinner hidden animate-spin ml-2 h-4 w-4 text-white"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
+    @endcan
 
     {{-- Import Modal --}}
     <div id="importModal" class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto">
