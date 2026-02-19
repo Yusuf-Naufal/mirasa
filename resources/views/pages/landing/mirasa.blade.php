@@ -1,15 +1,9 @@
 <!DOCTYPE html>
 <html lang="id" class="scroll-smooth">
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/master
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PT Mirasa Food Industry</title>
-<<<<<<< HEAD
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     
@@ -224,7 +218,6 @@
                 <div class="flex gap-8">
                     <a href="#" class="text-[10px] uppercase font-bold text-slate-400 hover:text-slate-900 transition-colors">Privacy Policy</a>
                     <a href="#" class="text-[10px] uppercase font-bold text-slate-400 hover:text-slate-900 transition-colors">Terms of Service</a>
-=======
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
