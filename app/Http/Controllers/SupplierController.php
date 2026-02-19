@@ -21,6 +21,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class SupplierController extends Controller
 {
+    
     /**
      * Menampilkan daftar supplier (Index)
      */
@@ -124,8 +125,13 @@ class SupplierController extends Controller
      */
     public function edit($id)
     {
+        $user = auth()->user();
         $supplier = Supplier::withTrashed()->findOrFail($id);
         $perusahaan = Perusahaan::whereNull('deleted_at')->get();
+
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $supplier->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         return view('pages.supplier.edit', compact('supplier', 'perusahaan'));
     }
@@ -144,7 +150,12 @@ class SupplierController extends Controller
         ]);
 
         // 2. Cari Data (Termasuk yang soft deleted agar bisa diupdate)
+        $user = auth()->user();
         $supplier = Supplier::withTrashed()->findOrFail($id);
+
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $supplier->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         // 3. Olah Data (Sama dengan logika Store agar Uppercase)
         $data = [

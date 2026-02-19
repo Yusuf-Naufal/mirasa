@@ -54,55 +54,65 @@
                 </div>
 
                 {{-- BUTTON TAMBAH BARANG DENGAN DROPDOWN (Pemisahan) --}}
-                <div class="relative inline-block text-left w-full md:w-56" x-data="{ open: false }">
-                    <button @click="open = !open" @click.away="open = false" type="button"
-                        class="inline-flex justify-center items-center w-full lg:w-auto gap-x-1.5 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Barang Masuk
-                        <svg class="-mr-1 h-5 w-5 text-green-200" viewBox="0 0 20 20" fill="currentColor"
-                            aria-hidden="true">
-                            <path fill-rule="evenodd"
-                                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
+                @canany(['barang-masuk.create-produksi', 'barang-masuk.create-bahan-penolong'])
+                    <div class="relative inline-block text-left w-full md:w-56" x-data="{ open: false }">
+                        <button @click="open = !open" @click.away="open = false" type="button"
+                            class="inline-flex justify-center items-center w-full lg:w-auto gap-x-1.5 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Barang Masuk
+                            <svg class="-mr-1 h-5 w-5 text-green-200" viewBox="0 0 20 20" fill="currentColor"
+                                aria-hidden="true">
+                                <path fill-rule="evenodd"
+                                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
 
-                    {{-- MENU PILIHAN --}}
-                    <div x-show="open" x-transition:enter="transition ease-out duration-100"
-                        x-transition:enter-start="transform opacity-0 scale-95"
-                        x-transition:enter-end="transform opacity-100 scale-100"
-                        x-transition:leave="transition ease-in duration-75"
-                        x-transition:leave-start="transform opacity-100 scale-100"
-                        x-transition:leave-end="transform opacity-0 scale-95"
-                        class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
-                        <div class="py-1">
-                            <a href="{{ route('barang-masuk.create-produksi') }}"
-                                class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
-                                <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Produksi
-                            </a>
-                            <a href="{{ route('barang-masuk.create-bp') }}"
-                                class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
-                                <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Bahan Penolong
-                            </a>
+                        {{-- MENU PILIHAN --}}
+                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
+                            <div class="py-1">
+                                @can('barang-masuk.create-produksi')
+                                    <a href="{{ route('barang-masuk.create-produksi') }}"
+                                        class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
+                                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Produksi
+                                    </a>
+                                @endcan
+                                @can('barang-masuk.create-bahan-penolong')
+                                    <a href="{{ route('barang-masuk.create-bp') }}"
+                                        class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
+                                        <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Bahan Penolong
+                                    </a>
+                                @endcan
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endcanany
             </div>
 
             {{-- 3. TABS NAVIGATION --}}
             <div class="flex gap-4 border-b border-gray-100 mb-6">
-                <a href="{{ route('barang-masuk.index', ['tab' => 'produksi']) }}"
-                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'produksi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
-                    Barang Produksi
-                </a>
+                @can('barang-masuk.produksi')
+                    <a href="{{ route('barang-masuk.index', ['tab' => 'produksi']) }}"
+                        class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'produksi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
+                        Barang Produksi
+                    </a>
+                @endcan
 
-                <a href="{{ route('barang-masuk.index', ['tab' => 'penolong']) }}"
-                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'penolong' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
-                    Bahan Penolong
-                </a>
+                @can('barang-masuk.bahan-penolong')
+                    <a href="{{ route('barang-masuk.index', ['tab' => 'penolong']) }}"
+                        class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'penolong' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
+                        Bahan Penolong
+                    </a>
+                @endcan
             </div>
 
             {{-- AREA TABEL --}}

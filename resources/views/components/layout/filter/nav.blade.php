@@ -6,7 +6,7 @@
     <div class="relative w-full lg:w-72" x-data="{ open: false }">
         @php
             // Definisi Tab dengan properti lengkap
-            $tabs = collect([
+            $allTabs = collect([
                 [
                     'route' => 'grafik.bahan-baku',
                     'label' => 'Bahan Baku',
@@ -65,7 +65,19 @@
                 ],
             ]);
 
+            // 2. FILTER: Hanya ambil tab yang diizinkan oleh permission user
+            $tabs = $allTabs->filter(function ($tab) {
+                return auth()->user()->can($tab['route']);
+            });
+
+            // 3. Tentukan Active Tab berdasarkan route saat ini
             $activeTab = $tabs->first(fn($tab) => request()->routeIs($tab['route']));
+
+            // 4. FALLBACK: Jika route saat ini tidak ada di daftar yang diizinkan (misal akses manual URL)
+            // Ambil tab pertama yang diizinkan sebagai default tampilan
+            if (!$activeTab && $tabs->isNotEmpty()) {
+                $activeTab = $tabs->first();
+            }
         @endphp
 
         <button @click="open = !open" @click.away="open = false"

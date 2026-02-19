@@ -74,47 +74,55 @@
                     </form>
 
                     {{-- BUTTON TAMBAH BARANG DENGAN DROPDOWN (Pemisahan) --}}
-                    <div class="relative inline-block text-left w-full lg:w-auto" x-data="{ open: false }">
-                        <button @click="open = !open" @click.away="open = false" type="button"
-                            class="inline-flex justify-center items-center w-full lg:w-auto gap-x-1.5 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
-                            Barang Masuk
-                            <svg class="-mr-1 h-5 w-5 text-green-200" viewBox="0 0 20 20" fill="currentColor"
-                                aria-hidden="true">
-                                <path fill-rule="evenodd"
-                                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                        </button>
+                    @canany(['inventory.create-produksi, inventory.create-bahan-baku, inventory.create-bahan-penolong'])
+                        <div class="relative inline-block text-left w-full lg:w-auto" x-data="{ open: false }">
+                            <button @click="open = !open" @click.away="open = false" type="button"
+                                class="inline-flex justify-center items-center w-full lg:w-auto gap-x-1.5 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg>
+                                Barang Masuk
+                                <svg class="-mr-1 h-5 w-5 text-green-200" viewBox="0 0 20 20" fill="currentColor"
+                                    aria-hidden="true">
+                                    <path fill-rule="evenodd"
+                                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </button>
 
-                        {{-- MENU PILIHAN --}}
-                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="transform opacity-0 scale-95"
-                            x-transition:enter-end="transform opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="transform opacity-100 scale-100"
-                            x-transition:leave-end="transform opacity-0 scale-95"
-                            class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
-                            <div class="py-1">
-                                <a href="{{ route('inventory.create-produksi') }}"
-                                    class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Produksi
-                                </a>
-                                <a href="{{ route('inventory.create-bb') }}"
-                                    class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-purple-500 rounded-full"></span> Bahan Baku
-                                </a>
-                                <a href="{{ route('inventory.create-bp') }}"
-                                    class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Bahan Penolong
-                                </a>
+                            {{-- MENU PILIHAN --}}
+                            <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
+                                <div class="py-1">
+                                    @can('inventory.create-produksi')
+                                        <a href="{{ route('inventory.create-produksi') }}"
+                                            class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Produksi
+                                        </a>
+                                    @endcan
+                                    @can('inventory.create-bahan-baku')
+                                        <a href="{{ route('inventory.create-bb') }}"
+                                            class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-purple-500 rounded-full"></span> Bahan Baku
+                                        </a>
+                                    @endcan
+                                    @can('inventory.create-bahan-penolong')
+                                        <a href="{{ route('inventory.create-bp') }}"
+                                            class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Bahan Penolong
+                                        </a>
+                                    @endcan
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endcanany
                 </div>
             </div>
 

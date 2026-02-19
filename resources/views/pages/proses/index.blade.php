@@ -5,15 +5,17 @@
 
             <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
                 <div class="flex gap-2">
-                    {{-- Tombol Tambah --}}
-                    <button type="button" onclick="openModal('addModal')"
-                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
-                        </svg>
-                        <span class="hidden md:block md:ml-2">Tambah Proses</span>
-                    </button>
+                    @can('proses.create')
+                        {{-- Tombol Tambah --}}
+                        <button type="button" onclick="openModal('addModal')"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
+                            </svg>
+                            <span class="hidden md:block md:ml-2">Tambah Proses</span>
+                        </button>
+                    @endcan
 
 
                     {{-- Tombol Filter --}}

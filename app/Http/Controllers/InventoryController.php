@@ -358,6 +358,10 @@ class InventoryController extends Controller
     {
         // Mengambil data inventory beserta barangnya
         $inventory = Inventory::with('barang')->findOrFail($id);
+        $user = auth()->user();
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $inventory->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk melihat data ini.');
+        }
 
         // Mengambil details dengan filter: stok > 0 dan urutan paling lama (oldest)
         $details = $inventory->DetailInventory()

@@ -138,16 +138,18 @@
                                                     ({{ $detail->barang->satuan ?? 'XX' }})
                                                 </h4>
                                             </div>
-                                            <button type="button"
-                                                @click="initEdit({{ $detail }}, '{{ $detail->barang->nama_barang ?? 'Produk' }}')"
-                                                class="bg-white shadow-sm text-purple-600 hover:bg-purple-600 hover:text-white p-2 rounded-xl transition-all border border-purple-100">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                </svg>
-                                            </button>
+                                            @can('produksi.detail-edit')
+                                                <button type="button"
+                                                    @click="initEdit({{ $detail }}, '{{ $detail->barang->nama_barang ?? 'Produk' }}')"
+                                                    class="bg-white shadow-sm text-purple-600 hover:bg-purple-600 hover:text-white p-2 rounded-xl transition-all border border-purple-100">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                    </svg>
+                                                </button>
+                                            @endcan
                                         </div>
 
                                         <div class="grid grid-cols-2 gap-y-3 gap-x-4">

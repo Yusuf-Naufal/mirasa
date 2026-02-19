@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
-use App\Models\Produksi;
-use App\Models\Supplier;
+use App\Models\DetailInventory;
 use App\Models\Inventory;
 use App\Models\Perusahaan;
+use App\Models\Produksi;
+use App\Models\Supplier;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Models\DetailInventory;
 use Illuminate\Support\Facades\DB;
 
 class BarangMasukController extends Controller
@@ -19,11 +20,41 @@ class BarangMasukController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $activeTab = $request->get('tab', 'produksi');
 
-        // Ambil data perusahaan untuk filter Super Admin
-        $perusahaan = $user->hasRole('Super Admin') ? Perusahaan::whereNull('deleted_at')->get() : [];
+        // 1. CEK PERMISSION DI AWAL
+        $canProduksi = $user->can('barang-masuk.produksi');
+        $canBahanPenolong = $user->can('barang-masuk.bahan-penolong');
 
+        // 2. VALIDASI TAB AKTIF BERDASARKAN IZIN & PERMINTAAN KHUSUS
+        $activeTab = $request->get('tab');
+
+        if (!$activeTab) {
+            /** * PRIORITAS DEFAULT:
+             * Jika Anda ingin mengutamakan 'bahan-penolong', 
+             * maka cek $canBahanPenolong terlebih dahulu.
+             */
+            if ($canBahanPenolong) {
+                $activeTab = 'bahan-penolong';
+            } elseif ($canProduksi) {
+                $activeTab = 'produksi';
+            } else {
+                $activeTab = 'none';
+            }
+        }
+
+        // Proteksi: Mencegah user mengakses tab yang tidak diizinkan via URL manual
+        if ($activeTab === 'produksi' && !$canProduksi) {
+            $activeTab = $canBahanPenolong ? 'bahan-penolong' : 'none';
+        } elseif ($activeTab === 'bahan-penolong' && !$canBahanPenolong) {
+            $activeTab = $canProduksi ? 'produksi' : 'none';
+        }
+
+        // Jika user sama sekali tidak punya akses, hentikan proses
+        if ($activeTab === 'none') {
+            abort(403, 'Anda tidak memiliki izin untuk melihat modul Barang Masuk.');
+        }
+
+        // 3. QUERY LIST BARANG (UNTUK FILTER MODAL)
         $listBarang = Barang::query()
             ->when(!$user->hasRole('Super Admin'), fn($q) => $q->where('id_perusahaan', $user->id_perusahaan))
             ->whereHas('jenisBarang', function ($q) use ($activeTab) {
@@ -36,29 +67,30 @@ class BarangMasukController extends Controller
             ->orderBy('nama_barang', 'asc')
             ->get();
 
-        // Query DetailInventory (Barang Masuk)
+        // 4. QUERY UTAMA DETAIL INVENTORY
         $query = DetailInventory::with(['Inventory.Barang.jenisBarang', 'Inventory.Perusahaan', 'supplier']);
 
-        // Filter Tab (Data yang ditampilkan di tabel)
+        // Filter Query Utama berdasarkan tab yang sudah divalidasi
         if ($activeTab === 'produksi') {
             $query->whereHas('Inventory.Barang.jenisBarang', fn($q) => $q->whereIn('kode', ['FG', 'WIP', 'EC']));
         } else {
             $query->whereHas('Inventory.Barang.jenisBarang', fn($q) => $q->where('kode', 'BP'));
         }
 
-        // Filter Perusahaan
+        // 5. FILTER PERUSAHAAN (ROLE-BASED)
+        $perusahaan = $user->hasRole('Super Admin') ? Perusahaan::whereNull('deleted_at')->get() : [];
+
         if (!$user->hasRole('Super Admin')) {
             $query->whereHas('Inventory', fn($q) => $q->where('id_perusahaan', $user->id_perusahaan));
         } elseif ($request->filled('id_perusahaan')) {
             $query->whereHas('Inventory', fn($q) => $q->where('id_perusahaan', $request->id_perusahaan));
         }
 
-        // Filter Barang Spesifik (DARI MODAL FILTER)
+        // 6. FILTER TAMBAHAN (SEARCH, BARANG, TANGGAL)
         if ($request->filled('id_barang')) {
             $query->whereHas('Inventory', fn($q) => $q->where('id_barang', $request->id_barang));
         }
 
-        // Filter Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -67,7 +99,6 @@ class BarangMasukController extends Controller
             });
         }
 
-        // Filter Tanggal
         if ($request->filled('date_range')) {
             $dates = explode(' to ', $request->date_range);
             if (count($dates) == 2) {
@@ -77,6 +108,7 @@ class BarangMasukController extends Controller
             }
         }
 
+        // 7. PAGINATION & GROUPING
         $barangMasukPagination = $query->latest('tanggal_masuk')->paginate(30)->withQueryString();
 
         $data = $barangMasukPagination->getCollection()->groupBy([
@@ -86,7 +118,13 @@ class BarangMasukController extends Controller
             'inventory.id_barang'
         ]);
 
-        return view('pages.barangmasuk.index', compact('data', 'barangMasukPagination', 'listBarang', 'perusahaan', 'activeTab'));
+        return view('pages.barangmasuk.index', compact(
+            'data',
+            'barangMasukPagination',
+            'listBarang',
+            'perusahaan',
+            'activeTab',
+        ));
     }
 
     /**
@@ -305,8 +343,10 @@ class BarangMasukController extends Controller
     public function editProduksi($id)
     {
         $user = auth()->user();
-
         $item = DetailInventory::findOrFail($id);
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $item->Inventory->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
             ->whereHas('jenisBarang', function ($query) {
@@ -325,8 +365,10 @@ class BarangMasukController extends Controller
     public function editBp($id)
     {
         $user = auth()->user();
-
         $item = DetailInventory::findOrFail($id);
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $item->Inventory->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
             ->whereHas('jenisBarang', function ($query) {
@@ -359,10 +401,14 @@ class BarangMasukController extends Controller
             'total_harga'        => 'nullable|numeric|min:0',
             'nomor_batch'        => 'nullable|string',
             'tempat_penyimpanan' => 'nullable|string|max:255',
-        ]);        
+        ]);
 
         try {
+            $user = auth()->user();
             $detail = DetailInventory::findOrFail($id);
+            if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $detail->Inventory->id_perusahaan) {
+                abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+            }
 
             // --- PROTEKSI UTAMA ---
             if ($detail->BarangKeluar()->exists()) {

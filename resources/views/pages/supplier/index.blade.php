@@ -5,24 +5,28 @@
 
             <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
                 <div class="flex gap-2">
-                    {{-- Tombol Tambah --}}
-                    <a type="button" href="{{ route('supplier.create') }}"
-                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
-                        </svg>
-                        <span class="hidden md:block md:ml-2">Tambah Supplier</span>
-                    </a>
+                    @can('supplier.create')
+                        {{-- Tombol Tambah --}}
+                        <a type="button" href="{{ route('supplier.create') }}"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
+                            </svg>
+                            <span class="hidden md:block md:ml-2">Tambah Supplier</span>
+                        </a>
+                    @endcan
 
-                    <button onclick="openModal('importModal')"
-                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-green-600 transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3V11h2v3h3v2zm-3-7V3.5L18.5 9H13z" />
-                        </svg>
-                        <span class="hidden md:block md:ml-2">Import Excel</span>
-                    </button>
+                    @can('supplier.import')
+                        <button onclick="openModal('importModal')"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-green-600 transition-all shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3V11h2v3h3v2zm-3-7V3.5L18.5 9H13z" />
+                            </svg>
+                            <span class="hidden md:block md:ml-2">Import Excel</span>
+                        </button>
+                    @endcan
 
                     {{-- Tombol Filter --}}
                     <button onclick="openModal('filterModal')"

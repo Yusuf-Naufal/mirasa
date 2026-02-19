@@ -33,38 +33,36 @@
     <div class="h-full px-4 pb-4 overflow-y-auto overflow-x-hidden bg-white custom-scrollbar">
         <ul class="space-y-2 font-medium">
 
-            @if (auth()->user()->hasRole('Super Admin') ||
-                    auth()->user()->hasRole('Manager') ||
-                    auth()->user()->hasRole('Admin Gudang'))
-                <li>
-                    @php
-                        // Menentukan route dashboard berdasarkan role
-                        $urlDashboard = '#';
-                        if (auth()->user()->hasRole('Super Admin')) {
-                            $urlDashboard = route('super-admin.dashboard');
-                        } elseif (auth()->user()->hasRole('Manager')) {
-                            $urlDashboard = route('manager.dashboard');
-                        } elseif (auth()->user()->hasRole('Admin Gudang')) {
-                            $urlDashboard = route('admin-gudang.dashboard');
-                        }
-                    @endphp
-                    <a href="{{ $urlDashboard }}"
-                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                        <div class="min-w-[32px] flex justify-center">
-                            <svg class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
-                                </path>
-                            </svg>
-                        </div>
-                        <span
-                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Dashboard</span>
-                    </a>
-                </li>
-            @endif
+            <li>
+                @php
+                    // Menentukan route dashboard berdasarkan role
+                    $urlDashboard = '#';
+                    if (auth()->user()->hasRole('Super Admin')) {
+                        $urlDashboard = route('super-admin.dashboard');
+                    } elseif (auth()->user()->hasRole('Manager')) {
+                        $urlDashboard = route('manager.dashboard');
+                    } elseif (auth()->user()->hasRole('Admin Gudang')) {
+                        $urlDashboard = route('admin-gudang.dashboard');
+                    } else {
+                        $urlDashboard = route('admin-gudang.dashboard');
+                    }
+                @endphp
+                <a href="{{ $urlDashboard }}"
+                    class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                    <div class="min-w-[32px] flex justify-center">
+                        <svg class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <span
+                        class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Dashboard</span>
+                </a>
+            </li>
 
-            @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin Gudang'))
+            @can('beranda.view')
                 <li>
                     <a href="{{ route('beranda') }}"
                         class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
@@ -72,8 +70,8 @@
                             <svg xmlns="http://www.w3.org/2000/svg"
                                 class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
                                 viewBox="0 0 24 24">
-                                <path fill="none" stroke="currentColor" stroke-linecap="round"
-                                    stroke-linejoin="round" stroke-width="2"
+                                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2"
                                     d="M20 19v-8.5a1 1 0 0 0-.4-.8l-7-5.25a1 1 0 0 0-1.2 0l-7 5.25a1 1 0 0 0-.4.8V19a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1" />
                             </svg>
                         </div>
@@ -81,25 +79,133 @@
                             class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Beranda</span>
                     </a>
                 </li>
-            @endif
+            @endcan
 
-            @if (auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Admin Gudang'))
+            @canany(['laporan.produksi', 'laporan.gudang', 'laporan.pengeluaran', 'laporan.hpp', 'laporan.transaksi'])
+                <li x-data="{ open: false }">
+                    {{-- Tombol Utama Laporan --}}
+                    <button @click="open = !open"
+                        class="w-full flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M13 9h5.5L13 3.5zM6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2m1 18h2v-6H7zm4 0h2v-8h-2zm4 0h2v-4h-2z" />
+                            </svg>
+                        </div>
+                        {{-- Di Mobile teks harus muncul jika sidebar terbuka (sm:translate-x-0) --}}
+                        <span
+                            class="ms-4 opacity-0 sm:group-hover:opacity-100 translate-x-[-10px] sm:group-hover:translate-x-0 transition-all duration-300 font-bold uppercase text-xs tracking-widest flex-1 text-left max-sm:opacity-100 max-sm:translate-x-0">
+                            Laporan
+                        </span>
+
+                        {{-- Indikator Panah --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" :class="open ? 'rotate-180' : ''"
+                            class="w-4 h-4 transition-transform duration-200 opacity-0 sm:group-hover:opacity-100 max-sm:opacity-100"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    {{-- Sub-Menu (Children) --}}
+                    <div x-show="open" x-cloak x-collapse {{-- Gunakan plugin collapse agar transisi smooth --}}
+                        class="mt-1 space-y-1 px-2 overflow-hidden">
+
+                        @can('laporan.produksi')
+                            {{-- Link Item: Hapus opacity-0 agar langsung terlihat saat di-expand --}}
+                            <a href="{{ route('laporan-produksi') }}"
+                                class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
+                                Produksi
+                            </a>
+                        @endcan
+
+                        @can('laporan.gudang')
+                            <a href="{{ route('laporan-gudang') }}"
+                                class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
+                                Gudang
+                            </a>
+                        @endcan
+
+                        @can('laporan.pengeluaran')
+                            <a href="{{ route('laporan-pengeluaran') }}"
+                                class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
+                                Pengeluaran
+                            </a>
+                        @endcan
+
+                        @can('laporan.hpp')
+                            <a href="{{ route('laporan-hpp') }}"
+                                class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
+                                HPP
+                            </a>
+                        @endcan
+
+                        @can('laporan.transaksi')
+                            <a href="{{ route('laporan-transaksi') }}"
+                                class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
+                                Transaksi
+                            </a>
+                        @endcan
+                    </div>
+                </li>
+            @endcanany
+
+            @canany(['grafik.bahan-baku', 'grafik.produksi', 'grafik.pemakaian', 'grafik.hpp', 'grafik.transaksi'])
                 <li>
-                    <a href="{{ route('costumer.index') }}"
+                    <a href="{{ route('grafik.index') }}"
                         class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
                         <div class="min-w-[32px] flex justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg"
                                 class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
-                                viewBox="0 0 12 12">
+                                viewBox="0 0 24 24">
                                 <path fill="currentColor"
-                                    d="M6.153 7.008A1.5 1.5 0 0 1 7.5 8.5c0 .771-.47 1.409-1.102 1.83c-.635.424-1.485.67-2.398.67s-1.763-.246-2.398-.67C.969 9.91.5 9.271.5 8.5A1.5 1.5 0 0 1 2 7h4zM10.003 7a1.5 1.5 0 0 1 1.5 1.5c0 .695-.432 1.211-.983 1.528c-.548.315-1.265.472-2.017.472q-.38-.001-.741-.056c.433-.512.739-1.166.739-1.944A2.5 2.5 0 0 0 7.997 7zM4.002 1.496A2.253 2.253 0 1 1 4 6.001a2.253 2.253 0 0 1 0-4.505m4.75 1.001a1.75 1.75 0 1 1 0 3.5a1.75 1.75 0 0 1 0-3.5" />
+                                    d="M7 16a1.5 1.5 0 0 0 1.5-1.5a1 1 0 0 0 0-.15l2.79-2.79h.46l1.61 1.61v.08a1.5 1.5 0 1 0 3 0v-.08L20 9.5A1.5 1.5 0 1 0 18.5 8a1 1 0 0 0 0 .15l-3.61 3.61h-.16L13 10a1.49 1.49 0 0 0-3 0l-3 3a1.5 1.5 0 0 0 0 3m13.5 4h-17V3a1 1 0 0 0-2 0v18a1 1 0 0 0 1 1h18a1 1 0 0 0 0-2" />
                             </svg>
                         </div>
                         <span
-                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Costumer</span>
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Kurva</span>
                     </a>
                 </li>
+            @endcanany
 
+            @can('produk.index')
+                <li>
+                    <a href="{{ route('produk.index') }}"
+                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 1024 1024">
+                                <path fill="currentColor" fill-rule="evenodd"
+                                    d="M160 144h304c8.837 0 16 7.163 16 16v304c0 8.837-7.163 16-16 16H160c-8.837 0-16-7.163-16-16V160c0-8.837 7.163-16 16-16m564.314-25.333l181.019 181.02c6.248 6.248 6.248 16.378 0 22.627l-181.02 181.019c-6.248 6.248-16.378 6.248-22.627 0l-181.019-181.02c-6.248-6.248-6.248-16.378 0-22.627l181.02-181.019c6.248-6.248 16.378-6.248 22.627 0M160 544h304c8.837 0 16 7.163 16 16v304c0 8.837-7.163 16-16 16H160c-8.837 0-16-7.163-16-16V560c0-8.837 7.163-16 16-16m400 0h304c8.837 0 16 7.163 16 16v304c0 8.837-7.163 16-16 16H560c-8.837 0-16-7.163-16-16V560c0-8.837 7.163-16 16-16" />
+                            </svg>
+                        </div>
+                        <span
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Produk</span>
+                    </a>
+                </li>
+            @endcan
+
+            @can('berita.index')
+                <li>
+                    <a href="{{ route('berita.index') }}"
+                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 2048 2048">
+                                <path fill="currentColor"
+                                    d="M2048 512v896q0 53-20 99t-55 81t-82 55t-99 21H249q-51 0-96-20t-79-53t-54-79t-20-97V256h1792v256zm-128 128h-128v704q0 26-19 45t-45 19t-45-19t-19-45V384H128v1031q0 25 9 47t26 38t39 26t47 10h1543q27 0 50-10t40-27t28-41t10-50zm-384 0H256V512h1280zm0 768h-512v-128h512zm0-256h-512v-128h512zm0-256h-512V768h512zm-640 512H256V765h640zm-512-128h384V893H384z" />
+                            </svg>
+                        </div>
+                        <span
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Berita</span>
+                    </a>
+                </li>
+            @endcan
+
+            @can('barang.index')
                 <li>
                     <a href="{{ route('barang.index') }}"
                         class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
@@ -115,7 +221,27 @@
                             class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Barang</span>
                     </a>
                 </li>
+            @endcan
 
+            @can('costumer.index')
+                <li>
+                    <a href="{{ route('costumer.index') }}"
+                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
+                        <div class="min-w-[32px] flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
+                                viewBox="0 0 12 12">
+                                <path fill="currentColor"
+                                    d="M6.153 7.008A1.5 1.5 0 0 1 7.5 8.5c0 .771-.47 1.409-1.102 1.83c-.635.424-1.485.67-2.398.67s-1.763-.246-2.398-.67C.969 9.91.5 9.271.5 8.5A1.5 1.5 0 0 1 2 7h4zM10.003 7a1.5 1.5 0 0 1 1.5 1.5c0 .695-.432 1.211-.983 1.528c-.548.315-1.265.472-2.017.472q-.38-.001-.741-.056c.433-.512.739-1.166.739-1.944A2.5 2.5 0 0 0 7.997 7zM4.002 1.496A2.253 2.253 0 1 1 4 6.001a2.253 2.253 0 0 1 0-4.505m4.75 1.001a1.75 1.75 0 1 1 0 3.5a1.75 1.75 0 0 1 0-3.5" />
+                            </svg>
+                        </div>
+                        <span
+                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Costumer</span>
+                    </a>
+                </li>
+            @endcan
+
+            @can('supplier.index')
                 <li>
                     <a href="{{ route('supplier.index') }}"
                         class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
@@ -131,7 +257,9 @@
                             class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Supplier</span>
                     </a>
                 </li>
+            @endcan
 
+            @can('proses.index')
                 <li>
                     <a href="{{ route('proses.index') }}"
                         class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
@@ -147,9 +275,9 @@
                             class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Proses</span>
                     </a>
                 </li>
-            @endif
+            @endcan
 
-            @if (auth()->user()->hasRole('Super Admin'))
+            @can('perusahaan.index')
                 <li>
                     <a href="{{ route('perusahaan.index') }}"
                         class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
@@ -166,6 +294,9 @@
                             class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Perusahaan</span>
                     </a>
                 </li>
+            @endcan
+
+            @can('user.index')
                 <li>
                     <a href="{{ route('user.index') }}"
                         class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
@@ -181,113 +312,9 @@
                             class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">User</span>
                     </a>
                 </li>
-            @endif
+            @endcan
 
-            <li x-data="{ open: false }">
-                {{-- Tombol Utama Laporan --}}
-                <button @click="open = !open"
-                    class="w-full flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                    <div class="min-w-[32px] flex justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
-                            viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M13 9h5.5L13 3.5zM6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4c0-1.11.89-2 2-2m1 18h2v-6H7zm4 0h2v-8h-2zm4 0h2v-4h-2z" />
-                        </svg>
-                    </div>
-                    {{-- Di Mobile teks harus muncul jika sidebar terbuka (sm:translate-x-0) --}}
-                    <span
-                        class="ms-4 opacity-0 sm:group-hover:opacity-100 translate-x-[-10px] sm:group-hover:translate-x-0 transition-all duration-300 font-bold uppercase text-xs tracking-widest flex-1 text-left max-sm:opacity-100 max-sm:translate-x-0">
-                        Laporan
-                    </span>
-
-                    {{-- Indikator Panah --}}
-                    <svg xmlns="http://www.w3.org/2000/svg" :class="open ? 'rotate-180' : ''"
-                        class="w-4 h-4 transition-transform duration-200 opacity-0 sm:group-hover:opacity-100 max-sm:opacity-100"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-
-                {{-- Sub-Menu (Children) --}}
-                <div x-show="open" x-cloak x-collapse {{-- Gunakan plugin collapse agar transisi smooth --}}
-                    class="mt-1 space-y-1 px-2 overflow-hidden">
-
-                    {{-- Link Item: Hapus opacity-0 agar langsung terlihat saat di-expand --}}
-                    <a href="{{ route('laporan-produksi') }}"
-                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
-                        Produksi
-                    </a>
-
-                    <a href="{{ route('laporan-gudang') }}"
-                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
-                        Gudang
-                    </a>
-
-                    <a href="{{ route('laporan-pengeluaran') }}"
-                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
-                        Pengeluaran
-                    </a>
-
-                    <a href="{{ route('laporan-hpp') }}"
-                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
-                        HPP
-                    </a>
-
-                    <a href="{{ route('laporan-transaksi') }}"
-                        class="flex items-center p-2.5 text-sm text-gray-500 rounded-lg hover:bg-gray-50 hover:text-blue-600 pl-12 font-medium transition-all">
-                        Transaksi
-                    </a>
-                </div>
-            </li>
-
-            <li>
-                <a href="{{ route('grafik.bahan-baku') }}"
-                    class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                    <div class="min-w-[32px] flex justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
-                            viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M7 16a1.5 1.5 0 0 0 1.5-1.5a1 1 0 0 0 0-.15l2.79-2.79h.46l1.61 1.61v.08a1.5 1.5 0 1 0 3 0v-.08L20 9.5A1.5 1.5 0 1 0 18.5 8a1 1 0 0 0 0 .15l-3.61 3.61h-.16L13 10a1.49 1.49 0 0 0-3 0l-3 3a1.5 1.5 0 0 0 0 3m13.5 4h-17V3a1 1 0 0 0-2 0v18a1 1 0 0 0 1 1h18a1 1 0 0 0 0-2" />
-                        </svg>
-                    </div>
-                    <span
-                        class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Kurva</span>
-                </a>
-            </li>
-
-            @if (auth()->user()->hasRole('Super Admin'))
-                <li>
-                    <a href="{{ route('produk.index') }}"
-                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                        <div class="min-w-[32px] flex justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
-                                viewBox="0 0 1024 1024">
-                                <path fill="currentColor" fill-rule="evenodd"
-                                    d="M160 144h304c8.837 0 16 7.163 16 16v304c0 8.837-7.163 16-16 16H160c-8.837 0-16-7.163-16-16V160c0-8.837 7.163-16 16-16m564.314-25.333l181.019 181.02c6.248 6.248 6.248 16.378 0 22.627l-181.02 181.019c-6.248 6.248-16.378 6.248-22.627 0l-181.019-181.02c-6.248-6.248-6.248-16.378 0-22.627l181.02-181.019c6.248-6.248 16.378-6.248 22.627 0M160 544h304c8.837 0 16 7.163 16 16v304c0 8.837-7.163 16-16 16H160c-8.837 0-16-7.163-16-16V560c0-8.837 7.163-16 16-16m400 0h304c8.837 0 16 7.163 16 16v304c0 8.837-7.163 16-16 16H560c-8.837 0-16-7.163-16-16V560c0-8.837 7.163-16 16-16" />
-                            </svg>
-                        </div>
-                        <span
-                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Produk</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ route('berita.index') }}"
-                        class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
-                        <div class="min-w-[32px] flex justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors"
-                                viewBox="0 0 2048 2048">
-                                <path fill="currentColor"
-                                    d="M2048 512v896q0 53-20 99t-55 81t-82 55t-99 21H249q-51 0-96-20t-79-53t-54-79t-20-97V256h1792v256zm-128 128h-128v704q0 26-19 45t-45 19t-45-19t-19-45V384H128v1031q0 25 9 47t26 38t39 26t47 10h1543q27 0 50-10t40-27t28-41t10-50zm-384 0H256V512h1280zm0 768h-512v-128h512zm0-256h-512v-128h512zm0-256h-512V768h512zm-640 512H256V765h640zm-512-128h384V893H384z" />
-                            </svg>
-                        </div>
-                        <span
-                            class="ms-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 font-semibold">Berita</span>
-                    </a>
-                </li>
+            @can('logs.index')
                 <li>
                     <a href="{{ route('logs.index') }}"
                         class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap">
@@ -304,7 +331,7 @@
                             Aktifitas</span>
                     </a>
                 </li>
-            @endif
+            @endcan
 
         </ul>
     </div>

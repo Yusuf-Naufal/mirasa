@@ -14,69 +14,105 @@
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4 md:px-0">
 
                 @php
-                    // Dashboard Route Logic
-                    if (auth()->user()->hasRole('Super Admin')) {
+                    // 1. Dashboard Route Logic
+                    $user = auth()->user();
+                    if ($user->hasRole('Super Admin')) {
                         $dashboardRoute = route('super-admin.dashboard');
-                    } elseif (auth()->user()->hasRole('Manager')) {
+                    } elseif ($user->hasRole('Manager')) {
                         $dashboardRoute = route('manager.dashboard');
-                    } elseif (auth()->user()->hasRole('Admin Gudang')) {
-                        $dashboardRoute = route('admin-gudang.dashboard');
                     } else {
-                        $dashboardRoute = '#';
+                        $dashboardRoute = route('admin-gudang.dashboard');
                     }
 
-                    // Card Items Definition for cleaner loop
-                    $menuItems = [
+                    $allMenuItems = [
                         [
                             'route' => $dashboardRoute,
                             'label' => 'Dashboard',
-                            'color' => 'indigo',
+                            'color' => 'gray',
                             'icon' =>
                                 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
+                            'permission' => null,
                         ],
                         [
                             'route' => route('inventory.index'),
                             'label' => 'Gudang',
                             'color' => 'amber',
                             'svg_type' => 'gudang',
+                            'permission' => 'inventory.index',
                         ],
                         [
                             'route' => route('produksi.index'),
                             'label' => 'Produksi',
                             'color' => 'slate',
                             'svg_type' => 'produksi',
+                            'permission' => 'produksi.index',
                         ],
                         [
                             'route' => route('bahan-baku.index'),
                             'label' => 'Bahan Baku',
                             'color' => 'emerald',
                             'svg_type' => 'bahan',
+                            'permission' => 'bahan-baku.index',
                         ],
                         [
                             'route' => route('barang-keluar.index'),
                             'label' => 'Barang Keluar',
                             'color' => 'rose',
                             'svg_type' => 'keluar',
+                            'permissions' => [
+                                'barang-keluar.produksi',
+                                'barang-keluar.penjualan',
+                                'barang-keluar.bahan-baku',
+                            ],
                         ],
                         [
                             'route' => route('barang-masuk.index'),
                             'label' => 'Barang Masuk',
                             'color' => 'emerald',
                             'svg_type' => 'masuk',
+                            'permissions' => ['barang-masuk.produksi', 'barang-masuk.bahan-penolong'],
                         ],
                         [
                             'route' => route('pemakaian.index'),
                             'label' => 'Pemakaian',
                             'color' => 'cyan',
                             'svg_type' => 'pemakaian',
+                            'permission' => 'pemakaian.index',
                         ],
                         [
                             'route' => route('pengeluaran.index'),
                             'label' => 'Pengeluaran',
                             'color' => 'orange',
                             'svg_type' => 'pengeluaran',
+                            'permissions' => [
+                                'pengeluaran.maintenance',
+                                'pengeluaran.kesejahtraan',
+                                'pengeluaran.operasional',
+                                'pengeluaran.office',
+                                'pengeluaran.limbah',
+                                'pengeluaran.administrasi',
+                            ],
                         ],
                     ];
+
+                    // 2. FILTER MENU BERDASARKAN PERMISSION
+                    $menuItems = collect($allMenuItems)->filter(function ($item) {
+                        // Gabungkan pengecekan kunci 'permission' dan 'permissions'
+                        $pKey = $item['permission'] ?? ($item['permissions'] ?? null);
+
+                        // Jika tidak ada permission (seperti dashboard), izinkan tampil
+                        if (is_null($pKey)) {
+                            return true;
+                        }
+
+                        // Jika nilainya adalah array, gunakan hasAnyPermission
+                        if (is_array($pKey)) {
+                            return auth()->user()->hasAnyPermission($pKey);
+                        }
+
+                        // Jika nilainya adalah string, gunakan can()
+                        return auth()->user()->can($pKey);
+                    });
                 @endphp
 
                 @foreach ($menuItems as $item)

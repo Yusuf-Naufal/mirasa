@@ -87,6 +87,15 @@
                             </select>
                         </div>
 
+                        <div class="space-y-1">
+                            <label for="kontak" class="block text-sm font-semibold text-gray-700">
+                                Domain
+                            </label>
+                            <input type="text" id="domain" name="domain"
+                                placeholder="Masukkan domain / subdomain perusahaan"
+                                class="w-full rounded-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border">
+                        </div>
+
                         <div class="space-y-1 md:col-span-2">
                             <label for="alamat" class="block text-sm font-semibold text-gray-700">Alamat Lengkap<span
                                     class="text-red-500">*</span></label>

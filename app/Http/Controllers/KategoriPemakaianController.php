@@ -76,7 +76,11 @@ class KategoriPemakaianController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        $user = Auth::user();
         $kategori = KategoriPemakaian::findOrFail($id);
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $kategori->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         $request->validate([
             'nama_kategori' => 'required|string|max:255',

@@ -25,7 +25,8 @@
                                 {{-- KODE BARANG DI BAWAH NAMA --}}
                                 <div
                                     class="text-xs font-mono text-gray-500 mt-0.5 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 w-fit">
-                                    {{ $i->Perusahaan->nama_perusahaan ?? 'All Akses' }} ({{ $i->Perusahaan->kota ?? 'XX' }})
+                                    {{ $i->Perusahaan->nama_perusahaan ?? 'All Akses' }}
+                                    ({{ $i->Perusahaan->kota ?? 'XX' }})
                                 </div>
                             </div>
                         </td>
@@ -61,28 +62,32 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex justify-center gap-3">
                                 {{-- TOMBOL EDIT --}}
-                                <a type="button" href="{{ route('user.edit', $i->id) }}"
-                                    class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 hover:bg-yellow-100 p-2 rounded-lg transition-colors"
-                                    title="Edit Data">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                    </svg>
-                                </a>
-
-                                {{-- LOGIKA DELETE --}}
-                                <form id="delete-form-{{ $i->id }}"
-                                    action="{{ route('user.destroy', $i->id) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" onclick="confirmDelete({{ $i->id }})"
-                                        class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
+                                @can('user.edit')
+                                    <a type="button" href="{{ route('user.edit', $i->id) }}"
+                                        class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 hover:bg-yellow-100 p-2 rounded-lg transition-colors"
+                                        title="Edit Data">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                         </svg>
-                                    </button>
-                                </form>
+                                    </a>
+                                @endcan
+
+                                {{-- LOGIKA DELETE --}}
+                                @can('user.delete')
+                                    <form id="delete-form-{{ $i->id }}"
+                                        action="{{ route('user.destroy', $i->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" onclick="confirmDelete({{ $i->id }})"
+                                            class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @endcan
                             </div>
                         </td>
                     </tr>
@@ -96,9 +101,11 @@
                                         d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" />
                                 </svg>
                                 <p class="text-gray-500 text-sm font-medium">Data user belum tersedia</p>
-                                <a href="{{ route('user.create') }}"
-                                    class="mt-4 text-blue-500 text-xs font-bold uppercase tracking-wider hover:underline">Tambah
-                                    Sekarang</a>
+                                @can('user.create')
+                                    <a href="{{ route('user.create') }}"
+                                        class="mt-4 text-blue-500 text-xs font-bold uppercase tracking-wider hover:underline">Tambah
+                                        Sekarang</a>
+                                @endcan
                             </div>
                         </td>
                     </tr>

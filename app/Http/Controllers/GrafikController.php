@@ -17,8 +17,10 @@ use App\Models\DetailProduksi;
 use App\Models\DetailInventory;
 use App\Models\KategoriPemakaian;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class GrafikController extends Controller
+class GrafikController extends Controller implements HasMiddleware
 {
     private function getCompanyId(Request $request)
     {
@@ -35,6 +37,41 @@ class GrafikController extends Controller
     private function getDaftarPerusahaan()
     {
         return auth()->user()->hasRole('Super Admin') ? Perusahaan::whereNull('deleted_at')->get() : null;
+    }
+
+    public function index()
+    {
+        $user = auth()->user();
+
+        // Definisikan daftar permission dan rute tujuannya secara berurutan
+        $accessMap = [
+            'grafik.bahan-baku' => 'grafik.bahan-baku',
+            'grafik.produksi'   => 'grafik.produksi',
+            'grafik.pemakaian'  => 'grafik.pemakaian',
+            'grafik.hpp'        => 'grafik.hpp',
+            'grafik.transaksi'  => 'grafik.transaksi',
+        ];
+
+        foreach ($accessMap as $permission => $routeName) {
+            if ($user->can($permission)) {
+                return redirect()->route($routeName);
+            }
+        }
+
+        // Jika user tidak memiliki satu pun permission di atas
+        abort(403, 'Anda tidak memiliki akses ke halaman grafik manapun.');
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            // Pasang middleware permission untuk masing-masing method
+            new Middleware('permission:grafik.bahan-baku', only: ['grafikBahanBaku']),
+            new Middleware('permission:grafik.produksi', only: ['grafikProduksi']),
+            new Middleware('permission:grafik.pemakaian', only: ['grafikPemakaian']),
+            new Middleware('permission:grafik.hpp', only: ['grafikHpp']),
+            new Middleware('permission:grafik.transaksi', only: ['grafikTransaksi']),
+        ];
     }
 
     // --- BAHAN BAKU ---

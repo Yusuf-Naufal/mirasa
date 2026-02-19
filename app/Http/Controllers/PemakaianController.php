@@ -148,7 +148,11 @@ class PemakaianController extends Controller
             'tanggal_pemakaian' => 'required|date',
         ]);
 
+        $user = auth()->user();
         $pemakaian = Pemakaian::findOrFail($id);
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $pemakaian->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         $total_harga = $request->jumlah * $request->harga;
 
