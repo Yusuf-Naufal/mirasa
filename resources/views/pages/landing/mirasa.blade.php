@@ -8,6 +8,7 @@
         <div
             class="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] bg-brand-red/[0.04] rounded-full blur-[120px] pointer-events-none">
         </div>
+
         <div
             class="absolute bottom-0 left-0 translate-y-1/4 -translate-x-1/4 w-[400px] h-[400px] bg-brand-red/[0.03] rounded-full blur-[100px] pointer-events-none">
         </div>
@@ -15,51 +16,38 @@
         <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 lg:gap-24 items-center relative z-10">
 
             <div class="order-2 lg:order-1 text-center lg:text-left space-y-8 md:space-y-12">
-
                 <div class="space-y-6">
                     <div
                         class="inline-flex items-center gap-3 px-5 py-2.5 bg-white border border-slate-200 rounded-full shadow-sm transition-colors hover:border-brand-red/30">
                         <span class="flex h-2.5 w-2.5 rounded-full bg-brand-red"></span>
                         <span class="text-brand-red text-[10px] md:text-[11px] font-black uppercase tracking-[0.4em]">
-                            <span class="lang-id">Berdiri Sejak 1979</span>
-                            <span class="lang-en">Established Since 1979</span>
+                            @translate('Berdiri Sejak 1979')
                         </span>
                     </div>
 
                     <h1
                         class="text-5xl md:text-5xl lg:text-7xl font-[900] leading-[0.95] tracking-[-0.04em] text-slate-900">
-                        <span class="lang-id">Kualitas Lokal,<br>
-                            <span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Standar
-                                Global.</span>
-                        </span>
-                        <span class="lang-en">Local Quality,<br>
-                            <span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Global
-                                Standard.</span>
+                        @translate('Kualitas Lokal') ,<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">
+                            @translate('Standar Global').
                         </span>
                     </h1>
 
                     <p class="text-base md:text-xl text-slate-500 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
-                        <span class="lang-id">Membawa cita rasa Nusantara ke panggung internasional melalui inovasi
-                            teknologi dan integritas mutu tanpa kompromi.</span>
-                        <span class="lang-en">Bringing Nusantara's flavors to the international stage through
-                            technological innovation and uncompromising quality integrity.</span>
+                        @translate('Membawa cita rasa Nusantara ke panggung internasional melalui inovasi teknologi dan integritas mutu tanpa kompromi.')
                     </p>
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start pt-4">
                     <a href="#stats"
                         class="bg-brand-red text-white px-10 py-5 rounded-2xl font-bold shadow-lg shadow-red-100 hover:bg-red-700 transition-colors text-xs uppercase tracking-widest flex items-center justify-center gap-3">
-                        <span class="lang-id">Eksplorasi Data</span>
-                        <span class="lang-en">Explore Data</span>
+                        @translate('Eksplorasi Data')
                         <i class="fa-solid fa-arrow-trend-up"></i>
                     </a>
 
                     <a href="#history"
                         class="bg-white border border-slate-200 text-slate-700 px-10 py-5 rounded-2xl font-bold hover:bg-slate-50 transition-colors text-xs uppercase tracking-widest flex items-center justify-center shadow-sm">
-                        <span class="lang-id">Filosofi Kami</span>
-                        <span class="lang-en">Our Philosophy</span>
+                        @translate('Filosofi Kami')
                         <i class="fa-solid fa-chevron-right ml-3 text-[10px]"></i>
                     </a>
                 </div>
@@ -108,6 +96,7 @@
                                     <path fill="#f2b200"
                                         d="M32 45.1v2.8l8.5 6.2l-3.9-5.7zM29.2 43l-2.5 1.1l-3.2 10l3.9-5.7z" />
                                     <path fill="#e68a00" d="m27.4 48.4l-3.9 5.7l8.5-6.2v-2.8z" />
+                                    <circle cx="32" cy="42.3" r="19.7" fill="#ffc200" />
                                     <path fill="#ffce31"
                                         d="M33.8 39.7L32 34.3l-1.8 5.4h-5.6l4.6 3.3l-1.8 5.4l4.6-3.3l4.6 3.3l-1.8-5.4l4.6-3.3z" />
                                 </svg>
@@ -115,14 +104,11 @@
                             <div>
                                 <p
                                     class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1 leading-none">
-                                    <span class="lang-id">Standar Global</span>
-                                    <span class="lang-en">Global Standard</span>
+                                    @translate('Standar Global')
                                 </p>
-
                                 <p
                                     class="text-base font-bold text-slate-800 uppercase tracking-tight italic text-nowrap">
-                                    <span class="lang-id">Siap Ekspor</span>
-                                    <span class="lang-en">Export Ready</span>
+                                    @translate('Siap Ekspor')
                                 </p>
                             </div>
                         </div>
@@ -150,19 +136,16 @@
                                     <i
                                         class="fa-solid fa-clock-rotate-left text-brand-red text-2xl group-hover:text-white"></i>
                                 </div>
-                                <span
-                                    class="lang-en text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Since
-                                    1979</span>
-                                <span
-                                    class="lang-id text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">Sejak
-                                    1979</span>
+                                <span class="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">
+                                    @translate('Sejak 1979')
+                                </span>
                             </div>
                             <h4 id="experience-years"
                                 class="text-7xl font-black font-display tracking-tighter text-brand-dark mb-2 italic">
-                                47+</h4>
-                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] leading-relaxed">
-                                <span class="lang-id italic text-brand-red">Tahun Dedikasi</span>
-                                <span class="lang-en italic text-brand-red">Years of Dedication</span>
+                                00
+                            </h4>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] leading-relaxed">
+                                <span class="italic text-brand-red">@translate('Tahun Dedikasi')</span>
                             </p>
                         </div>
 
@@ -180,15 +163,11 @@
                                     <span class="absolute text-white font-bold text-xs">100%</span>
                                 </div>
                                 <div>
-                                    <p
-                                        class="lang-en text-[10px] font-black text-brand-red uppercase tracking-widest mb-1">
-                                        Purity</p>
-                                    <p
-                                        class="lang-id text-[10px] font-black text-brand-red uppercase tracking-widest mb-1">
-                                        Murni</p>
+                                    <p class="text-[10px] font-black text-brand-red uppercase tracking-widest mb-1">
+                                        @translate('Murni')
+                                    </p>
                                     <p class="text-xs font-bold text-slate-300 uppercase tracking-tighter">
-                                        <span class="lang-id">Bahan Alami</span>
-                                        <span class="lang-en">Natural Ingredients</span>
+                                        @translate('Bahan Alami')
                                     </p>
                                 </div>
                             </div>
@@ -202,40 +181,29 @@
                     <div class="inline-flex items-center gap-4">
                         <div class="h-[2px] w-12 bg-brand-red"></div>
                         <h2 class="text-brand-red font-black text-[11px] uppercase tracking-[0.5em] italic">
-                            <span class="lang-id">Warisan Kami</span>
-                            <span class="lang-en">Our Legacy</span>
+                            @translate('Warisan Kami')
                         </h2>
                     </div>
 
                     <h3
                         class="text-5xl md:text-6xl font-black font-display text-slate-900 leading-[0.9] tracking-tighter uppercase italic">
-                        <span class="lang-id">Mengukir Sejarah di <br><span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Setiap
-                                Musim.</span></span>
-                        <span class="lang-en">Crafting History in <br><span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Every
-                                Season.</span></span>
+                        @translate('Mengukir Sejarah di') <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">
+                            @translate('Setiap Musim.')
+                        </span>
                     </h3>
 
                     <div class="grid md:grid-cols-2 gap-8 pt-6">
                         <div class="space-y-4">
                             <div class="w-10 h-[1px] bg-slate-300"></div>
                             <p class="text-slate-500 leading-relaxed text-sm md:text-base">
-                                <span class="lang-id">Berawal dari industri rumahan pada tahun 1979 di Mungkid,
-                                    Magelang, <strong>PT Mirasa Food Industry</strong> bertransformasi menjadi pionir
-                                    camilan berkualitas global.</span>
-                                <span class="lang-en">Founded as a home industry in 1979 in Mungkid, Magelang,
-                                    <strong>PT Mirasa Food Industry</strong> has transformed into a global quality snack
-                                    pioneer.</span>
+                                @translate('Berawal dari industri rumahan pada tahun 1979 di Mungkid, Magelang, PT Mirasa Food Industry bertransformasi menjadi pionir camilan berkualitas global.')
                             </p>
                         </div>
                         <div class="space-y-4">
                             <div class="w-10 h-[1px] bg-slate-300"></div>
                             <p class="text-slate-500 leading-relaxed text-sm md:text-base italic">
-                                <span class="lang-id">"Cap Payung" bukan sekadar logo; ini adalah janji perlindungan
-                                    terhadap kualitas produk dan kepuasan Anda di segala kondisi.</span>
-                                <span class="lang-en">"Cap Payung" is not just a logo; it's a promise to protect
-                                    product quality and your satisfaction under all conditions.</span>
+                                @translate('"Cap Payung" bukan sekadar logo; ini adalah janji perlindungan terhadap kualitas produk dan kepuasan Anda di segala kondisi.')
                             </p>
                         </div>
                     </div>
@@ -243,7 +211,7 @@
                     <div class="pt-8">
                         <a href="#vision"
                             class="inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-brand-dark hover:text-brand-red transition-colors group">
-                            <span class="lang-id">Lihat Visi Kami</span><span class="lang-en">View Our Vision</span>
+                            @translate('Lihat Visi Kami')
                             <div
                                 class="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-brand-red transition-all">
                                 <i
@@ -260,7 +228,7 @@
     <section id="owner" class="py-32 bg-white overflow-hidden relative">
         <div
             class="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/4 pointer-events-none select-none opacity-[0.02]">
-            <h2 class="text-[20rem] font-black font-display uppercase leading-none">Founder</h2>
+            <h2 class="text-[20rem] font-black font-display uppercase leading-none">@translate('Penemu')</h2>
         </div>
 
         <div class="max-w-7xl mx-auto px-6 relative z-10">
@@ -283,9 +251,11 @@
                             <div class="space-y-1">
                                 <p
                                     class="text-[10px] font-black text-brand-red uppercase tracking-[0.3em] leading-none mb-1">
-                                    Founder & CEO</p>
-                                <h4 class="text-xl font-black text-brand-dark uppercase tracking-tighter italic">Yusuf
-                                    Naufal</h4>
+                                    Founder & CEO
+                                </p>
+                                <h4 class="text-xl font-black text-brand-dark uppercase tracking-tighter italic">
+                                    Yusuf Naufal
+                                </h4>
                             </div>
                         </div>
                     </div>
@@ -293,41 +263,35 @@
                     <div class="absolute -top-10 -left-10 w-40 h-40 bg-brand-red/[0.03] rounded-full blur-3xl"></div>
                 </div>
 
+                {{-- Content Section --}}
                 <div class="lg:w-7/12 space-y-10">
                     <div class="space-y-4">
                         <div class="flex items-center gap-3">
                             <span class="w-10 h-[2px] bg-brand-red"></span>
                             <h2 class="text-brand-red font-black uppercase tracking-[0.4em] text-[11px] italic">
-                                <span class="lang-id">Pesan Pendiri</span>
-                                <span class="lang-en">Founder's Message</span>
+                                @translate('Pesan Pendiri')
                             </h2>
                         </div>
                         <h3
                             class="text-5xl md:text-6xl font-black font-display text-slate-900 leading-[0.9] tracking-tighter uppercase italic">
-                            <span class="lang-id italic">Visi Melampaui</span>
-                            <span
-                                class="lang-id text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Ekspektasi.</span>
-                            <span class="lang-en italic">Vision Beyond</span>
-                            <span
-                                class="lang-en text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Expectations.</span>
+                            <span class="italic">@translate('Visi Melampaui')</span>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">
+                                @translate('Ekspektasi.')
+                            </span>
                         </h3>
                     </div>
 
+                    {{-- Quote --}}
                     <div class="relative pt-6">
                         <i class="fa-solid fa-quote-left absolute -top-4 -left-6 text-6xl text-slate-100 -z-10"></i>
 
                         <div class="space-y-8">
                             <div
                                 class="text-2xl md:text-3xl font-medium text-slate-600 leading-tight italic tracking-tight">
-                                <p class="lang-id">
-                                    "Kepercayaan investor dan konsumen dibangun di atas satu hal: <span
-                                        class="text-brand-dark font-black not-italic">Konsistensi</span>. Di Mirasa
-                                    Food, kami tidak pernah berkompromi dengan kualitas produk kami."
-                                </p>
-                                <p class="lang-en">
-                                    "Trust from investors and consumers is built on one thing: <span
-                                        class="text-brand-dark font-black not-italic">Consistency</span>. At Mirasa
-                                    Food, we never compromise on our product quality."
+                                <p>
+                                    "@translate('Kepercayaan investor dan konsumen dibangun di atas satu hal:')
+                                    <span class="text-brand-dark font-black not-italic">@translate('Konsistensi')</span>.
+                                    @translate('Di Mirasa Food, kami tidak pernah berkompromi dengan kualitas produk kami.')"
                                 </p>
                             </div>
 
@@ -340,14 +304,15 @@
                         </div>
                     </div>
 
+                    {{-- Key Points --}}
                     <div class="pt-10 grid grid-cols-2 gap-8 border-t border-slate-100">
                         <div class="space-y-1">
                             <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Quality Control</p>
-                            <p class="text-xl font-black text-brand-dark uppercase italic">Zero Compromise</p>
+                            <p class="text-xl font-black text-brand-dark uppercase italic">@translate('Tanpa Kompromi')</p>
                         </div>
                         <div class="space-y-1">
                             <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Innovation</p>
-                            <p class="text-xl font-black text-brand-dark uppercase italic">Tech Driven</p>
+                            <p class="text-xl font-black text-brand-dark uppercase italic">@translate('Berbasis Teknologi')</p>
                         </div>
                     </div>
                 </div>
@@ -380,15 +345,11 @@
                         </div>
 
                         <h3 class="text-3xl font-black font-display mb-6 tracking-tighter uppercase italic">
-                            <span class="lang-id">Visi</span>
-                            <span class="lang-en">Vision</span>
+                            @translate('Visi Kami')
                         </h3>
 
                         <p class="text-slate-500 text-lg leading-relaxed font-medium">
-                            <span class="lang-id italic">"Menjadi pemimpin pasar industri makanan ringan berbasis
-                                singkong di tingkat global dengan mempertahankan identitas Nusantara."</span>
-                            <span class="lang-en italic">"To be the global market leader in the cassava-based snack
-                                industry while maintaining Indonesian identity."</span>
+                            <span class="italic">"@translate('Menjadi pemimpin pasar industri makanan ringan berbasis singkong di tingkat global dengan mempertahankan identitas Nusantara.')"</span>
                         </p>
 
                         <div class="mt-10 h-1 w-12 bg-brand-red/20 group-hover:w-full transition-all duration-700">
@@ -409,8 +370,7 @@
                         </div>
 
                         <h3 class="text-3xl font-black font-display text-white mb-6 tracking-tighter uppercase italic">
-                            <span class="lang-id">Misi</span>
-                            <span class="lang-en">Mission</span>
+                            @translate('Misi Kami')
                         </h3>
 
                         <ul class="space-y-6">
@@ -418,34 +378,26 @@
                                 <div class="mt-1.5 w-5 h-[2px] bg-brand-red group-hover/item:w-8 transition-all"></div>
                                 <div class="text-slate-400 group-hover/item:text-white transition-colors">
                                     <span
-                                        class="font-bold uppercase tracking-widest text-[10px] block mb-1 text-brand-red">Technology</span>
-                                    <span class="lang-id text-sm md:text-base leading-snug">Modernisasi teknologi
-                                        produksi higienis.</span>
-                                    <span class="lang-en text-sm md:text-base leading-snug">Modernizing hygienic
-                                        production technology.</span>
+                                        class="font-bold uppercase tracking-widest text-[10px] block mb-1 text-brand-red">@translate('Teknologi')</span>
+                                    <span class="text-sm md:text-base leading-snug">@translate('Modernisasi teknologi produksi higienis.')</span>
                                 </div>
                             </li>
+
                             <li class="flex items-start gap-4 group/item">
                                 <div class="mt-1.5 w-5 h-[2px] bg-brand-red group-hover/item:w-8 transition-all"></div>
                                 <div class="text-slate-400 group-hover/item:text-white transition-colors">
                                     <span
-                                        class="font-bold uppercase tracking-widest text-[10px] block mb-1 text-brand-red">Empowerment</span>
-                                    <span class="lang-id text-sm md:text-base leading-snug">Pemberdayaan mitra tani
-                                        lokal secara adil.</span>
-                                    <span class="lang-en text-sm md:text-base leading-snug">Empowering local farming
-                                        partners fairly.</span>
+                                        class="font-bold uppercase tracking-widest text-[10px] block mb-1 text-brand-red">@translate('Pemberdayaan')</span>
+                                    <span class="text-sm md:text-base leading-snug">@translate('Pemberdayaan mitra tani lokal secara adil.')</span>
                                 </div>
                             </li>
+
                             <li class="flex items-start gap-4 group/item">
                                 <div class="mt-1.5 w-5 h-[2px] bg-brand-red group-hover/item:w-8 transition-all"></div>
                                 <div class="text-slate-400 group-hover/item:text-white transition-colors">
                                     <span
-                                        class="font-bold uppercase tracking-widest text-[10px] block mb-1 text-brand-red">Flavor
-                                        Innovation</span>
-                                    <span class="lang-id text-sm md:text-base leading-snug">Inovasi rasa untuk standar
-                                        internasional.</span>
-                                    <span class="lang-en text-sm md:text-base leading-snug">Flavor innovation for
-                                        international standards.</span>
+                                        class="font-bold uppercase tracking-widest text-[10px] block mb-1 text-brand-red">@translate('Inovasi Rasa')</span>
+                                    <span class="text-sm md:text-base leading-snug">@translate('Inovasi rasa untuk standar internasional.')</span>
                                 </div>
                             </li>
                         </ul>
@@ -470,16 +422,14 @@
                     class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full backdrop-blur-sm">
                     <span class="w-2 h-2 rounded-full bg-brand-red animate-pulse"></span>
                     <h2 class="text-brand-red font-black tracking-[0.4em] uppercase text-[10px]">
-                        <span class="lang-id">Skala Industri</span><span class="lang-en">Industrial Scale</span>
+                        @translate('Skala Industri')
                     </h2>
                 </div>
                 <h3 class="text-4xl md:text-6xl font-black font-display tracking-tighter italic uppercase">
-                    <span class="lang-id italic">Kapasitas & <span
-                            class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-500">Jangkauan
-                            Global</span></span>
-                    <span class="lang-en italic">Capacity & <span
-                            class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-500">Global
-                            Reach</span></span>
+                    @translate('Kapasitas') &
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-500">
+                        @translate('Jangkauan Global')
+                    </span>
                 </h3>
             </div>
 
@@ -490,7 +440,6 @@
                     <div
                         class="absolute inset-0 bg-gradient-to-br from-brand-red/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                     </div>
-
                     <div class="relative z-10 space-y-6">
                         <div
                             class="w-14 h-14 bg-brand-red/10 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-brand-red transition-all duration-500 shadow-lg shadow-brand-red/20">
@@ -499,17 +448,16 @@
                         <div>
                             <div
                                 class="text-6xl font-black font-display tracking-tighter italic group-hover:text-brand-red transition-colors">
-                                5<span class="text-2xl ml-1 font-bold opacity-50 uppercase">Ton+</span>
+                                5<span class="text-2xl ml-1 font-bold opacity-50 uppercase">@translate('ton')+</span>
                             </div>
                             <div class="h-1 w-10 bg-brand-red mt-2 group-hover:w-20 transition-all duration-500"></div>
                         </div>
                         <div class="space-y-1">
                             <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                <span class="lang-id">Produksi Harian</span><span class="lang-en">Daily
-                                    Production</span>
+                                @translate('Produksi Harian')
                             </p>
-                            <p class="text-[10px] text-slate-500 font-medium italic italic leading-none">High-speed
-                                manufacturing</p>
+                            <p class="text-[10px] text-slate-500 font-medium italic leading-none">@translate('Manufaktur kecepatan tinggi')
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -524,17 +472,16 @@
                         <div>
                             <div
                                 class="text-6xl font-black font-display tracking-tighter italic group-hover:text-brand-red transition-colors">
-                                150<span class="text-2xl ml-1 font-bold opacity-50 uppercase">Ton</span>
+                                150<span class="text-2xl ml-1 font-bold opacity-50 uppercase">@translate('ton')+</span>
                             </div>
                             <div class="h-1 w-10 bg-brand-red mt-2 group-hover:w-20 transition-all duration-500"></div>
                         </div>
                         <div class="space-y-1">
                             <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                <span class="lang-id">Kapasitas Bulanan</span><span class="lang-en">Monthly
-                                    Capacity</span>
+                                @translate('Kapasitas Bulanan')
                             </p>
-                            <p class="text-[10px] text-slate-500 font-medium italic leading-none">Optimized supply
-                                chain</p>
+                            <p class="text-[10px] text-slate-500 font-medium italic leading-none">@translate('Rantai pasok teroptimasi')
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -555,9 +502,9 @@
                         </div>
                         <div class="space-y-1">
                             <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                <span class="lang-id">Mitra Petani</span><span class="lang-en">Farming Partners</span>
+                                @translate('Mitra Petani')
                             </p>
-                            <p class="text-[10px] text-slate-500 font-medium italic leading-none">Sustainably sourced
+                            <p class="text-[10px] text-slate-500 font-medium italic leading-none">@translate('Sumber berkelanjutan')
                             </p>
                         </div>
                     </div>
@@ -579,10 +526,10 @@
                         </div>
                         <div class="space-y-1">
                             <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                <span class="lang-id">Wilayah Ekspor</span><span class="lang-en">Export Regions</span>
+                                @translate('Wilayah Ekspor')
                             </p>
-                            <p class="text-[10px] text-slate-500 font-medium italic leading-none">Global distribution
-                                net</p>
+                            <p class="text-[10px] text-slate-500 font-medium italic leading-none">@translate('Jaringan distribusi global')
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -603,25 +550,20 @@
                         <span class="w-12 h-[2px] bg-brand-red"></span>
                         <h2
                             class="text-brand-red font-black tracking-[0.4em] uppercase text-[10px] italic leading-none">
-                            <span class="lang-id">Jaringan Global</span><span class="lang-en">Global Network</span>
+                            @translate('Jaringan Global')
                         </h2>
                     </div>
 
                     <h3
                         class="text-4xl md:text-5xl font-black font-display text-slate-900 leading-[1] tracking-tighter uppercase italic">
-                        <span class="lang-id">Sinergi <br><span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Strategis
-                                Dunia.</span></span>
-                        <span class="lang-en">Strategic <br><span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">World
-                                Synergy.</span></span>
+                        @translate('Sinergi') <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">
+                            @translate('Strategis Dunia.')
+                        </span>
                     </h3>
 
                     <p class="text-slate-400 text-base font-medium max-w-sm mx-auto lg:mx-0 leading-relaxed italic">
-                        <span class="lang-id">Membangun ekosistem distribusi dan standar mutu bersama pemimpin industri
-                            terpercaya di seluruh dunia.</span>
-                        <span class="lang-en">Building a distribution ecosystem and quality standards with trusted
-                            industry leaders worldwide.</span>
+                        @translate('Membangun ekosistem distribusi dan standar mutu bersama pemimpin industri terpercaya di seluruh dunia.')
                     </p>
                 </div>
 
@@ -633,7 +575,6 @@
                             <div
                                 class="absolute top-0 inset-x-0 h-1.5 bg-[#00549B] scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-t-full">
                             </div>
-
                             <div class="h-16 w-full flex items-center justify-center mb-6">
                                 <img src="{{ asset('assets/logo/logo-indofood.png') }}" loading="lazy"
                                     class="h-full w-auto object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 opacity-60 group-hover:opacity-100"
@@ -648,7 +589,6 @@
                             <div
                                 class="absolute top-0 inset-x-0 h-1.5 bg-brand-red scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-t-full">
                             </div>
-
                             <div class="h-16 w-full flex items-center justify-center mb-6">
                                 <img src="{{ asset('assets/logo/logo-alfa.webp') }}" loading="lazy"
                                     class="h-full w-auto object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 opacity-60 group-hover:opacity-100"
@@ -663,7 +603,6 @@
                             <div
                                 class="absolute top-0 inset-x-0 h-1.5 bg-purple-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-t-full">
                             </div>
-
                             <div class="h-16 w-full flex items-center justify-center mb-6">
                                 <img src="{{ asset('assets/logo/logo-halal.avif') }}" loading="lazy"
                                     class="h-full w-auto object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 opacity-60 group-hover:opacity-100"
@@ -671,10 +610,13 @@
                             </div>
                             <div class="text-center">
                                 <span
-                                    class="text-[9px] font-black text-slate-300 group-hover:text-purple-600 uppercase tracking-[0.3em] transition-colors block">Certified</span>
+                                    class="text-[9px] font-black text-slate-300 group-hover:text-purple-600 uppercase tracking-[0.3em] transition-colors block">
+                                    @translate('Tersertifikasi')
+                                </span>
                                 <span
-                                    class="text-[7px] font-bold text-slate-300 uppercase tracking-widest leading-none">Halal
-                                    Indonesia</span>
+                                    class="text-[7px] font-bold text-slate-300 uppercase tracking-widest leading-none">
+                                    Halal Indonesia
+                                </span>
                             </div>
                         </div>
 
@@ -693,25 +635,21 @@
                     <div class="inline-flex items-center gap-3">
                         <span class="w-12 h-[2px] bg-brand-red"></span>
                         <h2 class="text-brand-red font-black tracking-[0.4em] uppercase text-[10px] italic">
-                            <span class="lang-id">Kabar Terkini</span>
-                            <span class="lang-en">Latest News</span>
+                            @translate('Kabar Terkini')
                         </h2>
                     </div>
                     <h3
                         class="text-4xl md:text-5xl font-black font-display text-slate-900 leading-[1] tracking-tighter uppercase italic">
-                        <span class="lang-id">Wawasan & <br><span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Pembaruan
-                                Mirasa.</span></span>
-                        <span class="lang-en">Insights & <br><span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">Mirasa
-                                Updates.</span></span>
+                        @translate('Wawasan') & <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-800">
+                            @translate('Pembaruan Mirasa.')
+                        </span>
                     </h3>
                 </div>
 
-                <a href="{{ route('allBerita') }}"
+                <a href="{{ route('allBerita', ['lang' => request('lang', 'ID')]) }}"
                     class="group inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-brand-red transition-all">
-                    <span class="lang-id">Lihat Semua Berita</span>
-                    <span class="lang-en">View All News</span>
+                    @translate('Lihat Semua Berita')
                     <div
                         class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center group-hover:border-brand-red group-hover:bg-brand-red transition-all">
                         <i
@@ -724,6 +662,7 @@
                 @foreach ($berita as $item)
                     <article
                         class="group bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2">
+
                         <div class="aspect-[16/10] overflow-hidden relative">
                             <img src="{{ asset('storage/' . $item->gambar_utama) }}" alt="{{ $item->judul }}"
                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
@@ -731,7 +670,7 @@
                             <div class="absolute top-6 left-6">
                                 <span
                                     class="px-4 py-2 bg-white/90 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-widest text-brand-red shadow-sm">
-                                    {{ $item->kategori }}
+                                    @translate($item->kategori)
                                 </span>
                             </div>
                         </div>
@@ -749,18 +688,17 @@
 
                             <h4
                                 class="text-xl font-black text-slate-900 leading-tight uppercase tracking-tighter italic group-hover:text-brand-red transition-colors line-clamp-2">
-                                {{ $item->judul }}
+                                @translate($item->judul)
                             </h4>
 
                             <p class="text-slate-500 text-sm leading-relaxed line-clamp-3 italic font-medium">
-                                {{ $item->ringkasan }}
+                                @translate($item->ringkasan)
                             </p>
 
                             <div class="pt-4">
-                                <a href="{{ route('berita.show', $item->slug) }}"
+                                <a href="{{ route('berita.show', ['slug' => $item->slug, 'lang' => request('lang', 'ID')]) }}"
                                     class="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-brand-dark group/link">
-                                    <span class="lang-id">Baca Selengkapnya</span>
-                                    <span class="lang-en">Read More</span>
+                                    @translate('Baca Selengkapnya')
                                     <i
                                         class="fa-solid fa-chevron-right text-[8px] group-hover/link:translate-x-1 transition-transform"></i>
                                 </a>
@@ -770,6 +708,7 @@
                 @endforeach
             </div>
         </div>
+
         <div
             class="absolute bottom-0 right-0 w-96 h-96 bg-brand-red/[0.02] rounded-full blur-3xl translate-y-1/2 translate-x-1/2">
         </div>
@@ -790,46 +729,49 @@
                         <div>
                             <span class="block font-black text-xl tracking-tighter uppercase">PT Mirasa Food
                                 Industry</span>
-                            <span class="text-[9px] font-bold text-brand-red uppercase tracking-[0.3em]">Heritage of
-                                Quality</span>
+                            <span class="text-[9px] font-bold text-brand-red uppercase tracking-[0.3em]">@translate('Warisan Kualitas')</span>
                         </div>
                     </div>
                     <p class="text-slate-400 text-sm leading-relaxed max-w-md mx-auto lg:mx-0">
-                        <span class="lang-id italic">"Dedikasi tanpa henti untuk menjaga standar mutu camilan Nusantara
-                            sejak 1979. Kami tumbuh bersama petani lokal untuk menghadirkan kebahagiaan di setiap
-                            kemasan."</span>
-                        <span class="lang-en italic">"Restless dedication to maintaining the quality standards of
-                            Nusantara snacks since 1979. We grow with local farmers to bring happiness in every
-                            package."</span>
+                        <span class="italic">"@translate('Dedikasi tanpa henti untuk menjaga standar mutu camilan Nusantara sejak 1979. Kami tumbuh bersama petani lokal untuk menghadirkan kebahagiaan di setiap kemasan.')"</span>
                     </p>
                 </div>
 
                 <div class="lg:col-span-3 grid grid-cols-2 lg:grid-cols-1 gap-8 text-center lg:text-left">
                     <div class="space-y-6">
                         <span class="text-[11px] font-black uppercase tracking-[0.3em] text-brand-red">
-                            <span class="lang-id">Eksplorasi</span><span class="lang-en">Explore</span>
+                            @translate('Eksplorasi')
                         </span>
                         <ul class="space-y-4 text-[10px] font-bold uppercase tracking-widest text-slate-300">
-                            <li><a href="#history" class="hover:text-white transition-colors"><span
-                                        class="lang-id">Sejarah Kami</span><span class="lang-en">Our
-                                        History</span></a></li>
-                            <li><a href="#owner" class="hover:text-white transition-colors"><span
-                                        class="lang-id">Pemilik</span><span class="lang-en">Owner</span></a></li>
-                            <li><a href="#stats" class="hover:text-white transition-colors"><span
-                                        class="lang-id">Data Produksi</span><span class="lang-en">Production
-                                        Data</span></a></li>
+                            <li>
+                                <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#history"
+                                    class="hover:text-white transition-colors">
+                                    @translate('Sejarah Kami')
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#owner"
+                                    class="hover:text-white transition-colors">
+                                    @translate('Pemilik')
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#stats"
+                                    class="hover:text-white transition-colors">
+                                    @translate('Data Produksi')
+                                </a>
+                            </li>
                         </ul>
                     </div>
                     <div class="space-y-6 md:mt-0 lg:mt-8">
                         <span class="text-[11px] font-black uppercase tracking-[0.3em] text-brand-red">
-                            <span class="lang-id">Sosial Media</span><span class="lang-en">Social Media</span>
+                            @translate('Sosial Media')
                         </span>
                         <ul class="space-y-4 text-[10px] font-bold uppercase tracking-widest text-slate-300">
                             <li>
                                 <a target="blank"
                                     href="https://www.instagram.com/mirasafood.ind?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
-                                    class="hover:text-white transition-colors">Instagram
-                                </a>
+                                    class="hover:text-white transition-colors">Instagram</a>
                             </li>
                         </ul>
                     </div>
@@ -837,7 +779,7 @@
 
                 <div class="lg:col-span-4 space-y-8 bg-white/5 p-6 md:p-8 rounded-[2.5rem] border border-white/5">
                     <span class="text-[11px] font-black uppercase tracking-[0.3em] text-brand-red">
-                        <span class="lang-id">Kantor Pusat</span><span class="lang-en">Headquarters</span>
+                        @translate('Kantor Pusat')
                     </span>
 
                     <div class="space-y-6">
@@ -845,8 +787,7 @@
                             <div class="flex items-start gap-4 justify-center lg:justify-start">
                                 <i class="fa-solid fa-location-dot mt-1 text-brand-red"></i>
                                 <p class="text-xs text-slate-300 leading-relaxed font-medium">
-                                    Jalan Munggur No. 2 Ambartawang, Japun Satu, Paremono, Kec. Mungkid, Kabupaten
-                                    Magelang, Jawa Tengah 56512
+                                    Jalan Munggur No. 2 Ambartawang, Japun Satu, Paremono, Kec. Mungkid, Kabupaten Magelang, Jawa Tengah 56512
                                 </p>
                             </div>
                             <div class="flex items-center gap-4 justify-center lg:justify-start">
@@ -861,11 +802,9 @@
                                 src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15820.473972317046!2d110.24919329705028!3d-7.562057721282352!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a8bfcfb06852f%3A0xdcdf376e26390df9!2sPT.%20Mirasa%20Food%20Industry!5e0!3m2!1sid!2sid!4v1770107697111!5m2!1sid!2sid"
                                 allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
                             </iframe>
-
                             <div
                                 class="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#0A0F1A] via-transparent to-transparent">
                             </div>
-
                             <div
                                 class="absolute top-4 right-4 w-2 h-2 bg-brand-red rounded-full shadow-[0_0_12px_rgba(214,28,28,0.8)]">
                             </div>
@@ -873,8 +812,7 @@
 
                         <a href="https://maps.app.goo.gl/JcwMj1BrfzmVC4vT8" target="_blank"
                             class="flex items-center justify-center lg:justify-start gap-2 text-[9px] font-black text-brand-red uppercase tracking-widest hover:translate-x-1 transition-transform">
-                            <span class="lang-id">Buka di Google Maps</span><span class="lang-en">Open in Google
-                                Maps</span>
+                            Google Maps
                             <i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i>
                         </a>
                     </div>
@@ -883,17 +821,17 @@
 
             <div class="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
                 <p class="text-[10px] font-bold text-slate-500 tracking-[0.2em] text-center md:text-left uppercase">
-                    © {{ date('Y') }} PT MIRASA FOOD INDUSTRY. <span class="hidden md:inline">|</span> <span
-                        class="block md:inline">All Rights Reserved.</span>
+                    © {{ date('Y') }} PT MIRASA FOOD INDUSTRY. <span class="hidden md:inline">|</span>
+                    <span class="block md:inline">@translate('Seluruh Hak Cipta Dilindungi.')</span>
                 </p>
                 <div class="flex gap-4">
                     <div class="bg-green-500/10 px-3 py-1 rounded-md border border-green-500/20">
-                        <span class="text-[8px] font-black text-green-500 uppercase tracking-widest italic">Export
-                            Ready Certified</span>
+                        <span
+                            class="text-[8px] font-black text-green-500 uppercase tracking-widest italic">@translate('Tersertifikasi Siap Ekspor')</span>
                     </div>
                     <div class="bg-brand-red/10 px-3 py-1 rounded-md border border-brand-red/20">
-                        <span class="text-[8px] font-black text-brand-red uppercase tracking-widest italic">Halal
-                            Certified</span>
+                        <span
+                            class="text-[8px] font-black text-brand-red uppercase tracking-widest italic">@translate('Tersertifikasi Halal')</span>
                     </div>
                 </div>
             </div>

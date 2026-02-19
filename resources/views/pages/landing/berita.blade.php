@@ -7,12 +7,12 @@
             <div class="inline-flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-6">
                 <span class="w-2 h-2 rounded-full bg-brand-red animate-pulse"></span>
                 <h1 class="text-brand-red font-black tracking-[0.4em] uppercase text-[10px]">
-                    <span class="lang-id">Ruang Berita</span><span class="lang-en">Newsroom</span>
+                    @translate('Ruang Berita')
                 </h1>
             </div>
             <h2 class="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic leading-none">
-                <span class="lang-id">Kabar Terkini & <br><span class="text-brand-red">Wawasan Industri</span></span>
-                <span class="lang-en">Latest News & <br><span class="text-brand-red">Industry Insights</span></span>
+                @translate('Kabar Terkini') & <br>
+                <span class="text-brand-red">@translate('Wawasan Industri')</span>
             </h2>
         </div>
     </section>
@@ -23,7 +23,7 @@
             @if ($berita->isEmpty())
                 <div class="text-center py-20 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
                     <i class="fa-solid fa-newspaper text-slate-200 text-6xl mb-6"></i>
-                    <p class="text-slate-400 italic font-medium">Belum ada berita yang diterbitkan saat ini.</p>
+                    <p class="text-slate-400 italic font-medium">@translate('Belum ada berita yang diterbitkan saat ini.')</p>
                 </div>
             @else
                 <div class="flex flex-col gap-12">
@@ -38,7 +38,7 @@
                                 <div class="absolute top-6 left-6">
                                     <span
                                         class="px-4 py-2 bg-white/90 backdrop-blur-md rounded-full text-[9px] font-black uppercase tracking-widest text-brand-red shadow-sm">
-                                        {{ $item->kategori }}
+                                        @translate($item->kategori)
                                     </span>
                                 </div>
                             </div>
@@ -59,21 +59,20 @@
 
                                 <h4
                                     class="text-2xl md:text-3xl font-black text-slate-900 leading-tight uppercase tracking-tighter italic group-hover:text-brand-red transition-colors">
-                                    <a href="{{ route('berita.show', $item->slug) }}">
-                                        {{ $item->judul }}
+                                    <a href="{{ route('berita.show', ['slug' => $item->slug, 'lang' => request('lang', 'ID')]) }}">
+                                        @translate($item->judul)
                                     </a>
                                 </h4>
 
                                 <p
                                     class="text-slate-500 text-sm md:text-base leading-relaxed italic font-medium line-clamp-3">
-                                    {{ $item->ringkasan }}
+                                    @translate($item->ringkasan)
                                 </p>
 
                                 <div class="pt-4 flex items-center justify-between">
-                                    <a href="{{ route('berita.show', $item->slug) }}"
+                                    <a href="{{ route('berita.show', ['slug' => $item->slug, 'lang' => request('lang', 'ID')]) }}"
                                         class="inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-widest text-brand-dark group/link">
-                                        <span class="lang-id">Baca Selengkapnya</span>
-                                        <span class="lang-en">Read More</span>
+                                        @translate('Baca Selengkapnya')
                                         <div
                                             class="w-8 h-8 rounded-full border border-slate-200 flex items-center justify-center group-hover/link:border-brand-red group-hover/link:bg-brand-red transition-all">
                                             <i
@@ -82,7 +81,7 @@
                                     </a>
 
                                     <span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">
-                                        {{ $item->jumlah_view ?? 0 }} Views
+                                        {{ $item->jumlah_view ?? 0 }} @translate('Dilihat')
                                     </span>
                                 </div>
                             </div>
