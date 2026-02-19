@@ -1009,16 +1009,12 @@
                         <span class="text-[8px] font-black text-brand-red uppercase tracking-widest italic">Halal
                             Certified</span>
                     </div>
->>>>>>> origin/master
                 </div>
             </div>
         </div>
     </footer>
-
-<<<<<<< HEAD
 </body>
 </html>
-=======
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const currentYear = new Date().getFullYear();
@@ -1063,4 +1059,3 @@
 </body>
 
 </html>
->>>>>>> origin/master
