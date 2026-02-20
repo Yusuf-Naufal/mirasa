@@ -9,8 +9,7 @@
     @if (auth()->user()->perusahaan && auth()->user()->perusahaan->logo)
         <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . auth()->user()->perusahaan->logo) }}">
     @else
-        <link rel="icon" type="image/x-icon"
-            href="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}">
+        <link rel="icon" type="image/x-icon" href="{{ asset('assets/logo/Mirasa-logo.webp') }}">
     @endif
 
     {{-- TAILWIND --}}
@@ -44,8 +43,8 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    
-    
+
+
     {{-- HANDLE MODAL --}}
     <script>
         function openModal(id) {
@@ -54,14 +53,14 @@
             modal.classList.remove('hidden');
             modal.classList.add('flex'); // pastikan tampil dengan flex centering
         }
-    
+
         function closeModal(id) {
             const modal = document.getElementById(id);
             if (!modal) return;
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
-    
+
         // Tutup modal saat klik di luar konten
         window.addEventListener('click', (e) => {
             const openModals = document.querySelectorAll('[id$="Modal"]:not(.hidden)');
@@ -72,7 +71,7 @@
             });
         });
     </script>
-    
+
     {{-- HANDLE DELETE & ACTIVE ALERT --}}
     <script>
         function confirmDelete(id) {
@@ -92,7 +91,7 @@
                 }
             });
         }
-    
+
         function confirmActivate(id) {
             Swal.fire({
                 title: 'Aktifkan Data ini?',
@@ -110,19 +109,19 @@
             });
         }
     </script>
-    
+
     {{-- HANDLE NAV BUTTON --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const userMenuButton = document.getElementById('user-menu-button');
             const userDropdown = document.getElementById('user-dropdown');
-    
+
             // Fungsi Toggle Dropdown
             userMenuButton.addEventListener('click', function(event) {
                 event.stopPropagation(); // Mencegah klik menyebar ke window
                 userDropdown.classList.toggle('hidden');
             });
-    
+
             // Tutup dropdown jika klik di luar area menu
             window.addEventListener('click', function(event) {
                 if (!userMenuButton.contains(event.target) && !userDropdown.contains(event.target)) {
@@ -131,7 +130,7 @@
             });
         });
     </script>
-    
+
     {{-- HANDLE SUBMIT --}}
     <script>
         document.querySelectorAll('.form-prevent-multiple-submits').forEach(form => {
@@ -140,11 +139,11 @@
                     const btn = this.querySelector('.btn-submit');
                     const btnText = this.querySelector('.btn-text');
                     const btnSpinner = this.querySelector('.btn-spinner');
-    
+
                     if (btn) {
                         btn.disabled = true;
                         btn.classList.add('opacity-70', 'cursor-not-allowed');
-    
+
                         if (btnText) btnText.innerText = "Memproses...";
                         if (btnSpinner) btnSpinner.classList.remove('hidden');
                     }
@@ -152,7 +151,7 @@
             });
         });
     </script>
-    
+
     {{-- HANDLE ALL ALERT --}}
     @if (session('success'))
         <script>
@@ -169,7 +168,7 @@
             });
         </script>
     @endif
-    
+
     @if (session('error'))
         <script>
             Swal.fire({
@@ -185,14 +184,14 @@
             });
         </script>
     @endif
-    
+
     @if ($errors->any())
         <script>
             let errorMessages = '';
             @foreach ($errors->all() as $error)
                 errorMessages += '- {{ $error }}\n';
             @endforeach
-    
+
             Swal.fire({
                 toast: true,
                 position: 'top-end',
@@ -207,24 +206,24 @@
             });
         </script>
     @endif
-    
+
     {{-- HANDLE ASIDE --}}
     <script>
         function openAside(id) {
             const aside = document.getElementById(id);
             const overlay = document.getElementById('asideOverlay');
-    
+
             if (aside && overlay) { // Tambahkan pengecekan ini
                 aside.classList.remove('translate-x-full');
                 overlay.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
             }
         }
-    
+
         function closeAside(id) {
             const aside = document.getElementById(id);
             const overlay = document.getElementById('asideOverlay');
-    
+
             if (aside && overlay) { // Tambahkan pengecekan ini
                 aside.classList.add('translate-x-full');
                 overlay.classList.add('hidden');

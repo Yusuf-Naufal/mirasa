@@ -62,7 +62,7 @@
                     class="relative z-10 p-4 bg-white/90 rounded-[4rem] border border-white/60 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] transition-transform duration-500">
 
                     <div class="relative overflow-hidden rounded-[3.2rem]">
-                        <img src="{{ asset('assets/foto/mirasa_bg.png') }}" loading="lazy" alt="PT Mirasa Food"
+                        <img src="{{ asset('assets/foto/Mirasa-Profile.webp') }}" loading="lazy" alt="PT Mirasa Food"
                             class="w-80 md:w-[520px] h-auto object-cover shadow-inner aspect-[4/3]">
                     </div>
 
@@ -472,7 +472,8 @@
                         <div>
                             <div
                                 class="text-6xl font-black font-display tracking-tighter italic group-hover:text-brand-red transition-colors">
-                                150<span class="text-2xl ml-1 font-bold opacity-50 uppercase">@translate('ton')+</span>
+                                150<span
+                                    class="text-2xl ml-1 font-bold opacity-50 uppercase">@translate('ton')+</span>
                             </div>
                             <div class="h-1 w-10 bg-brand-red mt-2 group-hover:w-20 transition-all duration-500"></div>
                         </div>
@@ -576,7 +577,7 @@
                                 class="absolute top-0 inset-x-0 h-1.5 bg-[#00549B] scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-t-full">
                             </div>
                             <div class="h-16 w-full flex items-center justify-center mb-6">
-                                <img src="{{ asset('assets/logo/logo-indofood.png') }}" loading="lazy"
+                                <img src="{{ asset('assets/logo/indofood-logo.webp') }}" loading="lazy"
                                     class="h-full w-auto object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 opacity-60 group-hover:opacity-100"
                                     alt="Indofood">
                             </div>
@@ -604,7 +605,7 @@
                                 class="absolute top-0 inset-x-0 h-1.5 bg-purple-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 rounded-t-full">
                             </div>
                             <div class="h-16 w-full flex items-center justify-center mb-6">
-                                <img src="{{ asset('assets/logo/logo-halal.avif') }}" loading="lazy"
+                                <img src="{{ asset('assets/logo/halal-logo.webp') }}" loading="lazy"
                                     class="h-full w-auto object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500 opacity-60 group-hover:opacity-100"
                                     alt="Halal Indonesia">
                             </div>
@@ -724,12 +725,13 @@
 
                 <div class="lg:col-span-5 space-y-8 text-center lg:text-left">
                     <div class="flex flex-col items-center lg:items-start gap-4">
-                        <img src="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}" loading="lazy"
+                        <img src="{{ asset('assets/logo/Mirasa-logo.webp') }}" loading="lazy"
                             class="h-16 w-auto brightness-0 invert" alt="Footer Logo">
                         <div>
                             <span class="block font-black text-xl tracking-tighter uppercase">PT Mirasa Food
                                 Industry</span>
-                            <span class="text-[9px] font-bold text-brand-red uppercase tracking-[0.3em]">@translate('Warisan Kualitas')</span>
+                            <span
+                                class="text-[9px] font-bold text-brand-red uppercase tracking-[0.3em]">@translate('Warisan Kualitas')</span>
                         </div>
                     </div>
                     <p class="text-slate-400 text-sm leading-relaxed max-w-md mx-auto lg:mx-0">
@@ -787,7 +789,8 @@
                             <div class="flex items-start gap-4 justify-center lg:justify-start">
                                 <i class="fa-solid fa-location-dot mt-1 text-brand-red"></i>
                                 <p class="text-xs text-slate-300 leading-relaxed font-medium">
-                                    Jalan Munggur No. 2 Ambartawang, Japun Satu, Paremono, Kec. Mungkid, Kabupaten Magelang, Jawa Tengah 56512
+                                    Jalan Munggur No. 2 Ambartawang, Japun Satu, Paremono, Kec. Mungkid, Kabupaten
+                                    Magelang, Jawa Tengah 56512
                                 </p>
                             </div>
                             <div class="flex items-center gap-4 justify-center lg:justify-start">
