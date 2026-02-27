@@ -4,8 +4,8 @@
         <div class="bg-white rounded-2xl shadow-xl p-6 space-y-4 w-full max-w-xs md:max-w-md mx-auto">
 
             <img src="{{ str_contains(request()->getHost(), 'bahtera')
-                ? asset('assets/logo/logo-BMB-removebg-preview.png')
-                : asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}"
+                ? asset('assets/logo/BMB-logo.webp')
+                : asset('assets/logo/Mirasa-logo.webp') }}"
                 alt="Logo" class="mx-auto h-20 object-contain mb-2">
 
             <!-- Login Form -->

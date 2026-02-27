@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center h-20">
             <div class="flex items-center gap-3">
                 <div class="bg-white p-1.5 rounded-xl shadow-sm border border-slate-100">
-                    <img src="{{ asset('assets/logo/logo-BMB-removebg-preview.png') }}" alt="Logo Cap Payung"
+                    <img src="{{ asset('assets/logo/BMB-logo.webp') }}" alt="Logo Cap Payung"
                         class="w-10 h-10 rounded-lg flex items-center justify-center">
                 </div>
                 <div>
@@ -42,6 +42,6 @@
         <a href="#about" class="block text-lg font-bold text-slate-800">Tentang Kami</a>
         <a href="#products" class="block text-lg font-bold text-slate-800">Varian Rasa</a>
         <a href="#contact" class="block text-lg font-bold text-slate-800">Kontak</a>
-        <button class="w-full bg-bmb-blue text-white py-4 rounded-2xl font-bold">E-Katalog</button>
+        <a href="{{ route('katalog') }}" class="w-full bg-bmb-blue text-white py-4 rounded-2xl font-bold">E-Katalog</a>
     </div>
 </nav>

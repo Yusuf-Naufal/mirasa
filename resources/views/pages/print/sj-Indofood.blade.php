@@ -189,7 +189,7 @@
         <table class="header-table">
             <tr>
                 <td class="logo-section">
-                    <img src="{{ $currentPerusahaan->logo ? asset('storage/' . $currentPerusahaan->logo) : asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}"
+                    <img src="{{ $currentPerusahaan->logo ? asset('storage/' . $currentPerusahaan->logo) : asset('assets/logo/Mirasa-logo.webp') }}"
                         style="width: 50px;">
                 </td>
                 <td class="company-info">
@@ -344,7 +344,7 @@
         <table class="header-table">
             <tr>
                 <td class="logo-section">
-                    <img src="{{ $currentPerusahaan->logo ? asset('storage/' . $currentPerusahaan->logo) : asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}"
+                    <img src="{{ $currentPerusahaan->logo ? asset('storage/' . $currentPerusahaan->logo) : asset('assets/logo/Mirasa-logo.webp') }}"
                         style="width: 50px;">
                 </td>
                 <td class="company-info">

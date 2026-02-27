@@ -10,7 +10,7 @@
                     </div>
                     <div
                         class="relative bg-white p-2 rounded-2xl shadow-sm border border-slate-100 group-hover:border-brand-red/20 transition-all duration-500">
-                        <img src="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}" alt="Logo Mirasa"
+                        <img src="{{ asset('assets/logo/Mirasa-logo.webp') }}" alt="Logo Mirasa"
                             class="w-10 h-10 object-contain transform group-hover:rotate-12 transition-transform duration-500">
                     </div>
                 </div>
@@ -28,25 +28,29 @@
 
             <div class="hidden md:flex items-center gap-12">
                 <div class="flex gap-10 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
-                    <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#history" class="relative hover:text-brand-red transition-all duration-300 group">
+                    <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#history"
+                        class="relative hover:text-brand-red transition-all duration-300 group">
                         @translate('Sejarah')
                         <span
                             class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
                     </a>
 
-                    <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#owner" class="relative hover:text-brand-red transition-all duration-300 group">
+                    <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#owner"
+                        class="relative hover:text-brand-red transition-all duration-300 group">
                         @translate('Pemilik')
                         <span
                             class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
                     </a>
 
-                    <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#vision" class="relative hover:text-brand-red transition-all duration-300 group">
+                    <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#vision"
+                        class="relative hover:text-brand-red transition-all duration-300 group">
                         @translate('Strategi')
                         <span
                             class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
                     </a>
 
-                    <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#stats" class="relative hover:text-brand-red transition-all duration-300 group">
+                    <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#stats"
+                        class="relative hover:text-brand-red transition-all duration-300 group">
                         @translate('Produksi')
                         <span
                             class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
@@ -179,7 +183,8 @@
                     class="w-full flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-globe text-slate-400"></i>
-                        <span class="text-xs font-black uppercase tracking-widest text-slate-900">@translate('Pilih Bahasa')</span>
+                        <span
+                            class="text-xs font-black uppercase tracking-widest text-slate-900">@translate('Pilih Bahasa')</span>
                     </div>
                     <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform"
                         :class="openMobLang ? 'rotate-180' : ''"></i>
