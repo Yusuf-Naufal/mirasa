@@ -187,7 +187,7 @@ Route::middleware('auth')->group(function () {
     Route::get('pengeluaran/create-kesejahteraan', [PengeluaranController::class, 'createGajiKaryawan'])->name('pengeluaran.create-kesejahteraan')->middleware('permission:pengeluaran.kesejahteraan');
     Route::get('pengeluaran/create-maintenance', [PengeluaranController::class, 'createMaintenance'])->name('pengeluaran.create-maintenance')->middleware('permission:pengeluaran.maintenance');
     Route::get('pengeluaran/create-admnisitrasi', [PengeluaranController::class, 'createAdministrasi'])->name('pengeluaran.create-administrasi')->middleware('permission:pengeluaran.administrasi');
-    Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran.index')->middleware('permission:pengeluaran.index');
+    Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran.index');
     Route::post('/pengeluaran', [PengeluaranController::class, 'store'])->name('pengeluaran.store');
     Route::get('/pengeluaran/{id}/edit', [PengeluaranController::class, 'edit'])->name('pengeluaran.edit')->middleware('permission:pengeluaran.edit');
     Route::put('/pengeluaran/{id}', [PengeluaranController::class, 'update'])->name('pengeluaran.update')->middleware('permission:pengeluaran.update');
