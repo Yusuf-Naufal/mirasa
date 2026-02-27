@@ -166,7 +166,7 @@
     <footer class="bg-slate-50 py-20 border-t border-slate-100 relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-6 text-center relative z-10">
             <div class="flex justify-center mb-10">
-                <img src="{{ asset('assets/logo/logo-BMB-removebg-preview.png') }}"
+                <img src="{{ asset('assets/logo/BMB-logo.webp') }}"
                     class="h-12 md:h-16 opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
             </div>
             <p class="text-slate-400 text-[10px] font-black uppercase tracking-[0.6em] mb-6">

@@ -9,8 +9,7 @@
     @if (auth()->user()->perusahaan && auth()->user()->perusahaan->logo)
         <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . auth()->user()->perusahaan->logo) }}">
     @else
-        <link rel="icon" type="image/x-icon"
-            href="{{ asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}">
+        <link rel="icon" type="image/x-icon" href="{{ asset('assets/logo/Mirasa-logo.webp') }}">
     @endif
 
 

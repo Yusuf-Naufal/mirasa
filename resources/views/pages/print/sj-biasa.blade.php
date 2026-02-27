@@ -168,7 +168,7 @@
         <table class="header-table">
             <tr>
                 <td class="logo-section">
-                    <img src="{{ $currentPerusahaan->logo ? asset('storage/' . $currentPerusahaan->logo) : asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}"
+                    <img src="{{ $currentPerusahaan->logo ? asset('storage/' . $currentPerusahaan->logo) : asset('assets/logo/Mirasa-logo.webp') }}"
                         style="width: 50px;">
                 </td>
                 <td class="company-info" style="padding-left: 10px;">
@@ -266,9 +266,9 @@
                     @php
                         $satuan = strtoupper($item->DetailInventory->Inventory->Barang->satuan);
                         // Logika pemetaan satuan: Karton masuk KTN, selain itu masuk KG
-                        $qtyKtn = ($satuan == 'KARTON' || $satuan == 'KTN') ? $item->jumlah_keluar : 0;
-                        $qtyKg = ($qtyKtn == 0) ? $item->jumlah_keluar : 0;
-                        
+                        $qtyKtn = $satuan == 'KARTON' || $satuan == 'KTN' ? $item->jumlah_keluar : 0;
+                        $qtyKg = $qtyKtn == 0 ? $item->jumlah_keluar : 0;
+
                         $totalKtn += (float) $qtyKtn;
                         $totalKg += (float) $qtyKg;
                     @endphp
@@ -282,10 +282,15 @@
                         <td>{{ $keterangan->varietas }}</td>
                     </tr>
                 @endforeach
-                
+
                 {{-- Baris Kosong Tambahan untuk estetika cetakan --}}
                 <tr style="height: 35px;">
-                    <td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                 </tr>
             </tbody>
             <tfoot>
