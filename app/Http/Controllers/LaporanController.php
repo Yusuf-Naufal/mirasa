@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
-use App\Models\Produksi;
-use App\Models\Inventory;
-use App\Models\Perusahaan;
-use App\Models\Pengeluaran;
 use App\Models\BarangKeluar;
-use Illuminate\Http\Request;
 use App\Models\DetailInventory;
+use App\Models\Inventory;
+use App\Models\Pengeluaran;
+use App\Models\Perusahaan;
+use App\Models\Produksi;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LaporanController extends Controller
 {
@@ -98,6 +99,23 @@ class LaporanController extends Controller
                 ];
             });
 
+        $namaPerusahaan = $idPerusahaan ? Perusahaan::find($idPerusahaan)->nama_perusahaan : 'Semua Perusahaan';
+
+        // UNDUH PDF
+        if ($request->action == 'pdf') {
+            $pdfData = [
+                'totalBiayaBB' => $totalBiayaBB,
+                'totalBiayaBP' => $totalBiayaBP,
+                'barangKeluar' => $barangKeluar,
+                'hasilProduksi' => $hasilProduksi,
+                'dateRange' => $dateRange,
+                'namaPerusahaan' => $namaPerusahaan
+            ];
+
+            $pdf = Pdf::loadView('pages.laporan.cetak.produksi', $pdfData);
+            return $pdf->download('Laporan_Produksi_' . str_replace(' ', '_', $dateRange) . '.pdf');
+        }
+
         $perusahaan = Perusahaan::all();
 
         return view('pages.laporan.produksi', compact(
@@ -129,6 +147,9 @@ class LaporanController extends Controller
 
         // 2. Data Stok Global (Inventory) - Eager Loading untuk performa
         $stokRaw = Inventory::with(['Barang.jenisBarang', 'Perusahaan'])
+            ->withSum(['DetailInventory as total_nilai_asset' => function ($query) {
+                $query->where('stok', '>', 0);
+            }], 'total_harga')
             ->when($idPerusahaan, fn($q) => $q->where('id_perusahaan', $idPerusahaan))
             ->get();
 
@@ -181,6 +202,24 @@ class LaporanController extends Controller
             ->take(15)
             ->get();
 
+        $namaPerusahaan = $idPerusahaan ? Perusahaan::find($idPerusahaan)->nama_perusahaan : 'Semua Perusahaan';
+
+        // --- LOGIKA UNDUH PDF ---
+        if ($request->action == 'pdf') {
+            $pdfData = [
+                'stokGlobalGrouped' => $stokGlobalGrouped,
+                'summary' => $summary,
+                'dateRange' => $dateRange,
+                'namaPerusahaan' => $namaPerusahaan,
+                'stokDetail' => $stokDetail,
+                'barangKeluar' => $barangKeluar,
+            ];
+
+            // Gunakan orientasi Landscape karena data gudang biasanya lebar
+            $pdf = Pdf::loadView('pages.laporan.cetak.gudang', $pdfData)->setPaper('a4', 'landscape');
+            return $pdf->download('Laporan_Gudang_' . str_replace(' ', '_', $dateRange) . '.pdf');
+        }
+
         $perusahaan = Perusahaan::all();
 
         return view('pages.laporan.gudang', [
@@ -225,11 +264,11 @@ class LaporanController extends Controller
                 ->whereRaw('EXTRACT(YEAR FROM tanggal_pengeluaran) = ?', [$selectedYear]);
 
             // Filter Periode Lalu (Bulan Sebelumnya)
-            $lastMonthDate = \Carbon\Carbon::create($selectedYear, $selectedMonth, 1)->subMonth();
+            $lastMonthDate = Carbon::create($selectedYear, $selectedMonth, 1)->subMonth();
             $queryLast->whereRaw('EXTRACT(MONTH FROM tanggal_pengeluaran) = ?', [$lastMonthDate->month])
                 ->whereRaw('EXTRACT(YEAR FROM tanggal_pengeluaran) = ?', [$lastMonthDate->year]);
 
-            $daysInMonth = \Carbon\Carbon::create($selectedYear, $selectedMonth)->daysInMonth;
+            $daysInMonth = Carbon::create($selectedYear, $selectedMonth)->daysInMonth;
             $labels = range(1, $daysInMonth);
 
             $trendRaw = (clone $queryCurrent)
@@ -283,6 +322,28 @@ class LaporanController extends Controller
         }
 
         $chartData = $dataPeriodeIni->groupBy('kategori')->map(fn($row) => $row->sum('jumlah_pengeluaran'));
+
+        $namaPerusahaan = $idPerusahaan ? Perusahaan::find($idPerusahaan)->nama_perusahaan : 'Semua Perusahaan';
+
+        if ($request->action == 'pdf') {
+            $pdfData = [
+                'totalBulanIni' => $totalBulanIni,
+                'totalBulanLalu' => $totalBulanLalu,
+                'percentage' => $percentage,
+                'diff' => $diff,
+                'chartData' => $chartData,
+                'selectedMonth' => $selectedMonth,
+                'selectedYear' => $selectedYear,
+                'filterType' => $filterType,
+                'namaPerusahaan' => $namaPerusahaan,
+                'lineChartData' => $lineChartData,
+                'labels' => $labels,
+                'dataRincian' => $dataPeriodeIni->sortByDesc('tanggal_pengeluaran')
+            ];
+
+            $pdf = Pdf::loadView('pages.laporan.cetak.pengeluaran', $pdfData)->setPaper('a4', 'portrait');
+            return $pdf->download('Laporan_Pengeluaran_' . $selectedMonth . '_' . $selectedYear . '.pdf');
+        }
 
         return view('pages.laporan.pengeluaran', compact(
             'totalBulanIni',
@@ -502,6 +563,33 @@ class LaporanController extends Controller
             ? (($hppPerKg - $hppPerKgPrev) / $hppPerKgPrev) * 100
             : ($hppPerKg > 0 ? 100 : 0);
 
+        $namaPerusahaan = $idPerusahaan ? Perusahaan::find($idPerusahaan)->nama_perusahaan : 'Semua Perusahaan';
+
+        // --- LOGIKA UNDUH PDF ---
+        if ($request->action == 'pdf') {
+            $pdfData = [
+                'summary' => $summary,
+                'rincianProduksi' => $rincianProduksi,
+                'summaryBahan' => $summaryBahan,
+                'rincianBahan' => $rincianBahan,
+                'totalBebanHpp' => $totalBebanHpp,
+                'diffBebanHppPct' => $diffBebanHppPct,
+                'bebanKategoriHpp' => $bebanKategoriHpp,
+                'grandTotalBiayaHpp' => $grandTotalBiayaHpp,
+                'totalVolumeProduksi' => $totalVolumeProduksi,
+                'hppPerKg' => $hppPerKg,
+                'diffHppPct' => $diffHppPct,
+                'selectedMonth' => $selectedMonth,
+                'selectedYear' => $selectedYear,
+                'filterType' => $filterType,
+                'namaPerusahaan' => $namaPerusahaan,
+            ];
+
+            // Laporan HPP sangat detail, disarankan Portrait untuk urutan flow biaya
+            $pdf = Pdf::loadView('pages.laporan.cetak.hpp', $pdfData)->setPaper('a4', 'portrait');
+            return $pdf->download('Laporan_HPP_' . $selectedMonth . '_' . $selectedYear . '.pdf');
+        }
+
         return view('pages.laporan.hpp', compact(
             'summary',
             'rincianProduksi',
@@ -582,9 +670,27 @@ class LaporanController extends Controller
                     $kode = optional($barang->JenisBarang)->kode;
                     return in_array($kode, ['FG', 'WIP', 'EC']) ? ($item->jumlah_keluar * ($barang->nilai_konversi ?? 1)) : 0;
                 }),
-                'details' => $items 
+                'details' => $items
             ];
         })->sortByDesc('total_kg');
+
+        $namaPerusahaan = $idPerusahaan ? Perusahaan::find($idPerusahaan)->nama_perusahaan : 'Semua Perusahaan';
+
+        // --- LOGIKA UNDUH PDF ---
+        if ($request->action == 'pdf') {
+            $pdfData = [
+                'masukPerSupplier' => $masukPerSupplier,
+                'keluarPerCostumer' => $keluarPerCostumer,
+                'filterType' => $filterType,
+                'selectedMonth' => $selectedMonth,
+                'selectedYear' => $selectedYear,
+                'namaPerusahaan' => $namaPerusahaan,
+            ];
+
+            // Gunakan landscape karena kolom transaksi biasanya cukup banyak
+            $pdf = Pdf::loadView('pages.laporan.cetak.transaksi', $pdfData)->setPaper('a4', 'landscape');
+            return $pdf->download('Laporan_Transaksi_' . $selectedMonth . '_' . $selectedYear . '.pdf');
+        }
 
         $perusahaan = $user->hasRole('Super Admin') ? Perusahaan::all() : collect();
 
