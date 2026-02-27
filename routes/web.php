@@ -201,7 +201,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/barang-masuk/{id}', [BarangMasukController::class, 'update'])->name('barang-masuk.update')->middleware('permission:barang-masuk.update');
     Route::post('barang-masuk/create-produksi', [BarangMasukController::class, 'storeProduksi'])->name('barang-masuk.store-produksi')->middleware('permission:barang-masuk.create-produksi');
     Route::post('barang-masuk/create-bahan', [BarangMasukController::class, 'storeBahan'])->name('barang-masuk.store-bahan')->middleware('permission:barang-masuk.barang-masuk.create-bahan-penolong');
-    Route::get('/barang-masuk', [BarangMasukController::class, 'index'])->name('barang-masuk.index')->middleware('permission:barang-masuk.index');
+    Route::get('/barang-masuk', [BarangMasukController::class, 'index'])->name('barang-masuk.index');
     Route::delete('/barang-masuk/{id}', [BarangMasukController::class, 'destroy'])->name('barang-masuk.destroy')->middleware('permission:barang-masuk.delete');
 
     // CRUD PRODUKSI
@@ -214,7 +214,7 @@ Route::middleware('auth')->group(function () {
     Route::get('barang-keluar/create-bahan-baku', [BarangKeluarController::class, 'createBahanBaku'])->name('barang-keluar.create-bahan-baku')->middleware('permission:barang-keluar.create-bahan-baku');
     Route::get('barang-keluar/create-penjualan', [BarangKeluarController::class, 'createPenjualan'])->name('barang-keluar.create-penjualan')->middleware('permission:barang-keluar.create-penjualan');
     Route::get('/barang-keluar/print-group', [BarangKeluarController::class, 'printGroup'])->name('barang-keluar.print-group')->middleware('permission:barang-keluar.print-group');
-    Route::get('/barang-keluar', [BarangKeluarController::class, 'index'])->name('barang-keluar.index')->middleware('permission:barang-keluar.index');
+    Route::get('/barang-keluar', [BarangKeluarController::class, 'index'])->name('barang-keluar.index');
     Route::post('/barang-keluar', [BarangKeluarController::class, 'store'])->name('barang-keluar.store');
     Route::get('/barang-keluar/{id}/edit', [BarangKeluarController::class, 'edit'])->name('barang-keluar.edit')->middleware('permission:barang-keluar.edit');
     Route::put('/barang-keluar/{id}', [BarangKeluarController::class, 'update'])->name('barang-keluar.update')->middleware('permission:barang-keluar.edit');
