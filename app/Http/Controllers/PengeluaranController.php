@@ -26,7 +26,7 @@ class PengeluaranController extends Controller
             'OPERASIONAL' => 'pengeluaran.operasional',
             'OFFICE' => 'pengeluaran.office',
             'LIMBAH' => 'pengeluaran.limbah',
-            'KESEJAHTERAAN' => 'pengeluaran.kesejahtraan',
+            'KESEJAHTERAAN' => 'pengeluaran.kesejahteraan',
             'MAINTENANCE' => 'pengeluaran.maintenance',
             'ADMINISTRASI' => 'pengeluaran.administrasi',
         ];
@@ -185,6 +185,7 @@ class PengeluaranController extends Controller
             'kategori' => 'required',
             'jumlah_pengeluaran' => 'required|numeric',
             'tanggal_pengeluaran' => 'required|date',
+            'absensi' => 'nullable|numeric',
             'bukti' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
@@ -211,6 +212,7 @@ class PengeluaranController extends Controller
                 'kategori'           => $Kategori,
                 'sub_kategori'       => $subKategori,
                 'jumlah_pengeluaran' => $request->jumlah_pengeluaran,
+                'absensi'            => $request->absensi,
                 'is_hpp'             => $is_hpp,
                 'keterangan'         => $request->keterangan,
                 'bukti'              => $path,
@@ -282,6 +284,7 @@ class PengeluaranController extends Controller
             'kategori' => 'required',
             'jumlah_pengeluaran' => 'required|numeric',
             'tanggal_pengeluaran' => 'required|date',
+            'absensi' => 'nullable|numeric',
             'bukti' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
@@ -315,6 +318,11 @@ class PengeluaranController extends Controller
 
             $is_hpp = ($request->is_hpp == '1' || $request->is_hpp == 'on') ? 'true' : 'false';
 
+            $absensi = $request->absensi;
+            if ($Kategori === 'KESEJAHTERAAN' && $subKategori !== 'GAJI') {
+                $absensi = null;
+            }
+
             // 3. Update Data Utama
             $pengeluaran->update([
                 'tanggal_pengeluaran' => $request->tanggal_pengeluaran,
@@ -322,6 +330,7 @@ class PengeluaranController extends Controller
                 'kategori'           => $Kategori,
                 'sub_kategori'       => $subKategori,
                 'jumlah_pengeluaran' => $request->jumlah_pengeluaran,
+                'absensi'            => $absensi,
                 'is_hpp'             => $is_hpp,
                 'keterangan'         => $request->keterangan,
                 'bukti'              => $path,

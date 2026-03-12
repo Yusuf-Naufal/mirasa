@@ -127,8 +127,8 @@
             </a>
         @endcan
 
-        @canany(['pengeluaran.maintenance', 'pengeluaran.kesejahtraan', 'pengeluaran.operasional', 'pengeluaran.office',
-            'pengeluaran.limbah', 'pengeluaran.administrasi'])
+        @canany(['pengeluaran.maintenance', 'pengeluaran.kesejahteraan', 'pengeluaran.operasional',
+            'pengeluaran.office', 'pengeluaran.limbah', 'pengeluaran.administrasi'])
             {{-- Pengeluaran --}}
             <a href="{{ route('pengeluaran.index') }}"
                 class="flex items-center p-3 text-gray-700 rounded-xl hover:bg-amber-50 hover:text-amber-700 transition-all group">

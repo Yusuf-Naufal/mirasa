@@ -19,7 +19,8 @@
                     perlengkapan kantor.</p>
             </div>
 
-            <form action="{{ route('pengeluaran.store') }}" method="POST" enctype="multipart/form-data" class="form-prevent-multiple-submits">
+            <form action="{{ route('pengeluaran.store') }}" method="POST" enctype="multipart/form-data"
+                class="form-prevent-multiple-submits">
                 @csrf
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 md:px-0">
@@ -82,16 +83,33 @@
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                                 </div>
 
-                                <div class="md:col-span-2 text-left">
+                                <div class="md:col-span-2 text-left" x-data="{
+                                    rawNominal: '{{ $pengeluaran->jumlah_pengeluaran ?? '' }}',
+                                    formatRupiah(val) {
+                                        if (!val) return '';
+                                        return new Intl.NumberFormat('id-ID').format(val);
+                                    }
+                                }">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Total Nominal
                                         (Rp)</label>
                                     <div class="relative">
                                         <span
                                             class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">Rp</span>
-                                        <input type="number" name="jumlah_pengeluaran" placeholder="0"
+
+                                        <input type="text" x-ref="displayInput" :value="formatRupiah(rawNominal)"
+                                            @input="
+                                                let val = $event.target.value.replace(/\D/g, '');
+                                                rawNominal = val;
+                                                $nextTick(() => { $event.target.value = formatRupiah(val) });
+                                            "
+                                            placeholder="0"
                                             class="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-0 outline-none text-2xl font-bold transition-all uppercase"
                                             required>
+
+                                        <input type="hidden" name="jumlah_pengeluaran" :value="rawNominal">
                                     </div>
+                                    <p class="text-[10px] text-gray-500 mt-1 italic">*Input otomatis memformat ribuan
+                                        (contoh: 1.000.000)</p>
                                 </div>
                             </div>
                         </div>

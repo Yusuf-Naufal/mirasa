@@ -269,6 +269,132 @@
 
         </div>
 
+        {{-- GRAFIK OUTPUT PRODUKSI --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 transition-all hover:shadow-md">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <span class="p-2 bg-indigo-50 rounded-lg">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                            </path>
+                        </svg>
+                    </span>
+                    Kuantitas Keluar per Proses
+                </h3>
+                <span class="text-xs font-medium text-gray-400 bg-gray-50 px-3 py-1 rounded-full border">Live
+                    Data</span>
+            </div>
+            <div class="relative h-80 w-full">
+                <canvas id="chartProduksi"></canvas>
+            </div>
+        </div>
+
+        {{-- RINCIAN BARANG KELUAR PER PROSES --}}
+        <div class="space-y-6 mb-10">
+            <div class="flex items-center gap-3 border-b border-gray-100 pb-4">
+                <h3 class="text-xl font-extrabold text-gray-900 tracking-tight">Rincian Barang per Tahap Proses</h3>
+                <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                    {{ $rincianPerProses->count() }} Proses Aktif
+                </span>
+            </div>
+
+            @forelse($rincianPerProses as $idProses => $items)
+                <div
+                    class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:border-indigo-200">
+                    {{-- Header Kartu --}}
+                    <div
+                        class="bg-gradient-to-r from-indigo-600 to-indigo-500 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h10a2 2 0 012 2v4M14 4h1m1 0h1">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-[10px] font-bold text-indigo-100 uppercase tracking-widest leading-none mb-1">
+                                    Identitas Proses</p>
+                                <h4 class="text-sm font-black text-white uppercase">{{ $idProses }}</h4>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="text-right border-r border-white/20 pr-4">
+                                <p class="text-[10px] text-indigo-100 font-medium uppercase">Total Item</p>
+                                <p class="text-sm font-bold text-white">{{ number_format($items->sum('qty')) }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] text-indigo-100 font-medium uppercase">Estimasi Nilai</p>
+                                <p class="text-sm font-bold text-white">Rp
+                                    {{ number_format($items->sum('nilai'), 0, ',', '.') }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Tabel --}}
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50/50 border-b border-gray-100">
+                                    <th class="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                                        Informasi Barang</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right">
+                                        Kuantitas Keluar</th>
+                                    <th
+                                        class="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-right">
+                                        Nilai Transaksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                @foreach ($items as $item)
+                                    <tr class="hover:bg-indigo-50/30 transition-colors group/row">
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col">
+                                                <span
+                                                    class="font-bold text-gray-900 group-hover/row:text-indigo-600 transition-colors">{{ $item['nama_barang'] }}</span>
+                                                <span class="text-[10px] text-gray-400 italic">Material Produksi</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <div class="inline-flex items-center justify-end gap-2">
+                                                <span
+                                                    class="text-sm font-semibold text-gray-700">{{ number_format($item['qty']) }}</span>
+                                                <span
+                                                    class="text-[10px] font-medium bg-gray-100 text-gray-500 px-2 py-0.5 rounded uppercase">{{ $item['satuan'] }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right font-bold text-gray-800">
+                                            Rp {{ number_format($item['nilai'], 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @empty
+                <div class="bg-white rounded-3xl p-16 text-center border-2 border-dashed border-gray-100">
+                    <div class="inline-flex p-5 bg-gray-50 rounded-full mb-4">
+                        <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                            </path>
+                        </svg>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-900">Belum Ada Riwayat Keluar</h4>
+                    <p class="text-gray-400 max-w-xs mx-auto mt-2 text-sm">Data pengeluaran barang untuk proses
+                        produksi pada periode ini tidak ditemukan.</p>
+                </div>
+            @endforelse
+        </div>
+
     </div>
 
     <script>
@@ -279,6 +405,73 @@
                 allowInput: true,
                 altInput: true,
                 altFormat: "d M Y",
+            });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById('chartProduksi').getContext('2d');
+
+            // Buat gradien untuk batang grafik
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(79, 70, 229, 0.8)'); // Indigo-600
+            gradient.addColorStop(1, 'rgba(129, 140, 248, 0.2)'); // Indigo-400
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {!! json_encode($chartLabels) !!},
+                    datasets: [{
+                        label: 'Kuantitas Keluar',
+                        data: {!! json_encode($chartValues) !!},
+                        backgroundColor: gradient,
+                        borderColor: '#4f46e5',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        barThickness: 40,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 12,
+                            titleFont: {
+                                size: 14,
+                                weight: 'bold'
+                            },
+                            callbacks: {
+                                label: (context) => ` Total: ${context.raw.toLocaleString()} unit`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                borderDash: [5, 5],
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    weight: '600'
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
             });
         });
     </script>

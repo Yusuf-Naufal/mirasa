@@ -185,7 +185,7 @@
                     </div>
 
                     <form action="{{ route('supplier.import') }}" method="POST" enctype="multipart/form-data"
-                        class="space-y-6">
+                        class="form-prevent-multiple-submits space-y-6">
                         @csrf
                         <div class="form-prevent-multiple-submits relative group">
                             <input type="file" name="file" id="fileImport" class="hidden" required

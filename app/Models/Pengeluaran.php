@@ -20,6 +20,7 @@ class Pengeluaran extends Model
         'kategori',
         'sub_kategori',
         'jumlah_pengeluaran',
+        'absensi',
         'bukti',
         'keterangan',
     ];

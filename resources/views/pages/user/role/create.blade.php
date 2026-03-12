@@ -155,7 +155,7 @@
 
             const group = target.getAttribute('data-group');
             const permissionName = target.value;
-            const subModulKeywords = ['maintenance', 'kesejahtraan', 'operasional', 'office', 'limbah',
+            const subModulKeywords = ['maintenance', 'kesejahteraan', 'operasional', 'office', 'limbah',
                 'administrasi', 'produksi', 'bahan-baku', 'pemakaian', 'hpp', 'transaksi', 'gudang',
                 'penjualan', 'bahan-penolong', 'inventory'
             ];

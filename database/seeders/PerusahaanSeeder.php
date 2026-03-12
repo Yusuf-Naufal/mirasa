@@ -23,7 +23,7 @@ class PerusahaanSeeder extends Seeder
                 'logo' => null,
             ],
             [
-                'nama_perusahaan' => 'CV Bahtera Mandiri Ber...',
+                'nama_perusahaan' => 'CV Bahtera Mandiri Bersama',
                 'jenis_perusahaan' => 'Anak Perusahaan',
                 'alamat' => 'JL. Munggur No.1, RT.01/RW.05, Kadipuro, Mungkid, Kec. Mungkid, Kabupaten Magelang, Jawa Tengah 56512',
                 'kontak' => '6285124666420',

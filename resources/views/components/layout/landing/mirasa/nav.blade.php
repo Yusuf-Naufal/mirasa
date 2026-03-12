@@ -35,12 +35,12 @@
                             class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
                     </a>
 
-                    <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#owner"
+                    {{-- <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#owner"
                         class="relative hover:text-brand-red transition-all duration-300 group">
                         @translate('Pemilik')
                         <span
                             class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
-                    </a>
+                    </a> --}}
 
                     <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#vision"
                         class="relative hover:text-brand-red transition-all duration-300 group">
@@ -136,7 +136,7 @@
                     class="fa-solid fa-arrow-right text-brand-red opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
             </a>
 
-            <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#owner" onclick="toggleMobileMenu()"
+            {{-- <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#owner" onclick="toggleMobileMenu()"
                 class="group flex justify-between items-center py-4 border-b border-slate-50 transition-all">
                 <span
                     class="text-xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-brand-red transition-colors">
@@ -144,7 +144,7 @@
                 </span>
                 <i
                     class="fa-solid fa-arrow-right text-brand-red opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
-            </a>
+            </a> --}}
 
             <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#vision" onclick="toggleMobileMenu()"
                 class="group flex justify-between items-center py-4 border-b border-slate-50 transition-all">
