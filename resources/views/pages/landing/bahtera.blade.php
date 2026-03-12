@@ -52,11 +52,11 @@
                 </p>
 
                 <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-                    <a href="#produk"
+                    <a href="#products"
                         class="bg-bmb-blue text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-blue-800 transition-colors shadow-lg shadow-blue-900/10 text-center">
                         Lihat Produk
                     </a>
-                    <a href="#kontak"
+                    <a href="#contact"
                         class="bg-white border-2 border-slate-200 text-slate-700 px-10 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 transition-colors text-center">
                         Hubungi Kami
                     </a>
