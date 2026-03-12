@@ -84,16 +84,33 @@
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                                 </div>
 
-                                <div class="md:col-span-2">
+                                <div class="md:col-span-2 text-left" x-data="{
+                                    rawNominal: '{{ $pengeluaran->jumlah_pengeluaran ?? '' }}',
+                                    formatRupiah(val) {
+                                        if (!val) return '';
+                                        return new Intl.NumberFormat('id-ID').format(val);
+                                    }
+                                }">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Total Nominal
                                         (Rp)</label>
                                     <div class="relative">
                                         <span
                                             class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">Rp</span>
-                                        <input type="number" name="jumlah_pengeluaran" placeholder="0"
-                                            class="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-0 outline-none text-2xl font-bold transition-all"
+
+                                        <input type="text" x-ref="displayInput" :value="formatRupiah(rawNominal)"
+                                            @input="
+                                                let val = $event.target.value.replace(/\D/g, '');
+                                                rawNominal = val;
+                                                $nextTick(() => { $event.target.value = formatRupiah(val) });
+                                            "
+                                            placeholder="0"
+                                            class="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-0 outline-none text-2xl font-bold transition-all uppercase"
                                             required>
+
+                                        <input type="hidden" name="jumlah_pengeluaran" :value="rawNominal">
                                     </div>
+                                    <p class="text-[10px] text-gray-500 mt-1 italic">*Input otomatis memformat ribuan
+                                        (contoh: 1.000.000)</p>
                                 </div>
                             </div>
                         </div>
@@ -128,11 +145,13 @@
                                                 HPP</span>
                                             <div
                                                 class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-blue-500 flex items-center justify-center">
-                                                <div class="w-2 h-2 rounded-full bg-blue-500 hidden peer-checked:block">
+                                                <div
+                                                    class="w-2 h-2 rounded-full bg-blue-500 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">Biaya akan dibebankan untuk menghitung
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya akan dibebankan untuk
+                                            menghitung
                                             HPP</p>
                                     </div>
                                 </label>
@@ -211,7 +230,7 @@
                             </div>
                         </div>
 
-                        <div id="gas-info-card" class="bg-blue-50 rounded-2xl p-6 border border-blue-100">
+                        <div class="bg-blue-50 rounded-2xl p-6 border border-blue-100">
                             <div class="flex gap-3">
                                 <svg class="w-6 h-6 text-blue-600 shrink-0" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -219,9 +238,9 @@
                                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 <div>
-                                    <h4 class="text-sm font-bold text-blue-800">Info Biaya Gas</h4>
-                                    <p class="text-xs text-blue-700 mt-1">Sistem akan otomatis mencocokkan data
-                                        pemakaian gas harian yang belum terbayar untuk periode ini.</p>
+                                    <h4 class="text-sm font-bold text-blue-800">Info Biaya Operasional</h4>
+                                    <p class="text-xs text-blue-700 mt-1">Sistem akan otomatis mencocokkan data pada tabel
+                                        pemakaian yang belum terbayar untuk periode ini.</p>
                                 </div>
                             </div>
                         </div>
@@ -254,22 +273,6 @@
 
         </div>
     </div>
-
-    <script>
-        document.getElementById('sub_kategori').addEventListener('input', function() {
-            // Mengubah teks input menjadi kapital secara otomatis saat diketik
-            this.value = this.value.toUpperCase();
-
-            const gasCard = document.getElementById('gas-info-card');
-            const value = this.value;
-
-            if (value === 'GAS') {
-                gasCard.classList.remove('hidden');
-            } else {
-                gasCard.classList.add('hidden');
-            }
-        });
-    </script>
 
     {{-- HANDLE PREVIEW BUKTI --}}
     <script>

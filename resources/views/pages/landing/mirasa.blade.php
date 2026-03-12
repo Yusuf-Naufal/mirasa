@@ -225,7 +225,7 @@
         </div>
     </section>
 
-    <section id="owner" class="py-32 bg-white overflow-hidden relative">
+    {{-- <section id="owner" class="py-32 bg-white overflow-hidden relative">
         <div
             class="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/4 pointer-events-none select-none opacity-[0.02]">
             <h2 class="text-[20rem] font-black font-display uppercase leading-none">@translate('Penemu')</h2>
@@ -263,7 +263,7 @@
                     <div class="absolute -top-10 -left-10 w-40 h-40 bg-brand-red/[0.03] rounded-full blur-3xl"></div>
                 </div>
 
-                {{-- Content Section --}}
+            
                 <div class="lg:w-7/12 space-y-10">
                     <div class="space-y-4">
                         <div class="flex items-center gap-3">
@@ -281,7 +281,7 @@
                         </h3>
                     </div>
 
-                    {{-- Quote --}}
+                 
                     <div class="relative pt-6">
                         <i class="fa-solid fa-quote-left absolute -top-4 -left-6 text-6xl text-slate-100 -z-10"></i>
 
@@ -304,7 +304,7 @@
                         </div>
                     </div>
 
-                    {{-- Key Points --}}
+                  
                     <div class="pt-10 grid grid-cols-2 gap-8 border-t border-slate-100">
                         <div class="space-y-1">
                             <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Quality Control</p>
@@ -319,7 +319,7 @@
 
             </div>
         </div>
-    </section>
+    </section> --}}
 
     <section id="vision" class="py-32 bg-slate-50 px-6 relative overflow-hidden">
         <div
@@ -726,7 +726,7 @@
                 <div class="lg:col-span-5 space-y-8 text-center lg:text-left">
                     <div class="flex flex-col items-center lg:items-start gap-4">
                         <img src="{{ asset('assets/logo/Mirasa-logo.webp') }}" loading="lazy"
-                            class="h-16 w-auto brightness-0 invert" alt="Footer Logo">
+                            class="h-16 w-auto" alt="Footer Logo">
                         <div>
                             <span class="block font-black text-xl tracking-tighter uppercase">PT Mirasa Food
                                 Industry</span>
@@ -751,12 +751,12 @@
                                     @translate('Sejarah Kami')
                                 </a>
                             </li>
-                            <li>
+                            {{-- <li>
                                 <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#owner"
                                     class="hover:text-white transition-colors">
                                     @translate('Pemilik')
                                 </a>
-                            </li>
+                            </li> --}}
                             <li>
                                 <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#stats"
                                     class="hover:text-white transition-colors">

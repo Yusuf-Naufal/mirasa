@@ -18,15 +18,14 @@ class LaporanController extends Controller
     {
         $user = auth()->user();
 
-        // 1. Inisialisasi Date Range (Default: Bulan Ini)
+        // 1. Inisialisasi Date Range
         if ($request->filled('date_range') && str_contains($request->date_range, ' to ')) {
-            $dates = explode(' to ', $request->get('date_range'));
+            $dates = explode(' to ', $request->date_range);
             $startDate = $dates[0];
             $endDate = $dates[1];
         } else if ($request->filled('date_range')) {
-            // Jika user hanya pilih 1 tanggal
-            $startDate = $request->get('date_range');
-            $endDate = $request->get('date_range');
+            $startDate = $request->date_range;
+            $endDate = $request->date_range;
         } else {
             $startDate = now()->startOfMonth()->format('Y-m-d');
             $endDate = now()->endOfMonth()->format('Y-m-d');
@@ -38,7 +37,6 @@ class LaporanController extends Controller
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->get('id_perusahaan') : $user->id_perusahaan;
 
         // --- 3. BIAYA BAHAN BAKU (DetailInventory - BB) ---
-        // Gunakan eager loading 'Inventory.Barang' untuk performa
         $queryBB = DetailInventory::whereHas('Inventory.Barang.jenisBarang', function ($q) {
             $q->where('kode', 'BB');
         })
@@ -50,22 +48,21 @@ class LaporanController extends Controller
         $totalBiayaBB = $queryBB->sum('total_harga');
 
         // --- 4. BIAYA BAHAN PENOLONG & RINCIAN BARANG KELUAR ---
-        // Kita ambil datanya dulu untuk di-mapping ke tabel rincian
         $queryBarangKeluar = BarangKeluar::where('jenis_keluar', 'PRODUKSI')
             ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
                 $q->where('id_perusahaan', $idPerusahaan);
             })
             ->whereBetween('tanggal_keluar', [$startDate, $endDate])
-            ->with(['DetailInventory.Inventory.Barang']);
+            // Tambahkan 'Proses' di eager loading agar tidak N+1 query
+            ->with(['DetailInventory.Inventory.Barang', 'Proses']);
 
         $dataKeluarRaw = $queryBarangKeluar->get();
 
-        // Hitung total Biaya Bahan Penolong (BP) saja
         $totalBiayaBP = $dataKeluarRaw->filter(function ($item) {
             return optional(optional(optional($item->DetailInventory)->Inventory)->Barang->jenisBarang)->kode == 'BP';
         })->sum('total_harga');
 
-        // Mapping untuk Tabel "Rincian Barang Dikeluarkan" (Group By Barang)
+        // Grouping Utama untuk Tabel Ringkasan
         $barangKeluar = $dataKeluarRaw->groupBy('DetailInventory.Inventory.id_barang')
             ->map(function ($group) {
                 $first = $group->first();
@@ -77,7 +74,29 @@ class LaporanController extends Controller
                 ];
             });
 
-        // --- 5. PRODUK JADI (DetailInventory - FG, WIP, EC) ---
+        // --- 5. LOGIKA RINCIAN BARANG PER ID PROSES (Untuk Tabel di View) ---
+        $rincianPerProses = $dataKeluarRaw->groupBy(function ($item) {
+            // Menggunakan nama proses jika ada, jika tidak pakai ID atau 'N/A'
+            return $item->Proses ? $item->Proses->nama_proses : ($item->id_proses ?? 'Tanpa Proses');
+        })->map(function ($group) {
+            return $group->groupBy('DetailInventory.Inventory.id_barang')->map(function ($barangGroup) {
+                $first = $barangGroup->first();
+                return [
+                    'nama_barang' => $first->DetailInventory->Inventory->Barang->nama_barang,
+                    'qty'         => $barangGroup->sum('jumlah_keluar'),
+                    'satuan'      => $first->DetailInventory->Inventory->Barang->satuan,
+                    'nilai'       => $barangGroup->sum('total_harga')
+                ];
+            });
+        });
+
+        // --- 6. LOGIKA AGREGASI UNTUK GRAFIK ---
+        $chartLabels = $rincianPerProses->keys()->toArray();
+        $chartValues = $rincianPerProses->map(function ($items) {
+            return $items->sum('qty'); // Menghitung total qty per proses
+        })->values()->toArray();
+
+        // --- 7. PRODUK JADI ---
         $hasilProduksi = DetailInventory::whereHas('Inventory.Barang.jenisBarang', function ($q) {
             $q->whereIn('kode', ['FG', 'WIP', 'EC']);
         })
@@ -101,18 +120,19 @@ class LaporanController extends Controller
 
         $namaPerusahaan = $idPerusahaan ? Perusahaan::find($idPerusahaan)->nama_perusahaan : 'Semua Perusahaan';
 
-        // UNDUH PDF
+        // Penanganan PDF
         if ($request->action == 'pdf') {
             $pdfData = [
                 'totalBiayaBB' => $totalBiayaBB,
                 'totalBiayaBP' => $totalBiayaBP,
                 'barangKeluar' => $barangKeluar,
                 'hasilProduksi' => $hasilProduksi,
+                'rincianPerProses' => $rincianPerProses, // Tambahkan ini di PDF juga
                 'dateRange' => $dateRange,
                 'namaPerusahaan' => $namaPerusahaan
             ];
 
-            $pdf = Pdf::loadView('pages.laporan.cetak.produksi', $pdfData);
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pages.laporan.cetak.produksi', $pdfData);
             return $pdf->download('Laporan_Produksi_' . str_replace(' ', '_', $dateRange) . '.pdf');
         }
 
@@ -124,7 +144,10 @@ class LaporanController extends Controller
             'barangKeluar',
             'hasilProduksi',
             'perusahaan',
-            'dateRange'
+            'dateRange',
+            'chartLabels',
+            'chartValues',
+            'rincianPerProses' // <--- PASTIKAN INI ADA
         ));
     }
 

@@ -190,17 +190,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran.index');
     Route::post('/pengeluaran', [PengeluaranController::class, 'store'])->name('pengeluaran.store');
     Route::get('/pengeluaran/{id}/edit', [PengeluaranController::class, 'edit'])->name('pengeluaran.edit')->middleware('permission:pengeluaran.edit');
-    Route::put('/pengeluaran/{id}', [PengeluaranController::class, 'update'])->name('pengeluaran.update')->middleware('permission:pengeluaran.update');
+    Route::put('/pengeluaran/{id}', [PengeluaranController::class, 'update'])->name('pengeluaran.update')->middleware('permission:pengeluaran.edit');
     Route::delete('/pengeluaran/{id}', [PengeluaranController::class, 'destroy'])->name('pengeluaran.destroy')->middleware('permission:pengeluaran.delete');
 
     // CRUD BARANG MASUK
     Route::get('barang-masuk/create-produksi', [BarangMasukController::class, 'createProduksi'])->name('barang-masuk.create-produksi')->middleware('permission:barang-masuk.create-produksi');
-    Route::get('barang-masuk/create-bp', [BarangMasukController::class, 'createBp'])->name('barang-masuk.create-bp')->middleware('permission:barang-masuk.barang-masuk.create-bahan-penolong');
+    Route::get('barang-masuk/create-bp', [BarangMasukController::class, 'createBp'])->name('barang-masuk.create-bp')->middleware('permission:barang-masuk.create-bahan-penolong');
     Route::get('barang-masuk/edit-produksi/{id}', [BarangMasukController::class, 'editProduksi'])->name('barang-masuk.edit-produksi')->middleware('permission:barang-masuk.edit-produksi');
-    Route::get('barang-masuk/edit-bp/{id}', [BarangMasukController::class, 'editBp'])->name('barang-masuk.edit-bp')->middleware('permission:barang-masuk.barang-masuk.edit-bahan-penolong');
-    Route::put('/barang-masuk/{id}', [BarangMasukController::class, 'update'])->name('barang-masuk.update')->middleware('permission:barang-masuk.update');
+    Route::get('barang-masuk/edit-bp/{id}', [BarangMasukController::class, 'editBp'])->name('barang-masuk.edit-bp')->middleware('permission:barang-masuk.edit-bahan-penolong');
+    Route::put('/barang-masuk/{id}', [BarangMasukController::class, 'update'])->name('barang-masuk.update');
     Route::post('barang-masuk/create-produksi', [BarangMasukController::class, 'storeProduksi'])->name('barang-masuk.store-produksi')->middleware('permission:barang-masuk.create-produksi');
-    Route::post('barang-masuk/create-bahan', [BarangMasukController::class, 'storeBahan'])->name('barang-masuk.store-bahan')->middleware('permission:barang-masuk.barang-masuk.create-bahan-penolong');
+    Route::post('barang-masuk/create-bahan', [BarangMasukController::class, 'storeBahan'])->name('barang-masuk.store-bahan')->middleware('permission:barang-masuk.create-bahan-penolong');
     Route::get('/barang-masuk', [BarangMasukController::class, 'index'])->name('barang-masuk.index');
     Route::delete('/barang-masuk/{id}', [BarangMasukController::class, 'destroy'])->name('barang-masuk.destroy')->middleware('permission:barang-masuk.delete');
 

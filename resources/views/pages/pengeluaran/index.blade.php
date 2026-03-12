@@ -66,7 +66,8 @@
 
                 {{-- Dropdown Button Section --}}
                 @canany(['pengeluaran.create-operasional', 'pengeluaran.create-office', 'pengeluaran.create-limbah',
-                    'pengeluaran.create-kesejahtraan', 'pengeluaran.create-maintenance', 'pengeluaran.create-administrasi'])
+                    'pengeluaran.create-kesejahteraan', 'pengeluaran.create-maintenance',
+                    'pengeluaran.create-administrasi'])
                     <div class="relative w-full md:w-64" x-data="{ menuOpen: false }">
                         <button @click="menuOpen = !menuOpen" @click.away="menuOpen = false"
                             class="w-full md:w-64 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95">
@@ -144,7 +145,7 @@
                             @endcan
 
                             {{-- Kategori: Gaji --}}
-                            @can('pengeluaran.create-kesejahtraan')
+                            @can('pengeluaran.create-kesejahteraan')
                                 <a href="{{ route('pengeluaran.create-kesejahteraan') }}"
                                     class="flex items-center gap-3 px-4 py-3 hover:bg-purple-50 text-gray-700 transition-colors border-b border-gray-50">
                                     <div class="p-2 bg-purple-100 text-purple-600 rounded-xl">

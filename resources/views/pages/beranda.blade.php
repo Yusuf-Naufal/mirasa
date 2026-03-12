@@ -86,7 +86,7 @@
                             'svg_type' => 'pengeluaran',
                             'permissions' => [
                                 'pengeluaran.maintenance',
-                                'pengeluaran.kesejahtraan',
+                                'pengeluaran.kesejahteraan',
                                 'pengeluaran.operasional',
                                 'pengeluaran.office',
                                 'pengeluaran.limbah',

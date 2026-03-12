@@ -15,16 +15,19 @@
                 </a>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mt-2">Pengeluaran <span
                         class="text-purple-600">Kesejahteraan</span></h1>
-                <p class="text-sm text-gray-500 font-medium italic">*Gunakan kategori ini untuk kesejahteraan karyawan perusahaan.</p>
+                <p class="text-sm text-gray-500 font-medium italic">*Gunakan kategori ini untuk kesejahteraan karyawan
+                    perusahaan.</p>
             </div>
 
-            <form action="{{ route('pengeluaran.store') }}" method="POST" enctype="multipart/form-data" class="form-prevent-multiple-submits">
+            <form action="{{ route('pengeluaran.store') }}" method="POST" enctype="multipart/form-data"
+                class="form-prevent-multiple-submits">
                 @csrf
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 md:px-0">
 
                     {{-- LEFT SIDE: FORM INPUT --}}
-                    <div class="lg:col-span-2 space-y-6 text-left">
+                    <div class="lg:col-span-2 space-y-6 text-left" x-data="{ selectedLayanan: '', customLayanan: '', selectedSub: '' }">
+
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -40,13 +43,35 @@
                                         required>
                                 </div>
 
+                                {{-- Jenis Layanan --}}
                                 <div class="text-left">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis
-                                        Barang/Jasa</label>
-                                    <input type="text" name="sub_kategori" id="sub_kategori"
-                                        placeholder="Contoh: GAJI, KONSULTASI, BONUS"
-                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all uppercase"
-                                        required>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis Layanan</label>
+                                    <div class="relative">
+                                        <select :name="selectedLayanan !== 'LAINNYA' ? 'sub_kategori' : ''"
+                                            x-model="selectedLayanan" @change="selectedSub = $event.target.value"
+                                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none transition-all"
+                                            required>
+                                            <option value="" disabled selected>-- Pilih Jenis Layanan --</option>
+                                            <option value="GAJI">GAJI</option>
+                                            <option value="BONUS">BONUS</option>
+                                            <option value="TUNJANGAN">TUNJANGAN</option>
+                                            <option value="LAINNYA">LAINNYA...</option>
+                                        </select>
+                                    </div>
+
+                                    <div x-show="selectedLayanan === 'LAINNYA'"
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 -translate-y-2" class="mt-3">
+                                        <label class="block text-xs font-semibold text-gray-400 mb-2 uppercase">Sebutkan
+                                            Layanan</label>
+                                        <input type="text"
+                                            :name="selectedLayanan === 'LAINNYA' ? 'sub_kategori' : ''"
+                                            x-model="customLayanan"
+                                            @input="selectedSub = $event.target.value.toUpperCase()"
+                                            placeholder="Ketik layanan lainnya..."
+                                            class="w-full px-4 py-3 rounded-xl border border-blue-200 focus:ring-2 focus:ring-blue-500 outline-none uppercase bg-blue-50/30 transition-all"
+                                            :required="selectedLayanan === 'LAINNYA'">
+                                    </div>
                                 </div>
 
                                 <div class="text-left">
@@ -55,16 +80,57 @@
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                                 </div>
 
-                                <div class="md:col-span-2 text-left">
+                                {{-- INPUT ABSENSI: Muncul hanya jika selectedSub === 'GAJI' --}}
+                                <div class="md:col-span-2 text-left" x-show="selectedSub === 'GAJI'"
+                                    x-transition:enter="transition ease-out duration-300"
+                                    x-transition:enter-start="opacity-0 transform -translate-y-4">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Total
+                                        Kehadiran</label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                                <circle cx="12" cy="7" r="4" />
+                                            </svg>
+                                        </span>
+
+                                        <input type="number" name="absensi" placeholder="0"
+                                            class="w-full pl-12 pr-4 py-4 bg-purple-50/50 rounded-xl border-2 border-dashed border-purple-200 focus:bg-white focus:border-purple-500 focus:ring-0 outline-none text-2xl font-bold transition-all"
+                                            :required="selectedSub === 'GAJI'">
+                                    </div>
+                                    <p class="text-[10px] text-purple-600 mt-2 italic">*Wajib diisi untuk perhitungan
+                                        Gaji.</p>
+                                </div>
+
+                                <div class="md:col-span-2 text-left" x-data="{
+                                    rawNominal: '{{ $pengeluaran->jumlah_pengeluaran ?? '' }}',
+                                    formatRupiah(val) {
+                                        if (!val) return '';
+                                        return new Intl.NumberFormat('id-ID').format(val);
+                                    }
+                                }">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Total Nominal
                                         (Rp)</label>
                                     <div class="relative">
                                         <span
                                             class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">Rp</span>
-                                        <input type="number" name="jumlah_pengeluaran" placeholder="0"
+
+                                        <input type="text" x-ref="displayInput" :value="formatRupiah(rawNominal)"
+                                            @input="
+                                                let val = $event.target.value.replace(/\D/g, '');
+                                                rawNominal = val;
+                                                $nextTick(() => { $event.target.value = formatRupiah(val) });
+                                            "
+                                            placeholder="0"
                                             class="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-0 outline-none text-2xl font-bold transition-all uppercase"
                                             required>
+
+                                        <input type="hidden" name="jumlah_pengeluaran" :value="rawNominal">
                                     </div>
+                                    <p class="text-[10px] text-gray-500 mt-1 italic">*Input otomatis memformat ribuan
+                                        (contoh: 1.000.000)</p>
                                 </div>
                             </div>
                         </div>
@@ -101,18 +167,20 @@
                                                 HPP</span>
                                             <div
                                                 class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-blue-500 flex items-center justify-center">
-                                                <div class="w-2 h-2 rounded-full bg-blue-500 hidden peer-checked:block">
+                                                <div
+                                                    class="w-2 h-2 rounded-full bg-blue-500 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">Biaya akan dibebankan untuk menghitung
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya akan dibebankan untuk
+                                            menghitung
                                             HPP</p>
                                     </div>
                                 </label>
 
                                 <label class="flex-1 cursor-pointer group">
                                     <input type="radio" name="is_hpp" value="0" id="radio_non_hpp"
-                                        class="peer hidden" >
+                                        class="peer hidden">
                                     <div
                                         class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-gray-500 peer-checked:bg-gray-50 transition-all group-hover:border-gray-300">
                                         <div class="flex items-center justify-between">
@@ -120,11 +188,13 @@
                                                 class="text-sm font-bold text-gray-700 peer-checked:text-gray-900">Non-HPP</span>
                                             <div
                                                 class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-gray-500 flex items-center justify-center">
-                                                <div class="w-2 h-2 rounded-full bg-gray-600 hidden peer-checked:block">
+                                                <div
+                                                    class="w-2 h-2 rounded-full bg-gray-600 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak di bebankan ke
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak di bebankan
+                                            ke
                                             HPP</p>
                                     </div>
                                 </label>
