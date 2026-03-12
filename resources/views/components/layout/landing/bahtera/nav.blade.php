@@ -37,11 +37,52 @@
         </div>
     </div>
 
-    <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-slate-200 px-6 py-8 space-y-6 shadow-xl">
-        <a href="#home" class="block text-lg font-bold text-slate-800">Beranda</a>
-        <a href="#about" class="block text-lg font-bold text-slate-800">Tentang Kami</a>
-        <a href="#products" class="block text-lg font-bold text-slate-800">Varian Rasa</a>
-        <a href="#contact" class="block text-lg font-bold text-slate-800">Kontak</a>
-        <a href="{{ route('katalog') }}" class="w-full bg-bmb-blue text-white py-4 rounded-2xl font-bold">E-Katalog</a>
+    <div id="mobile-menu" class="fixed inset-0 z-40 hidden md:hidden">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+
+        <div
+            class="fixed right-0 top-0 bottom-0 w-[80%] max-w-sm bg-white shadow-2xl p-8 flex flex-col transform transition-transform duration-300">
+            <div class="flex justify-end mb-8">
+                <button id="close-menu" class="p-2 text-slate-500">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="flex flex-col gap-6">
+                <a href="#home" class="mobile-link group">
+                    <span
+                        class="text-2xl font-black text-slate-800 group-hover:text-bmb-orange transition-colors">Beranda</span>
+                    <div class="h-1 w-0 bg-bmb-orange group-hover:w-12 transition-all duration-300"></div>
+                </a>
+                <a href="#about" class="mobile-link group">
+                    <span
+                        class="text-2xl font-black text-slate-800 group-hover:text-bmb-orange transition-colors">Tentang
+                        Kami</span>
+                    <div class="h-1 w-0 bg-bmb-orange group-hover:w-12 transition-all duration-300"></div>
+                </a>
+                <a href="#products" class="mobile-link group">
+                    <span
+                        class="text-2xl font-black text-slate-800 group-hover:text-bmb-orange transition-colors">Varian
+                        Rasa</span>
+                    <div class="h-1 w-0 bg-bmb-orange group-hover:w-12 transition-all duration-300"></div>
+                </a>
+                <a href="#contact" class="mobile-link group">
+                    <span
+                        class="text-2xl font-black text-slate-800 group-hover:text-bmb-orange transition-colors">Kontak</span>
+                    <div class="h-1 w-0 bg-bmb-orange group-hover:w-12 transition-all duration-300"></div>
+                </a>
+            </nav>
+
+            <div class="mt-auto">
+                <a href="{{ route('katalog') }}"
+                    class="block w-full bg-gradient-to-r from-bmb-orange to-orange-600 text-white text-center py-4 rounded-2xl font-extrabold text-lg shadow-lg shadow-orange-200 uppercase tracking-wider">
+                    Lihat E-Katalog
+                </a>
+                <p class="text-center text-slate-400 text-xs mt-6 font-medium">© 2024 Bahtera Mandiri Bersama</p>
+            </div>
+        </div>
     </div>
 </nav>
