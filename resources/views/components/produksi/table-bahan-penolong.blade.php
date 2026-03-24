@@ -19,15 +19,15 @@
             <tbody class="divide-y divide-gray-50 text-sm">
                 @forelse($items as $bp)
                     <tr class="hover:bg-purple-50/30 transition-colors">
-                        <td class="px-8 py-4 font-bold text-gray-800 leading-tight">{{ $bp->Inventory->Barang->nama_barang }}</td>
+                        <td class="px-8 py-4 font-bold text-gray-800 leading-tight">{{ $bp->DetailInventory->Inventory->Barang->nama_barang }}</td>
                         <td class="px-6 py-4">
                             <span class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-700 text-[9px] font-black uppercase">
-                                {{ $bp->supplier->nama_supplier ?? 'Tanpa Supplier' }}
+                                {{ $bp->DetailInventory->Supplier->nama_supplier ?? 'Tanpa Supplier' }}
                             </span>
                         </td>
                         <td class="px-6 py-4 text-center">
                             <span class="font-black text-gray-800">{{ number_format($bp->jumlah_diterima, 2) }}</span>
-                            <span class="text-[9px] font-black text-gray-400 uppercase ml-0.5">{{ $bp->Inventory->Barang->satuan }}</span>
+                            <span class="text-[9px] font-black text-gray-400 uppercase ml-0.5">{{ $bp->DetailInventory->Inventory->Barang->satuan }}</span>
                         </td>
                         <td class="px-8 py-4 text-right font-black text-purple-600">Rp {{ number_format($bp->total_harga, 0, ',', '.') }}</td>
                     </tr>
