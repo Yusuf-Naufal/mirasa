@@ -273,6 +273,8 @@ class BarangKeluarController extends Controller
                 ]);
 
                 $sisaKebutuhan -= $jumlahDiambil;
+
+                $produksi->syncTotals();
             }
 
             DB::commit();

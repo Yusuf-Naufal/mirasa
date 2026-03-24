@@ -44,7 +44,7 @@
                             <div class="flex flex-col">
                                 <span
                                     class="font-bold text-gray-800 text-sm group-hover:text-blue-600 transition-colors">
-                                    {{ $first->DetailInventory->Inventory->Barang->nama_barang }}
+                                    {{ $first->DetailInventory->Inventory->Barang->nama_barang ?? "Terhapus" }}
                                 </span>
                                 <span class="text-[10px] text-blue-500 font-medium">Terdiri dari {{ $items->count() }}
                                     Batch pengambilan</span>
@@ -60,7 +60,7 @@
                                 <span
                                     class="text-sm font-black text-gray-800">{{ number_format($totalQty, 0, ',', '.') }}</span>
                                 <span
-                                    class="text-[9px] font-bold text-gray-400 uppercase">{{ $first->DetailInventory->Inventory->Barang->satuan }}</span>
+                                    class="text-[9px] font-bold text-gray-400 uppercase">{{ $first->DetailInventory->Inventory->Barang->satuan ?? "-"}}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-right">
@@ -91,7 +91,7 @@
                                                 <span class="text-xs font-bold text-gray-800">
                                                     {{ number_format($detail->jumlah_keluar, 0, ',', '.') }}
                                                     <span
-                                                        class="text-[10px] text-gray-400 font-normal">{{ $detail->DetailInventory->Inventory->Barang->satuan }}</span>
+                                                        class="text-[10px] text-gray-400 font-normal">{{ $detail->DetailInventory->Inventory->Barang->satuan ?? '-'}}</span>
                                                 </span>
                                             </div>
                                             <div class="flex flex-col">
@@ -117,18 +117,18 @@
                                                     id: '{{ $detail->id }}', 
                                                     qty: '{{ $detail->jumlah_keluar }}', 
                                                     originalQty: '{{ $detail->jumlah_keluar }}',
-                                                    barang: '{{ $detail->DetailInventory->Inventory->Barang->nama_barang }}',
-                                                    satuan: '{{ $detail->DetailInventory->Inventory->Barang->satuan }}',
+                                                    barang: '{{ $detail->DetailInventory->Inventory->Barang->nama_barang ?? "Terhapus" }}',
+                                                    satuan: '{{ $detail->DetailInventory->Inventory->Barang->satuan ?? "-" }}',
                                                     stok_batch: {{ $detail->DetailInventory->stok }},
                                                     tanggal: '{{ \Carbon\Carbon::parse($detail->tanggal_keluar)->format('Y-m-d') }}'
                                                 };
                                                 editModal = true"
-                                                    class="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+                                                    class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2"
-                                                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                     </svg>
                                                 </button>
                                             @endcan

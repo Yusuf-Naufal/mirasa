@@ -22,52 +22,58 @@
                 {{-- KIRI: RINGKASAN DATA --}}
                 <div class="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
 
-                    {{-- Card 1: Bahan Baku Masuk --}}
+                    {{-- Card 1: Bahan Baku Keluar (Digunakan) --}}
                     <div
                         class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden group">
                         <div
                             class="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110">
                         </div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Ringkasan Bahan
-                            Baku
-                            Masuk</p>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
+                            Ringkasan Bahan Baku Digunakan
+                        </p>
 
                         <div class="space-y-4">
                             <div>
-                                <span class="text-[9px] font-black text-emerald-400 uppercase">Total Nilai</span>
+                                <span class="text-[9px] font-black text-emerald-400 uppercase">Total Nilai Keluar</span>
                                 <h3 class="text-3xl font-black text-emerald-600 leading-none mt-1">
-                                    Rp {{ number_format($produksi->list_bahan_baku->sum('total_harga'), 0, ',', '.') }}
+                                    {{-- Menggunakan sum dari total_harga pada model BarangKeluar --}}
+                                    Rp {{ number_format($bahanBaku->sum('total_harga'), 0, ',', '.') }}
                                 </h3>
                             </div>
                             <div class="flex items-center gap-2 pt-2 border-t border-gray-50">
                                 <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
-                                <span class="text-xs font-bold text-gray-700">{{ $produksi->list_bahan_baku->count() }}
-                                    Bahan
-                                    Baku Diterima</span>
+                                <span class="text-xs font-bold text-gray-700">
+                                    {{-- Menghitung jumlah record barang keluar yang termasuk kategori BB Utama --}}
+                                    {{ $bahanBaku->total() }} Item Bahan Baku Keluar
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Card 2: Pengeluaran (FIFO) --}}
+                    {{-- Card 2: Pengeluaran Selain Bahan Baku Utama --}}
                     <div
                         class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden group">
                         <div
                             class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110">
                         </div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Ringkasan
-                            Pengeluaran (HPP)</p>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
+                            Ringkasan Pengeluaran Lainnya
+                        </p>
 
                         <div class="space-y-4">
                             <div>
                                 <span class="text-[9px] font-black text-blue-400 uppercase">Total Biaya</span>
                                 <h3 class="text-3xl font-black text-blue-600 leading-none mt-1">
-                                    Rp {{ number_format($produksi->barangKeluar->sum('total_harga'), 0, ',', '.') }}
+                                    {{-- Mengambil sum dari variabel $barangKeluar yang sudah difilter --}}
+                                    Rp {{ number_format($barangKeluar->sum('total_harga'), 0, ',', '.') }}
                                 </h3>
                             </div>
                             <div class="flex items-center gap-2 pt-2 border-t border-gray-50">
                                 <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                                <span class="text-xs font-bold text-gray-700">{{ $produksi->barangKeluar->count() }}
-                                    Transaksi Keluar</span>
+                                <span class="text-xs font-bold text-gray-700">
+                                    {{-- Mengambil total record dari paginator --}}
+                                    {{ $barangKeluar->total() }} Transaksi Keluar
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -80,22 +86,21 @@
                         </div>
                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Ringkasan Bahan
                             Penolong
-                            Masuk</p>
+                            Digunakan</p>
 
                         <div class="space-y-4">
                             <div>
                                 <span class="text-[9px] font-black text-yellow-400 uppercase">Total Nilai</span>
                                 <h3 class="text-3xl font-black text-yellow-600 leading-none mt-1">
                                     Rp
-                                    {{ number_format($produksi->list_barang_penolong_masuk->sum('total_harga'), 0, ',', '.') }}
+                                    {{ number_format($barangPenolong->sum('total_harga'), 0, ',', '.') }}
                                 </h3>
                             </div>
                             <div class="flex items-center gap-2 pt-2 border-t border-gray-50">
                                 <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                <span
-                                    class="text-xs font-bold text-gray-700">{{ $produksi->list_barang_penolong_masuk->count() }}
+                                <span class="text-xs font-bold text-gray-700">{{ $barangPenolong->total() }}
                                     Bahan
-                                    Penolong Diterima</span>
+                                    Penolong Digunakan</span>
                             </div>
                         </div>
                     </div>
@@ -327,11 +332,12 @@
                     {{-- Isi Konten Tetap Sama --}}
                     <div class="tab-content">
                         @if ($currentTab === 'bb')
-                            <x-produksi.table-bahan-baku :items="$bahanBaku" :totalNilai="$produksi->list_bahan_baku->sum('total_harga')" />
+                            <x-produksi.table-bahan-baku :items="$bahanBaku" :totalNilai="$bahanBaku->sum('total_harga')" :produksi="$produksi"
+                                :bahanBakuMasuk="$bahanBakuMasuk" />
                         @elseif($currentTab === 'bp')
-                            <x-produksi.table-bahan-penolong :items="$barangPenolong" :totalNilai="$produksi->list_barang_penolong_masuk->sum('total_harga')" />
+                            <x-produksi.table-bahan-penolong :items="$barangPenolong" :totalNilai="$barangPenolong->sum('total_harga')" />
                         @elseif($currentTab === 'bk')
-                            <x-produksi.table-barang-keluar :items="$barangKeluar" :totalBiaya="$produksi->barangKeluar->sum('total_harga')" />
+                            <x-produksi.table-barang-keluar :items="$barangKeluar" :totalBiaya="$barangKeluar->sum('total_harga')" />
                         @endif
                     </div>
                 </div>

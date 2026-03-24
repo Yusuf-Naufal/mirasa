@@ -27,27 +27,32 @@ class Produksi extends Model
 
     public function syncTotals()
     {
-        // 1. Paksa refresh relasi agar data detail_inventory yang baru pindah terbaca
-        $this->unsetRelation('DetailInventory');
+        // 1. Bersihkan cache relasi agar data terbaru terbaca
+        $this->unsetRelation('BarangKeluar');
 
-        $rekap = $this->DetailInventory()
-            ->whereHas('Inventory.Barang.jenisBarang', function ($q) {
-                $q->where('kode', 'BB');
+        // Ambil rekap dari tabel BarangKeluar
+        $rekap = $this->BarangKeluar()
+            ->whereHas('DetailInventory.Inventory.Barang', function ($q) {
+                $q->where('jenis', 'Utama')
+                    ->whereHas('jenisBarang', function ($sq) {
+                        $sq->where('kode', 'BB');
+                    });
             })
-            // Menggunakan join untuk memastikan kita menjumlahkan id_barang yang benar
+            ->join('detail_inventory', 'barang_keluar.id_detail_inventory', '=', 'detail_inventory.id')
             ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
             ->select('inventory.id_barang')
-            ->selectRaw('SUM(detail_inventory.jumlah_diterima) as total_qty')
-            ->selectRaw('SUM(detail_inventory.total_harga) as total_nilai')
+            // Gunakan jumlah_keluar dan total_harga dari tabel barang_keluar
+            ->selectRaw('SUM(barang_keluar.jumlah_keluar) as total_qty')
+            ->selectRaw('SUM(barang_keluar.total_harga) as total_nilai')
             ->groupBy('inventory.id_barang')
             ->get();
 
         $activeBarangIds = $rekap->pluck('id_barang')->toArray();
 
-        // 2. Hapus detail_produksi yang barangnya sudah tidak ada di produksi ini
+        // 2. Hapus detail_produksi yang barangnya sudah tidak ada di list pengeluaran ini
         $this->DetailProduksi()->whereNotIn('id_barang', $activeBarangIds)->delete();
 
-        // 3. Update atau buat baru untuk barang yang tersisa/baru masuk
+        // 3. Update atau buat baru data ringkasan di DetailProduksi
         foreach ($rekap as $data) {
             $this->DetailProduksi()->updateOrCreate(
                 ['id_barang' => $data->id_barang],
