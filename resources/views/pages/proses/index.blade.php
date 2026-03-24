@@ -126,7 +126,7 @@
     <div id="addModal"
         class="p-2 fixed inset-0 bg-black/50 bg-opacity-50 hidden flex items-center justify-center z-50">
         <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
-            <h2 class="text-lg font-semibold mb-4">Tambah Jenis Barang</h2>
+            <h2 class="text-lg font-semibold mb-4">Tambah Proses</h2>
             <form action="{{ route('proses.store') }}" method="POST" class="form-prevent-multiple-submits">
                 @csrf
                 <div class="space-y-3">

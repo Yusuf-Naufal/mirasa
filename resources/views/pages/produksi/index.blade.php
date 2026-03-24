@@ -93,8 +93,8 @@
                                     {{-- Indikator Bahan Masuk --}}
                                     <div class="flex items-center gap-2">
                                         <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                                        <span class="text-[10px] font-bold text-gray-600">{{ $item->BahanBakuMasuk }}
-                                            Bahan Baku Masuk</span>
+                                        <span class="text-[10px] font-bold text-gray-600">{{ $item->BahanBakuDigunakan }}
+                                            Bahan Baku Digunakan</span>
                                     </div>
                                     {{-- Indikator Barang Keluar --}}
                                     <div class="flex items-center gap-2">
