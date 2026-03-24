@@ -26,7 +26,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <span class="font-black text-gray-800">{{ number_format($bp->jumlah_diterima, 2) }}</span>
+                            <span class="font-black text-gray-800">{{ number_format($bp->DetailInventory->jumlah_diterima, 2) }}</span>
                             <span class="text-[9px] font-black text-gray-400 uppercase ml-0.5">{{ $bp->DetailInventory->Inventory->Barang->satuan }}</span>
                         </td>
                         <td class="px-8 py-4 text-right font-black text-purple-600">Rp {{ number_format($bp->total_harga, 0, ',', '.') }}</td>
