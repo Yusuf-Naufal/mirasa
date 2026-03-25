@@ -2,9 +2,9 @@
 
 <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
     <div class="px-8 py-5 bg-blue-50 border-b border-blue-100 flex justify-between items-center shrink-0">
-        <h2 class="text-xs font-black text-blue-700 uppercase tracking-widest italic">Pengeluaran Stok (FIFO)</h2>
+        <h2 class="text-xs font-black text-blue-700 uppercase tracking-widest italic">Barang Produksi</h2>
         <span
-            class="text-[9px] font-black bg-white px-3 py-1 rounded-lg text-blue-600 border border-blue-100 uppercase tracking-tighter shadow-sm">KELUAR</span>
+            class="text-[9px] font-black bg-white px-3 py-1 rounded-lg text-blue-600 border border-blue-100 uppercase tracking-tighter shadow-sm">Masuk</span>
     </div>
 
     <div class="flex-grow overflow-x-auto">
@@ -12,9 +12,9 @@
             <thead class="bg-gray-50/80 sticky top-0 z-10 backdrop-blur-md">
                 <tr>
                     <th class="px-8 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">Item & Batch</th>
-                    <th class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest">Tujuan / Proses
-                    </th>
                     <th class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Qty
+                    </th>
+                    <th class="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-center">Total Berat
                     </th>
                     <th class="px-8 py-4 text-[9px] font-black text-gray-400 uppercase tracking-widest text-right">
                         Subtotal</th>
@@ -25,23 +25,17 @@
                     <tr class="hover:bg-blue-50/30 transition-colors">
                         <td class="px-8 py-4">
                             <p class="font-bold text-gray-800 leading-tight">
-                                {{ $bk->DetailInventory->Inventory->Barang->nama_barang }}</p>
+                                {{ $bk->Inventory->Barang->nama_barang }}</p>
                             <p class="text-[9px] text-blue-500 font-black uppercase mt-1">Batch:
-                                {{ $bk->DetailInventory->nomor_batch ?? 'N/A' }}</p>
-                        </td>
-                        <td class="px-6 py-4">
-                            @if ($bk->jenis_keluar === 'PRODUKSI')
-                                <span
-                                    class="px-2 py-0.5 rounded-md bg-orange-100 text-orange-700 text-[9px] font-black uppercase">PRODUKSI</span>
-                                <p class="text-[10px] font-bold text-gray-600 mt-1 leading-none">
-                                    {{ $bk->Proses->nama_proses ?? '-' }}</p>
-                            @else
-                                <span
-                                    class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase">{{ $bk->jenis_keluar }}</span>
-                            @endif
+                                {{ $bk->nomor_batch ?? 'N/A' }}</p>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <span class="font-black text-gray-800">{{ number_format($bk->jumlah_keluar, 2) }}</span>
+                            <span class="font-black text-gray-800">{{ number_format($bk->jumlah_diterima, 2) }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="font-black text-green-800">
+                                {{ number_format($bk->stok * ($bk->Inventory->Barang->nilai_konversi ?? 1), 2) }} Kg
+                            </span>
                         </td>
                         <td class="px-8 py-4 text-right font-black text-blue-600">Rp
                             {{ number_format($bk->total_harga, 0, ',', '.') }}</td>

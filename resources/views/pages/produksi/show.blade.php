@@ -50,35 +50,7 @@
                         </div>
                     </div>
 
-                    {{-- Card 2: Pengeluaran Selain Bahan Baku Utama --}}
-                    <div
-                        class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden group">
-                        <div
-                            class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110">
-                        </div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
-                            Ringkasan Pengeluaran Lainnya
-                        </p>
-
-                        <div class="space-y-4">
-                            <div>
-                                <span class="text-[9px] font-black text-blue-400 uppercase">Total Biaya</span>
-                                <h3 class="text-3xl font-black text-blue-600 leading-none mt-1">
-                                    {{-- Mengambil sum dari variabel $barangKeluar yang sudah difilter --}}
-                                    Rp {{ number_format($barangKeluar->sum('total_harga'), 0, ',', '.') }}
-                                </h3>
-                            </div>
-                            <div class="flex items-center gap-2 pt-2 border-t border-gray-50">
-                                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                                <span class="text-xs font-bold text-gray-700">
-                                    {{-- Mengambil total record dari paginator --}}
-                                    {{ $barangKeluar->total() }} Transaksi Keluar
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Card 3: Bahan Penolong Masuk --}}
+                    {{-- Card 2: Bahan Penolong Keluar --}}
                     <div
                         class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden group">
                         <div
@@ -104,6 +76,35 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Card 3: Barang Produksi Masuk --}}
+                    <div
+                        class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm relative overflow-hidden group">
+                        <div
+                            class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-110">
+                        </div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
+                            Ringkasan Produksi
+                        </p>
+
+                        <div class="space-y-4">
+                            <div>
+                                <span class="text-[9px] font-black text-blue-400 uppercase">Total Asset</span>
+                                <h3 class="text-3xl font-black text-blue-600 leading-none mt-1">
+                                    {{-- Mengambil sum dari variabel $barangKeluar yang sudah difilter --}}
+                                    Rp {{ number_format($barangKeluar->sum('total_harga'), 0, ',', '.') }}
+                                </h3>
+                            </div>
+                            <div class="flex items-center gap-2 pt-2 border-t border-gray-50">
+                                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                                <span class="text-xs font-bold text-gray-700">
+                                    {{-- Mengambil total record dari paginator --}}
+                                    {{ $barangKeluar->total() }} Barang Produksi
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
 
                     {{-- Card 4: Daftar Hasil Produksi --}}
                     <div x-data="{
@@ -325,7 +326,7 @@
                         {{-- Tab Pengeluaran --}}
                         <a href="{{ request()->url() }}?tab=bk"
                             class="flex-1 py-3 text-center text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all whitespace-nowrap px-4 {{ $currentTab === 'bk' ? 'bg-white shadow-md text-blue-600 scale-[1.02]' : 'text-gray-500 hover:bg-white/30' }}">
-                            Pengeluaran
+                            Produksi
                         </a>
                     </div>
 

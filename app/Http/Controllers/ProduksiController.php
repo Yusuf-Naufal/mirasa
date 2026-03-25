@@ -123,11 +123,11 @@ class ProduksiController extends Controller
             ->paginate(10, ['*'], 'page_bp')
             ->appends(['tab' => 'bp']);
 
-        $barangKeluar = BarangKeluar::where('id_produksi', $id)
-            ->whereDoesntHave('DetailInventory.Inventory.Barang.jenisBarang', function ($q) {
+        $barangKeluar = DetailInventory::where('id_produksi', $id)
+            ->whereDoesntHave('Inventory.Barang.jenisBarang', function ($q) {
                 $q->whereIn('kode', ['BB', 'BP']);
             })
-            ->with(['DetailInventory.Inventory.Barang.jenisBarang'])
+            ->with(['Inventory.Barang.jenisBarang'])
             ->paginate(10, ['*'], 'page_bk')
             ->appends(['tab' => 'bk']);
 
