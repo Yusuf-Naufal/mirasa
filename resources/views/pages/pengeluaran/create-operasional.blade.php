@@ -134,9 +134,9 @@
                                 Klasifikasi Beban Biaya
                             </label>
                             <div class="flex flex-wrap gap-4">
-                                <label class="flex-1 cursor-pointer group">
-                                    <input type="radio" name="is_hpp" value="1" id="radio_hpp"
-                                        class="peer hidden" checked>
+                                <label class="flex-1 cursor-pointer group relative">
+                                    <input type="radio" name="is_hpp" value="1" class="peer hidden"
+                                        {{ old('is_hpp', $pengeluaran->is_hpp ?? '1') == '1' ? 'checked' : '' }}>
                                     <div
                                         class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all group-hover:border-blue-300">
                                         <div class="flex items-center justify-between">
@@ -151,14 +151,13 @@
                                             </div>
                                         </div>
                                         <p class="text-[10px] text-gray-500 mt-1">Biaya akan dibebankan untuk
-                                            menghitung
-                                            HPP</p>
+                                            menghitung HPP</p>
                                     </div>
                                 </label>
 
-                                <label class="flex-1 cursor-pointer group">
-                                    <input type="radio" name="is_hpp" value="0" id="radio_non_hpp"
-                                        class="peer hidden">
+                                <label class="flex-1 cursor-pointer group relative">
+                                    <input type="radio" name="is_hpp" value="0" class="peer hidden"
+                                        {{ old('is_hpp', $pengeluaran->is_hpp ?? '') == '0' ? 'checked' : '' }}>
                                     <div
                                         class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-gray-500 peer-checked:bg-gray-50 transition-all group-hover:border-gray-300">
                                         <div class="flex items-center justify-between">
@@ -171,16 +170,15 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak di bebankan
-                                            ke
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak dibebankan ke
                                             HPP</p>
                                     </div>
                                 </label>
                             </div>
                         </div>
 
-                        <div class="md:col-span-2 bg-purple-50/50 rounded-xl p-4 border border-purple-100">
-                            <label class="block text-sm font-bold text-purple-900 mb-3 flex items-center gap-2">
+                        <div class="md:col-span-2 bg-amber-50/50 rounded-xl p-4 border border-amber-100">
+                            <label class="block text-sm font-bold text-amber-900 mb-3 flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
@@ -189,47 +187,44 @@
                                 Metode Alokasi Biaya
                             </label>
                             <div class="flex flex-wrap gap-4">
-                                <label class="flex-1 cursor-pointer group">
-                                    <input type="radio" name="metode_alokasi" value="FIXED" id="radio_fixed"
-                                        class="peer hidden" checked>
+                                <label class="flex-1 cursor-pointer group relative">
+                                    <input type="radio" name="metode_alokasi" value="FIXED" class="peer hidden"
+                                        {{ old('metode_alokasi', $pengeluaran->metode_alokasi ?? 'FIXED') == 'FIXED' ? 'checked' : '' }}>
                                     <div
-                                        class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-purple-500 peer-checked:bg-purple-50 transition-all group-hover:border-purple-300">
+                                        class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all group-hover:border-amber-300">
                                         <div class="flex items-center justify-between">
-                                            <span class="text-sm font-bold text-gray-700 peer-checked:text-purple-700">
-                                                Beban Harian
-                                            </span>
+                                            <span
+                                                class="text-sm font-bold text-gray-700 peer-checked:text-amber-700">Beban
+                                                Harian</span>
                                             <div
-                                                class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-purple-500 flex items-center justify-center">
+                                                class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-amber-500 flex items-center justify-center">
                                                 <div
-                                                    class="w-2 h-2 rounded-full bg-purple-500 hidden peer-checked:block">
+                                                    class="w-2 h-2 rounded-full bg-amber-500 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">
-                                            Biaya dibebankan penuh pada tanggal pengeluaran (Harian).
-                                        </p>
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya dibebankan penuh pada tanggal
+                                            pengeluaran.</p>
                                     </div>
                                 </label>
 
-                                <label class="flex-1 cursor-pointer group">
-                                    <input type="radio" name="metode_alokasi" value="SPREAD" id="radio_spread"
-                                        class="peer hidden">
+                                <label class="flex-1 cursor-pointer group relative">
+                                    <input type="radio" name="metode_alokasi" value="SPREAD" class="peer hidden"
+                                        {{ old('metode_alokasi', $pengeluaran->metode_alokasi ?? '') == 'SPREAD' ? 'checked' : '' }}>
                                     <div
                                         class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-red-500 peer-checked:bg-red-50 transition-all group-hover:border-red-300">
                                         <div class="flex items-center justify-between">
-                                            <span class="text-sm font-bold text-gray-700 peer-checked:text-red-700">
-                                                Beban Bulanan
-                                            </span>
+                                            <span
+                                                class="text-sm font-bold text-gray-700 peer-checked:text-red-700">Beban
+                                                Bulanan</span>
                                             <div
                                                 class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-red-500 flex items-center justify-center">
-                                                <div
-                                                    class="w-2 h-2 rounded-full bg-red-500 hidden peer-checked:block">
+                                                <div class="w-2 h-2 rounded-full bg-red-500 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">
-                                            Biaya dibagi rata/proporsional selama satu periode (Bulanan).
-                                        </p>
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya dibagi rata selama satu periode
+                                            (Bulanan).</p>
                                     </div>
                                 </label>
                             </div>
