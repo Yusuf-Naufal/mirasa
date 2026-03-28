@@ -8,6 +8,8 @@
                 <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Detail Pengeluaran
                 </th>
                 <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">HPP</th>
+                <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Alokasi
+                </th>
                 <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Nominal
                 </th>
                 <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Aksi</th>
@@ -68,6 +70,15 @@
                             @else
                                 <span
                                     class="px-2 py-1 rounded-lg bg-gray-50 text-gray-400 text-[9px] font-black uppercase">Tidak</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            @if ($item->metode_alokasi == "FIXED")
+                                <span
+                                    class="px-2 py-1 rounded-lg bg-green-50 text-green-600 text-[9px] font-black uppercase">Fixed</span>
+                            @else
+                                <span
+                                    class="px-2 py-1 rounded-lg bg-gray-50 text-gray-400 text-[9px] font-black uppercase">Spread</span>
                             @endif
                         </td>
                         <td class="px-4 py-4 text-right">

@@ -24,7 +24,7 @@
             } elseif (auth()->user()->hasRole('Admin Gudang')) {
                 $dashboardRoute = route('admin-gudang.dashboard');
             } else {
-                $dashboardRoute = '#';
+                $dashboardRoute = route('admin-gudang.dashboard');
             }
         @endphp
 
