@@ -12,6 +12,8 @@
                 <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Detail Pengeluaran
                 </th>
                 <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">HPP</th>
+                <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Alokasi
+                </th>
                 <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Nominal
                 </th>
                 <th class="px-4 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Aksi</th>
@@ -43,22 +45,37 @@
                         </td>
                         <td class="px-4 py-4">
                             <div class="flex flex-col">
-                                <span
-                                    class="text-sm font-bold text-gray-700 uppercase leading-tight">{{ $item->nama_pengeluaran }}</span>
+                                <span class="text-sm font-bold text-gray-700 uppercase leading-tight">
+                                    {{ $item->nama_pengeluaran }}
+                                </span>
+
                                 <div class="flex items-center gap-2 mt-1">
                                     <span
                                         class="text-[9px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded font-bold uppercase tracking-tighter">
                                         {{ $item->sub_kategori }}
                                     </span>
-                                    {{-- Link Lihat Bukti --}}
-                                    @if ($item->bukti)
-                                        <a href="{{ asset('storage/' . $item->bukti) }}" target="_blank"
-                                            class="text-[9px] font-bold text-blue-500 hover:text-blue-700 flex items-center gap-1 underline decoration-dotted">
-                                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor"
+
+                                    {{-- Menampilkan Nilai Absensi Jika Ada --}}
+                                    @if ($item->sub_kategori == 'GAJI')
+                                        <span class="text-gray-300">|</span>
+                                        <div class="flex items-center gap-1.5">
+                                            <svg class="w-3 h-3 text-green-500" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                                                </path>
                                             </svg>
+                                            <span class="text-[10px] font-black text-green-700">
+                                                {{ $item->absensi }} Orang
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    {{-- Link Lihat Bukti --}}
+                                    @if ($item->bukti)
+                                        <span class="text-gray-300">|</span>
+                                        <a href="{{ asset('storage/' . $item->bukti) }}" target="_blank"
+                                            class="text-[9px] font-bold text-blue-500 hover:text-blue-700 flex items-center gap-1 underline decoration-dotted">
                                             LIHAT BUKTI
                                         </a>
                                     @endif
@@ -72,6 +89,15 @@
                             @else
                                 <span
                                     class="px-2 py-1 rounded-lg bg-gray-50 text-gray-400 text-[9px] font-black uppercase">Tidak</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            @if ($item->metode_alokasi == 'FIXED')
+                                <span
+                                    class="px-2 py-1 rounded-lg bg-green-50 text-green-600 text-[9px] font-black uppercase">Fixed</span>
+                            @else
+                                <span
+                                    class="px-2 py-1 rounded-lg bg-gray-50 text-gray-400 text-[9px] font-black uppercase">Spread</span>
                             @endif
                         </td>
                         <td class="px-4 py-4 text-right">

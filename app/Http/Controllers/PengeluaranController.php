@@ -47,6 +47,7 @@ class PengeluaranController extends Controller
         $search = $request->get('search');
         $id_perusahaan = $request->get('id_perusahaan');
         $is_hpp = $request->get('is_hpp');
+        $metode_alokasi = $request->get('metode_alokasi');
         $date_range = $request->get('date_range');
         $month = $request->get('month', date('m'));
         $year = $request->get('year', date('Y'));
@@ -82,6 +83,10 @@ class PengeluaranController extends Controller
         // Filter HPP
         if ($is_hpp !== null && $is_hpp !== '') {
             $queryAll->where('is_hpp', $is_hpp);
+        }
+
+        if ($metode_alokasi) {
+            $queryAll->where('metode_alokasi', $metode_alokasi);
         }
 
         // Filter Tanggal
@@ -211,6 +216,7 @@ class PengeluaranController extends Controller
                 'nama_pengeluaran'   => $request->nama_pengeluaran,
                 'kategori'           => $Kategori,
                 'sub_kategori'       => $subKategori,
+                'metode_alokasi'     => $request->metode_alokasi ?? 'FIXED',
                 'jumlah_pengeluaran' => $request->jumlah_pengeluaran,
                 'absensi'            => $request->absensi,
                 'is_hpp'             => $is_hpp,
@@ -329,6 +335,7 @@ class PengeluaranController extends Controller
                 'nama_pengeluaran'    => $request->nama_pengeluaran,
                 'kategori'           => $Kategori,
                 'sub_kategori'       => $subKategori,
+                'metode_alokasi'     => $request->metode_alokasi ?? 'FIXED',
                 'jumlah_pengeluaran' => $request->jumlah_pengeluaran,
                 'absensi'            => $absensi,
                 'is_hpp'             => $is_hpp,

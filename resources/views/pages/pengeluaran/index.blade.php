@@ -231,11 +231,11 @@
                         <x-pengeluaran.table-operasional :items="$dataAktif['items']" />
                     @break
 
-                    @case('GAJI KARYAWAN')
+                    @case('KESEJAHTERAAN')
                         <x-pengeluaran.table-gaji :items="$dataAktif['items']" />
                     @break
 
-                    @case('PENGOLAHAN LIMBAH')
+                    @case('LIMBAH')
                         <x-pengeluaran.table-limbah :items="$dataAktif['items']" />
                     @break
 
@@ -335,6 +335,23 @@
                             </option>
                             <option value="0" {{ request('is_hpp') == '0' ? 'selected' : '' }}>
                                 Non HPP</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="filter_alokasi"
+                            class="block text-sm font-semibold text-gray-700 mb-1">Alokasi</label>
+                        <select name="metode_alokasi" id="filter_alokasi"
+                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-[#FFC829] focus:outline-none focus:ring-2 focus:ring-[#FFC829]/20 outline-none">
+                            {{-- Tambahkan opsi kosong agar bisa melihat semua data --}}
+                            <option value="">Semua Metode</option>
+
+                            <option value="FIXED" {{ request('metode_alokasi') == 'FIXED' ? 'selected' : '' }}>
+                                Fixed (Beban Harian)
+                            </option>
+                            <option value="SPREAD" {{ request('metode_alokasi') == 'SPREAD' ? 'selected' : '' }}>
+                                Spread (Beban Bulanan)
+                            </option>
                         </select>
                     </div>
                 </div>

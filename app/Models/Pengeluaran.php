@@ -19,6 +19,7 @@ class Pengeluaran extends Model
         'is_hpp',
         'kategori',
         'sub_kategori',
+        'metode_alokasi',
         'jumlah_pengeluaran',
         'absensi',
         'bukti',
