@@ -151,8 +151,9 @@
                             </div>
                         </div>
 
-                        <div class="md:col-span-2 bg-purple-50/50 rounded-xl p-4 border border-purple-100">
-                            <label class="block text-sm font-bold text-purple-900 mb-3 flex items-center gap-2">
+                        {{-- METODE ALOKASI BIAYA --}}
+                        <div class="md:col-span-2 bg-amber-50/50 rounded-xl p-4 border border-amber-100">
+                            <label class="block text-sm font-bold text-amber-900 mb-3 flex items-center gap-2">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
@@ -165,15 +166,15 @@
                                     <input type="radio" name="metode_alokasi" value="FIXED" id="radio_fixed"
                                         class="peer hidden" checked>
                                     <div
-                                        class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-purple-500 peer-checked:bg-purple-50 transition-all group-hover:border-purple-300">
+                                        class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all group-hover:border-amber-300">
                                         <div class="flex items-center justify-between">
-                                            <span class="text-sm font-bold text-gray-700 peer-checked:text-purple-700">
+                                            <span class="text-sm font-bold text-gray-700 peer-checked:text-amber-700">
                                                 Beban Harian
                                             </span>
                                             <div
-                                                class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-purple-500 flex items-center justify-center">
+                                                class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-amber-500 flex items-center justify-center">
                                                 <div
-                                                    class="w-2 h-2 rounded-full bg-purple-500 hidden peer-checked:block">
+                                                    class="w-2 h-2 rounded-full bg-amber-500 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
