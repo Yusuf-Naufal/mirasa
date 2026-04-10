@@ -387,12 +387,17 @@ class BarangController extends Controller
                         $sheet = $event->sheet->getDelegate();
                         $rowCount = 100;
 
-                        // 1. Setup Kolom Otomatis
+                        // Setup Kolom Otomatis
                         foreach (range('A', 'G') as $col) {
                             $sheet->getColumnDimension($col)->setAutoSize(true);
                         }
 
-                        // 2. Dropdown Kategori Sistem (D)
+                        $msgKode = $sheet->getCell('B2')->getDataValidation();
+                        $msgKode->setShowInputMessage(true)
+                            ->setPromptTitle('Format Kode Barang')
+                            ->setPrompt('Wajib menggunakan prefix jenis barang. Contoh: FG-01, WIP-01, atau BB-01.');
+
+                        // Dropdown Kategori Sistem (D)
                         $validationKategori = $sheet->getCell('D2')->getDataValidation();
                         $validationKategori->setType(DataValidation::TYPE_LIST)
                             ->setErrorStyle(DataValidation::STYLE_STOP)
@@ -403,7 +408,7 @@ class BarangController extends Controller
                             ->setPrompt('Pilih salah satu: FG, WIP, EC, BB, BP')
                             ->setFormula1('"FG,WIP,EC,BB,BP"');
 
-                        // 3. Dropdown Sub Kategori BB (E)
+                        // Dropdown Sub Kategori BB (E)
                         $validationBB = $sheet->getCell('E2')->getDataValidation();
                         $validationBB->setType(DataValidation::TYPE_LIST)
                             ->setShowInputMessage(true)
@@ -411,7 +416,7 @@ class BarangController extends Controller
                             ->setPrompt('Isi Utama/Pendukung jika kategori adalah BB')
                             ->setFormula1('"Utama,Pendukung"');
 
-                        // 4. Input Message untuk Konversi (F & G)
+                        // Input Message untuk Konversi (F & G)
                         $msgKonversi = $sheet->getCell('F2')->getDataValidation();
                         $msgKonversi->setType(DataValidation::TYPE_WHOLE)
                             ->setShowInputMessage(true)
@@ -431,7 +436,7 @@ class BarangController extends Controller
                     },
                 ];
             }
-        }, 'template_barang_v2.xlsx');
+        }, 'template_barang.xlsx');
     }
 
     public function import(Request $request)

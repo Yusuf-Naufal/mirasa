@@ -222,7 +222,7 @@ class CostumerController extends Controller
                         $validationKode = $sheet->getCell('B2')->getDataValidation();
                         $validationKode->setShowInputMessage(true)
                             ->setPromptTitle('Aturan Kode')
-                            ->setPrompt('Wajib diisi, unik, dan disarankan menggunakan format konsisten.');
+                            ->setPrompt('Wajib diisi, unik, dan disarankan menggunakan format konsisten seperti IFM-CLP, IFM-SMR.');
 
                         // 3. Terapkan Border dan Tooltip ke 100 baris
                         for ($i = 2; $i <= $rowCount; $i++) {
@@ -236,7 +236,7 @@ class CostumerController extends Controller
                     },
                 ];
             }
-        }, 'template_costumer_v2.xlsx');
+        }, 'template_costumer.xlsx');
     }
 
     public function import(Request $request)
