@@ -29,11 +29,9 @@ class MonitoringController extends Controller
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->query('id_perusahaan') : $user->id_perusahaan;
 
         // --- 1. LOW STOCK ALERT ---
-        $lowStock = Inventory::with(['Barang' => function ($q) {
-            $q->whereNull('deleted_at');
-        }])
+        $lowStock = Inventory::with(['Barang'])
             ->when($idPerusahaan, fn($q) => $q->where('id_perusahaan', $idPerusahaan))
-            ->whereNull('deleted_at')
+            ->whereHas('Barang')
             ->where(function ($query) {
                 $query->whereColumn('stok', '<', 'minimum_stok')
                     ->orWhere('stok', '<=', 0);
@@ -59,11 +57,9 @@ class MonitoringController extends Controller
         }
 
         // --- 3. INVENTORY GROUPING ---
-        $queryInventory = Inventory::with(['Barang' => function ($q) {
-            $q->whereNull('deleted_at');
-        }, 'Barang.jenisBarang'])
+        $queryInventory = Inventory::with(['Barang.jenisBarang'])
             ->when($idPerusahaan, fn($q) => $q->where('id_perusahaan', $idPerusahaan))
-            ->whereNull('deleted_at')
+            ->whereHas('Barang')
             ->get();
 
         $grouped = [

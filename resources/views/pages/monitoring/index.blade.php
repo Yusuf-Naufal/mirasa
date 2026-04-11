@@ -438,14 +438,20 @@
                 const bgBadge = isOut ? 'bg-red-600 text-white' : 'bg-red-100 text-red-600';
 
                 return `
-                            <div class="bg-white/80 p-2 rounded-xl flex justify-between items-center border border-red-100">
-                                <div class="w-2/3">
-                                    <h4 class="text-[9px] font-bold text-slate-700 truncate">${item.barang.nama_barang}</h4>
-                                    <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Min: ${item.minimum_stok}</p>
-                                </div>
-                                <span class="text-[8px] font-black px-2 py-0.5 rounded-md ${bgBadge}">${statusText}</span>
-                            </div>
-                        `;
+                    <div class="bg-white/80 p-2 rounded-xl flex justify-between items-center border border-red-100">
+                        <div class="w-2/3">
+                            <h4 class="text-[9px] font-bold text-slate-700 truncate">
+                                ${item.barang?.nama_barang ?? 'Barang Terhapus'}
+                            </h4>
+                            <p class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">
+                                Min: ${item.minimum_stok}
+                            </p>
+                        </div>
+                        <span class="text-[8px] font-black px-2 py-0.5 rounded-md ${bgBadge}">
+                            ${statusText}
+                        </span>
+                    </div>
+                `;
             }).join('');
         }
 
