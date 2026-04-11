@@ -21,7 +21,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class SupplierController extends Controller
 {
-    
+
     /**
      * Menampilkan daftar supplier (Index)
      */
@@ -256,7 +256,7 @@ class SupplierController extends Controller
                         $msgInfo = $sheet->getCell('A2')->getDataValidation();
                         $msgInfo->setShowInputMessage(true)
                             ->setPromptTitle('Aturan Pengisian')
-                            ->setPrompt('Wajib diisi dan tidak boleh duplikat dengan data yang sudah ada.');
+                            ->setPrompt('Wajib diisi, unik, dan disarankan menggunakan format konsisten seperti SUP-CLP, SUP-SMR.');
 
                         // Terapkan ke baris selanjutnya
                         for ($i = 2; $i <= $rowCount; $i++) {
@@ -271,7 +271,7 @@ class SupplierController extends Controller
                     },
                 ];
             }
-        }, 'template_supplier_v2.xlsx');
+        }, 'template_supplier.xlsx');
     }
 
     public function import(Request $request)
