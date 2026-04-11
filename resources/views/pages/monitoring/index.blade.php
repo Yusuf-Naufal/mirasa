@@ -391,18 +391,26 @@
                 const opacityClass = currentVal === 0 ? 'bg-red-50/50' : 'bg-white';
 
                 return `
-                            <div id="inv-card-${item.id}" class="glass-card ${opacityClass} ${ringClass} p-3 rounded-2xl flex items-center justify-between relative overflow-hidden">
-                                ${animTag}
-                                <div class="flex-1 overflow-hidden mr-2">
-                                    <p class="text-[7px] font-black text-slate-400 uppercase truncate">${item.barang.kode}</p>
-                                    <h4 class="text-[10px] font-extrabold text-slate-700 leading-tight truncate">${item.barang.nama_barang}</h4>
-                                </div>
-                                <div class="text-right flex flex-col items-end">
-                                    <span class="text-lg font-black ${textStokClass} italic leading-none">${currentVal}</span>
-                                    <span class="text-[7px] font-bold text-slate-400 uppercase">${item.barang.satuan}</span>
-                                </div>
+                        <div id="inv-card-${item.id}" class="glass-card ${opacityClass} ${ringClass} p-3 rounded-2xl flex items-center justify-between relative overflow-hidden">
+                            ${animTag}
+                            <div class="flex-1 overflow-hidden mr-2">
+                                <p class="text-[7px] font-black text-slate-400 uppercase truncate">
+                                    ${item.barang?.kode ?? 'N/A'}
+                                </p>
+                                <h4 class="text-[10px] font-extrabold text-slate-700 leading-tight truncate">
+                                    ${item.barang?.nama_barang ?? '<span class="text-red-400">Barang Tidak Ditemukan</span>'}
+                                </h4>
                             </div>
-                        `;
+                            <div class="text-right flex flex-col items-end">
+                                <span class="text-lg font-black ${textStokClass} italic leading-none">
+                                    ${currentVal}
+                                </span>
+                                <span class="text-[7px] font-bold text-slate-400 uppercase">
+                                    ${item.barang?.satuan ?? '-'}
+                                </span>
+                            </div>
+                        </div>
+                    `;
             }).join('');
 
             // Hapus efek ring setelah 2 detik agar tidak permanen
