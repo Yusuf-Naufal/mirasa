@@ -31,6 +31,7 @@ class MonitoringController extends Controller
         // --- 1. LOW STOCK ALERT ---
         $lowStock = Inventory::with(['Barang'])
             ->when($idPerusahaan, fn($q) => $q->where('id_perusahaan', $idPerusahaan))
+            ->whereHas('Barang')
             ->where(function ($query) {
                 $query->whereColumn('stok', '<', 'minimum_stok')
                     ->orWhere('stok', '<=', 0);
@@ -58,6 +59,7 @@ class MonitoringController extends Controller
         // --- 3. INVENTORY GROUPING ---
         $queryInventory = Inventory::with(['Barang.jenisBarang'])
             ->when($idPerusahaan, fn($q) => $q->where('id_perusahaan', $idPerusahaan))
+            ->whereHas('Barang')
             ->get();
 
         $grouped = [
