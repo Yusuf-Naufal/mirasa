@@ -8,8 +8,22 @@
     <style>
         /* Ukuran Kertas K4 PRS (Kuarto) */
         @page {
-            size: 210mm 140mm;
+            size: landscape;
             margin: 0;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            body {
+                padding: 0;
+            }
+
+            .wrapper {
+                border: 1px solid #000;
+            }
         }
 
         body {
@@ -161,20 +175,6 @@
         .signature-line {
             margin-top: 40px;
             font-weight: bold;
-        }
-
-        @media print {
-            .no-print {
-                display: none;
-            }
-
-            body {
-                padding: 0;
-            }
-
-            .wrapper {
-                border: 1px solid #000;
-            }
         }
     </style>
 </head>

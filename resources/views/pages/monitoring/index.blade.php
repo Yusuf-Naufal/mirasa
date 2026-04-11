@@ -194,7 +194,7 @@
                     {{-- Kolom Produksi --}}
                     <div class="flex flex-col gap-2 overflow-hidden">
                         <div class="grid-header border-blue-500 pl-3">
-                            <h3 class="text-[10px] font-black text-slate-800 uppercase italic">Produksi (FG/WIP)</h3>
+                            <h3 class="text-[10px] font-black text-slate-800 uppercase italic">Produksi (FG/WIP/EC)</h3>
                         </div>
                         <div id="grid-produksi"
                             class="flex-1 overflow-y-auto custom-scroll pr-1 grid grid-cols-1 gap-2 contents-start">
