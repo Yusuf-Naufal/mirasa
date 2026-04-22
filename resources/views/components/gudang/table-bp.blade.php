@@ -66,8 +66,8 @@
         </div>
     </div>
 
-    <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[800px]">
+    <div class="overflow-x-auto pb-12">
+        <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50/80 border-b border-slate-100">
                     <th
@@ -139,79 +139,117 @@
 
                         {{-- Aksi --}}
                         <td class="px-6 py-4 text-center">
-                            @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
-                                <div class="flex items-center justify-center gap-1">
-                                    @can('inventory.detail-edit')
-                                        <button type="button"
-                                            @click="openEdit({ 
-                                                id: '{{ $i->id }}', 
-                                                jumlah_diterima: '{{ $i->jumlah_diterima }}', 
-                                                jumlah_rusak: '{{ $i->jumlah_rusak }}', 
-                                                stok: '{{ $i->stok }}', 
-                                                harga: '{{ $i->harga }}', 
-                                                tgl_masuk: '{{ $i->tanggal_masuk }}', 
-                                                lokasi: '{{ $i->tempat_penyimpanan }}', 
-                                            })"
-                                            class="inline-flex items-center justify-center w-9 h-9 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-slate-200 hover:border-blue-200 transition-all duration-200 bg-slate-50/50">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                            </svg>
-                                        </button>
-                                    @endcan
+                            <div x-data="{ open: false, top: '0px', left: '0px' }" class="relative inline-block text-left">
 
-                                    @can('inventory.delete')
-                                        <form action="{{ route('inventory.destroy', $i->id) }}" method="POST"
-                                            onsubmit="return confirm('Hapus data ini? Rekapitulasi akan disesuaikan.')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                class="inline-flex items-center justify-center w-9 h-9 text-slate-400 hover:text-red-600 hover:bg-white rounded-xl shadow-sm border border-slate-200 hover:border-red-200 transition-all duration-200 bg-slate-50/50">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    @endcan
-                                </div>
-                            @else
-                                <div class="flex items-center justify-center gap-1">
+                                <button type="button"
+                                    @click="
+                                        let rect = $event.currentTarget.getBoundingClientRect();
+                                        top = (rect.bottom + 4) + 'px';
+                                        left = (rect.right - 192) + 'px';
+                                        open = !open;
+                                    "
+                                    @click.away="open = false"
+                                    class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all outline-none focus:ring-2 focus:ring-blue-100">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                    </svg>
+                                </button>
 
-                                    @can('inventory.quick-edit')
-                                        <button type="button" @click="openAddQty('{{ $i->id }}')"
-                                            class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg border border-emerald-100 transition-colors"
-                                            title="Tambah Stok">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 4v16m8-8H4" />
-                                            </svg>
-                                        </button>
+                                <template x-teleport="body">
 
-                                        <button type="button" @click="openReduceQty('{{ $i->id }}')"
-                                            class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-100 transition-colors"
-                                            title="Kurangi Stok (Manual)">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M20 12H4" />
-                                            </svg>
-                                        </button>
+                                    <div x-show="open" :style="`top: ${top}; left: ${left};`"
+                                        @scroll.window="open = false"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="transform opacity-0 scale-95"
+                                        x-transition:enter-end="transform opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="transform opacity-100 scale-100"
+                                        x-transition:leave-end="transform opacity-0 scale-95"
+                                        class="fixed w-48 bg-white rounded-xl shadow-lg ring-1 ring-slate-900/5 divide-y divide-slate-100 overflow-hidden z-[9999]"
+                                        style="display: none;">
 
-                                        <button type="button"
-                                            @click="openEditPrice({ id: '{{ $i->id }}', harga: '{{ $i->harga }}' })"
-                                            class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg border border-amber-100 transition-colors"
-                                            title="Ubah Harga">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </button>
-                                    @endcan
+                                        <div class="py-1">
+                                            @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
+                                                @can('inventory.detail-edit')
+                                                    <button type="button"
+                                                        @click="openEdit({ 
+                                    id: '{{ $i->id }}', stok: '{{ $i->stok }}', diterima: '{{ $i->jumlah_diterima }}', harga: '{{ $i->harga }}', tgl_masuk: '{{ $i->tanggal_masuk }}', no_batch: '{{ $i->nomor_batch }}', tempat: '{{ $i->tempat_penyimpanan }}', tgl_exp: '{{ $i->tanggal_exp }}' 
+                                }); open = false"
+                                                        class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-blue-500"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                        Edit Data
+                                                    </button>
+                                                @endcan
+                                            @else
+                                                @can('inventory.quick-edit')
+                                                    <button type="button"
+                                                        @click="openAddQty('{{ $i->id }}'); open = false"
+                                                        class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-emerald-500"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M12 4v16m8-8H4" />
+                                                        </svg>
+                                                        Tambah Stok
+                                                    </button>
 
-                                </div>
-                            @endif
+                                                    <button type="button"
+                                                        @click="openReduceQty('{{ $i->id }}'); open = false"
+                                                        class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition-colors">
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-rose-500"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M20 12H4" />
+                                                        </svg>
+                                                        Kurangi Stok
+                                                    </button>
+
+                                                    <button type="button"
+                                                        @click="openEditPrice({ id: '{{ $i->id }}', harga: '{{ $i->harga }}' }); open = false"
+                                                        class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-amber-500"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        Ubah Harga
+                                                    </button>
+                                                @endcan
+                                            @endif
+                                        </div>
+
+                                        @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
+                                            @can('inventory.delete')
+                                                <div class="py-1">
+                                                    <form action="{{ route('inventory.destroy', $i->id) }}"
+                                                        method="POST"
+                                                        onsubmit="return confirm('Hapus data ini? Rekapitulasi akan disesuaikan.')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                            class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                            <svg class="mr-3 h-4 w-4 text-red-400 group-hover:text-red-600"
+                                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path
+                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            </svg>
+                                                            Hapus
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @endcan
+                                        @endif
+                                    </div>
+
+                                </template>
+                            </div>
                         </td>
                     </tr>
                 @empty

@@ -8,6 +8,7 @@
         selectedSatuan: '-',
         jumlah: 0,
         jenisKeluar: 'PENJUALAN',
+        withCustomer: true,
         openCustomer: false,
         searchCustomer: '',
         selectedCustomerId: '',
@@ -115,7 +116,7 @@
             {{-- Header --}}
             <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <a href="{{ route('barang-keluar.index') }}"
+                    <a href="{{ route('barang-keluar.index', ['tab' => 'PENJUALAN']) }}"
                         class="group inline-flex items-center text-emerald-600 hover:text-emerald-700 text-sm font-semibold mb-2">
                         <svg class="h-4 w-4 mr-1 transform group-hover:-translate-x-1 transition-all" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
@@ -143,21 +144,23 @@
 
                         {{-- Pilih Tipe Transaksi --}}
                         <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                            <label
-                                class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-4">Langkah
-                                1: Tipe Transaksi</label>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-4">
+                                Langkah 1: Tipe Penjualan
+                            </label>
                             <div class="flex p-1 bg-gray-100 rounded-2xl">
-                                <button type="button" @click="jenisKeluar = 'PENJUALAN'"
-                                    :class="jenisKeluar === 'PENJUALAN' ? 'bg-white shadow-sm text-emerald-600' :
-                                        'text-gray-500'"
+                                <button type="button" @click="withCustomer = true"
+                                    :class="withCustomer ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-500'"
                                     class="flex-1 py-3 rounded-xl text-sm font-bold transition-all">
-                                    Penjualan
+                                    Dengan Customer
                                 </button>
-                                {{-- <button type="button" @click="jenisKeluar = 'TRANSFER'" disabled
-                                    :class="jenisKeluar === 'TRANSFER' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'"
-                                    class="flex-1 py-3 rounded-xl text-sm font-bold transition-all cursor-not-allowed">
-                                    Transfer
-                                </button> --}}
+
+                                {{-- Jika Tanpa Customer diklik, bersihkan juga data customer yang mungkin sempat terpilih --}}
+                                <button type="button"
+                                    @click="withCustomer = false; selectedCustomerId = ''; selectedCustomerName = '';"
+                                    :class="!withCustomer ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-500'"
+                                    class="flex-1 py-3 rounded-xl text-sm font-bold transition-all">
+                                    Tanpa Customer
+                                </button>
                             </div>
                         </div>
 
@@ -253,15 +256,15 @@
                                 3: Detail Pengiriman</label>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {{-- Tujuan Dinamis --}}
-                                <div class="md:col-span-2 space-y-1.5">
-                                    <label class="text-xs font-bold text-gray-500 uppercase ml-1"
-                                        x-text="jenisKeluar === 'PENJUALAN' ? 'Customer / Pelanggan' : 'Perusahaan Tujuan (Transfer)'"></label>
+                                {{-- Tujuan Dinamis (Hanya Muncul Jika Dengan Customer) --}}
+                                <div class="md:col-span-2 space-y-1.5" x-show="withCustomer" x-cloak x-transition>
+                                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Customer /
+                                        Pelanggan</label>
 
-                                    <div x-show="jenisKeluar === 'PENJUALAN'" class="relative">
-                                        {{-- Input Hidden untuk Form Submit --}}
+                                    <div class="relative">
+                                        {{-- Input Hidden untuk Form Submit. Hanya wajib (required) jika withCustomer true --}}
                                         <input type="hidden" name="id_costumer" :value="selectedCustomerId"
-                                            :required="jenisKeluar === 'PENJUALAN'">
+                                            :required="withCustomer">
 
                                         {{-- Tombol Dropdown --}}
                                         <button type="button" @click="openCustomer = !openCustomer"
@@ -305,18 +308,6 @@
                                                 </template>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div x-show="jenisKeluar === 'TRANSFER'">
-                                        <select name="id_tujuan" :required="jenisKeluar === 'TRANSFER'"
-                                            class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none">
-                                            <option value="">-- Pilih Perusahaan Tujuan --</option>
-                                            @foreach ($perusahaan as $p)
-                                                <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}
-                                                    ({{ $p->kota }})
-                                                </option>
-                                            @endforeach
-                                        </select>
                                     </div>
                                 </div>
 

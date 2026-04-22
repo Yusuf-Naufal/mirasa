@@ -20,5 +20,7 @@
     <!-- Styles -->
     @vite('resources/css/app.css')
 
+    @laravelPWA
+
     <meta name="robots" content="noindex, nofollow">
 </head>

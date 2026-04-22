@@ -284,22 +284,65 @@
                                             // Mengambil objek barang melalui relasi berjenjang
                                             $inventory = optional($item->DetailInventory)->Inventory;
                                             $barang = optional($inventory)->Barang;
+
+                                            // Logika Kalkulasi Netto (Gross - Retur)
+                                            $qAsli = $item->jumlah_keluar;
+                                            $qAfkir = $item->jumlah_dikonversi ?? 0;
+                                            $qNetto = $qAsli - $qAfkir;
+
+                                            $hargaSatuan = $qAsli > 0 ? $item->total_harga / $qAsli : $item->harga;
+                                            $tAsli = $item->total_harga;
+                                            $tAfkir = $qAfkir * $hargaSatuan;
+                                            $tNetto = $qNetto * $hargaSatuan;
                                         @endphp
-                                        <div class="flex justify-between items-center text-xs">
-                                            <span class="font-bold text-gray-700">
-                                                {{ $barang->nama_barang ?? 'Barang Terhapus' }}
-                                            </span>
-                                            <div class="flex items-center gap-8">
-                                                <span class="font-bold text-gray-800">
-                                                    {{ number_format($item->jumlah_keluar) }}
-                                                    <span
-                                                        class="text-[10px] text-gray-400">{{ $barang->satuan ?? '-' }}</span>
-                                                </span>
-                                                <span class="w-24 text-right font-black text-gray-900">
-                                                    Rp {{ number_format($item->total_harga) }}
-                                                </span>
+
+                                        {{-- Render hanya jika masih ada nilai (tidak diretur 100%) atau untuk riwayat --}}
+                                        @if ($qNetto > 0 || $qAfkir > 0)
+                                            <div class="flex justify-between items-center text-xs">
+                                                <div class="flex flex-col">
+                                                    <span class="font-bold text-gray-700">
+                                                        {{ $barang->nama_barang ?? 'Barang Terhapus' }}
+                                                    </span>
+                                                    @if ($qAfkir > 0)
+                                                        <span
+                                                            class="text-[9px] text-amber-600 font-bold uppercase tracking-widest mt-0.5">
+                                                            Dikurangi Retur: {{ number_format($qAfkir) }}
+                                                            {{ $barang->satuan ?? '-' }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+
+                                                <div class="flex items-center gap-8">
+                                                    {{-- Kolom QTY --}}
+                                                    <div class="flex flex-col items-end">
+                                                        <span class="font-bold text-gray-800">
+                                                            {{ number_format($qNetto) }}
+                                                            <span
+                                                                class="text-[10px] text-gray-400">{{ $barang->satuan ?? '-' }}</span>
+                                                        </span>
+                                                        @if ($qAfkir > 0)
+                                                            <span class="text-[9px] text-gray-400 line-through"
+                                                                title="Qty Asli sebelum retur">
+                                                                {{ number_format($qAsli) }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    {{-- Kolom SUBTOTAL --}}
+                                                    <div class="w-24 flex flex-col items-end">
+                                                        <span class="font-black text-gray-900">
+                                                            Rp {{ number_format($tNetto) }}
+                                                        </span>
+                                                        @if ($qAfkir > 0)
+                                                            <span class="text-[9px] text-gray-400 line-through"
+                                                                title="Subtotal Asli sebelum retur">
+                                                                Rp {{ number_format($tAsli) }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        @endif
                                     @endforeach
                                 </div>
                             </td>

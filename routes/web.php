@@ -157,7 +157,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index')->middleware('permission:inventory.index');
     Route::delete('/inventory/{id}', [InventoryController::class, 'destroy'])->name('inventory.destroy')->middleware('permission:inventory.delete');
     Route::get('/inventory/{id}', [InventoryController::class, 'show'])->name('inventory.show')->middleware('permission:inventory.show');
-
+    Route::post('/inventory/tutup-buku', [InventoryController::class, 'eksekusiTutupBuku'])->name('inventory.tutup-buku')->middleware('permission:inventory.tutup-buku');
+    Route::get('/inventory/afkir-ulang/{id}', [InventoryController::class, 'Afkir'])->name('inventory.afkir-ulang')->middleware('permission:inventory.afkir-ulang');
+    Route::get('/inventory/kartu-stok/{id}', [InventoryController::class, 'kartuStok'])->name('inventory.kartu-stok')->middleware('permission:inventory.kartu-stok');
+    Route::get('/inventory/kartu-stok/{id}/pdf', [InventoryController::class, 'exportPdf'])->name('inventory.kartu-stok.pdf')->middleware('permission:inventory.cetak-kartu-stok');
+    Route::post('/inventory/afkir-ulang/gudang/{id}', [InventoryController::class, 'afkirUlangGudang'])->name('inventory.afkir-ulang.gudang')->middleware('permission:inventory.afkir-ulang');
 
     // CRUD BAHAN BAKU
     Route::get('/bahan-baku', [BahanBakuController::class, 'index'])->name('bahan-baku.index')->middleware('permission:bahan-baku.index');
@@ -219,6 +223,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/barang-keluar/{id}/edit', [BarangKeluarController::class, 'edit'])->name('barang-keluar.edit')->middleware('permission:barang-keluar.edit');
     Route::put('/barang-keluar/{id}', [BarangKeluarController::class, 'update'])->name('barang-keluar.update')->middleware('permission:barang-keluar.edit');
     Route::delete('/barang-keluar/{id}', [BarangKeluarController::class, 'destroy'])->name('barang-keluar.destroy')->middleware('permission:barang-keluar.delete');
+    Route::get('/barang-keluar/{id}/afkir-ulang', [BarangKeluarController::class, 'showAfkirUlang'])->name('barang-keluar.afkir-ulang')->middleware('permission:barang-keluar.afkir-ulang');
+    Route::post('/barang-keluar/{id}/afkir-ulang', [BarangKeluarController::class, 'eksekusiAfkirUlang'])->name('barang-keluar.afkir-ulang.store')->middleware('permission:barang-keluar.afkir-ulang');
 
     // CRUD PRODUK
     Route::get('/produk', [ProdukController::class, 'index'])->name('produk.index')->middleware('permission:produk.index');

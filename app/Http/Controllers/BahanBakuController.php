@@ -160,7 +160,7 @@ class BahanBakuController extends Controller
             $totalHarga   = $subtotal - $potongan;
 
             // 3. Simpan Riwayat ke Detail Inventory
-            $detail = DetailInventory::create([
+            DetailInventory::create([
                 'id_inventory'    => $inventory->id,
                 'id_supplier'     => $request->id_supplier,
                 'id_produksi'     => $produksi->id,

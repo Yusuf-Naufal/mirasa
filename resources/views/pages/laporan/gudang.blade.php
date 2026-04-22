@@ -92,7 +92,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <a href="{{ route('laporan-gudang') }}"
                             class="p-2.5 bg-white text-gray-400 rounded-xl border border-gray-200 hover:text-red-500 transition-all shadow-sm">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +116,7 @@
                 </div>
                 <div class="relative z-10">
                     <p class="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total
-                        Asset</p>
+                        Asset Saat Ini</p>
                     <h3 class="text-base md:text-xl font-black text-emerald-600 truncate">Rp
                         {{ number_format($summary['total_asset'], 0, ',', '.') }}</h3>
                 </div>
@@ -188,10 +188,13 @@
                                 <thead class="sticky top-0 z-20 bg-white/95 backdrop-blur-md shadow-sm">
                                     <tr
                                         class="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
-                                        <th class="px-8 py-4">Nama Barang</th>
-                                        <th class="px-4 py-4 text-center">Stok Minimal</th> {{-- Kolom Baru --}}
+                                        <th class="px-8 py-4 text-left">Nama Barang</th>
+                                        <th class="px-4 py-4 text-center">Stok Minimal</th>
                                         <th class="px-4 py-4 text-center">Stok Saat Ini</th>
-                                        <th class="px-8 py-4 text-right">Status Gudang</th>
+                                        <th class="px-8 py-4 text-center">Status Gudang</th>
+                                        @can('inventory.kartu-stok')
+                                            <th class="px-8 py-4 text-center">Aksi</th>
+                                        @endcan
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-50">
@@ -202,17 +205,19 @@
                                                     class="text-sm font-bold text-gray-700 group-hover:text-blue-600 transition-colors">
                                                     {{ optional($item->Barang)->nama_barang }}
                                                 </span>
-                                                {{-- Menampilkan Satuan di bawah Nama Barang agar layout tetap bersih --}}
+                                                {{-- Menampilkan Satuan di bawah Nama Barang --}}
                                                 <p
                                                     class="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
                                                     Satuan: {{ optional($item->Barang)->satuan ?? '-' }}
                                                 </p>
                                             </td>
+
                                             <td class="px-4 py-4 text-center">
                                                 <span class="text-xs font-bold text-gray-400">
                                                     {{ number_format($item->minimum_stok, 0, ',', '.') }}
                                                 </span>
                                             </td>
+
                                             <td class="px-4 py-4 text-center">
                                                 <div class="flex flex-col items-center">
                                                     <span
@@ -220,11 +225,13 @@
                                                         {{ number_format($item->stok, 0, ',', '.') }}
                                                     </span>
                                                     {{-- Badge satuan kecil di bawah angka stok --}}
-                                                    <span
-                                                        class="text-[8px] font-bold text-gray-400 uppercase">{{ optional($item->Barang)->satuan }}</span>
+                                                    <span class="text-[8px] font-bold text-gray-400 uppercase">
+                                                        {{ optional($item->Barang)->satuan }}
+                                                    </span>
                                                 </div>
                                             </td>
-                                            <td class="px-8 py-4 text-right">
+
+                                            <td class="px-8 py-4 text-center">
                                                 @if ($item->stok == 0)
                                                     <span
                                                         class="px-4 py-1.5 bg-red-50 text-red-600 rounded-full text-[9px] font-black uppercase shadow-sm shadow-red-100">
@@ -242,6 +249,23 @@
                                                     </span>
                                                 @endif
                                             </td>
+
+                                            @can('inventory.kartu-stok')
+                                                <td class="px-8 py-4 text-center">
+                                                    <div class="flex justify-center gap-3">
+                                                        <a type="button"
+                                                            href="{{ route('inventory.kartu-stok', $item->id) }}"
+                                                            class="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-lg transition-colors"
+                                                            title="Kartu Stok">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 1024 1024">
+                                                                <path fill="currentColor"
+                                                                    d="M704 192h160v736H160V192h160v64h384zM288 512h448v-64H288zm0 256h448v-64H288zm96-576V96h256v96z" />
+                                                            </svg>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            @endcan
                                         </tr>
                                     @endforeach
                                 </tbody>
