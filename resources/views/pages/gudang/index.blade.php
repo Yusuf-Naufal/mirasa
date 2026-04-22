@@ -3,10 +3,12 @@
         <div class="flex-1 pt-12">
 
             {{-- 1. INFORMASI GUDANG & HEADER --}}
-            <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="mb-8 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+
+                {{-- Bagian Kiri: Judul & Breadcrumb --}}
                 <div>
                     <a href="{{ route('beranda') }}"
-                        class="group text-blue-600 hover:text-blue-700 text-sm font-semibold inline-flex items-center gap-2 transition-all">
+                        class="group inline-flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-800 transition-colors mb-3">
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="h-4 w-4 transform group-hover:-translate-x-1 transition-transform" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
@@ -15,17 +17,75 @@
                         </svg>
                         Kembali ke Beranda
                     </a>
-                    <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Manajemen inventory</h1>
-                    <div class="flex items-center mt-1 text-gray-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
+
+                    <h1 class="text-3xl font-black text-gray-900 tracking-tight">Manajemen Inventory</h1>
+
+                    <div
+                        class="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-200 shadow-sm text-gray-600 text-sm font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-500" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
-                        <span class="text-sm font-medium">Gudang:
-                            {{ auth()->user()->perusahaan->nama_perusahaan ?? 'Nama Perusahaan' }}</span>
+                        Gudang: {{ auth()->user()->perusahaan->nama_perusahaan ?? 'Nama Perusahaan' }}
                     </div>
                 </div>
+
+                @can('inventory.tutup-buku')
+                    {{-- Bagian Kanan: Control Bar Tutup Buku --}}
+                    @php
+                        // Otomatis arahkan ke bulan sebelumnya
+                        $bulanLalu = now()->subMonth();
+                    @endphp
+
+                    <form action="{{ route('inventory.tutup-buku') }}" method="POST"
+                        class="bg-white p-3 md:p-4 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row items-start md:items-center gap-4 w-full xl:w-auto">
+                        @csrf
+
+                        {{-- Info Panel Form --}}
+                        <div class="flex items-center gap-3 pr-4 md:border-r border-gray-100 w-full md:w-auto">
+                            <div class="p-2 bg-gray-50 rounded-xl text-gray-400">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-black text-gray-800">Tutup Buku</h3>
+                                <p class="text-[10px] text-gray-400 font-medium">Kunci saldo periode</p>
+                            </div>
+                        </div>
+
+                        {{-- Input Group --}}
+                        <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <select name="bulan"
+                                    class="w-full sm:w-auto text-sm border-gray-200 rounded-xl focus:ring-blue-500 font-medium text-gray-700 bg-gray-50 hover:bg-white cursor-pointer transition-colors">
+                                    @foreach (range(1, 12) as $m)
+                                        <option value="{{ $m }}" {{ $bulanLalu->month == $m ? 'selected' : '' }}>
+                                            {{ Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                <select name="tahun"
+                                    class="w-full sm:w-auto text-sm border-gray-200 rounded-xl focus:ring-blue-500 font-medium text-gray-700 bg-gray-50 hover:bg-white cursor-pointer transition-colors">
+                                    @foreach (range(now()->year - 2, now()->year) as $y)
+                                        <option value="{{ $y }}" {{ $bulanLalu->year == $y ? 'selected' : '' }}>
+                                            {{ $y }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <button type="submit"
+                                onclick="return confirm('Apakah Anda yakin ingin mengunci saldo akhir untuk periode ini pada seluruh barang?')"
+                                class="w-full sm:w-auto px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border border-red-100 hover:border-red-600 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2">
+                                Eksekusi
+                            </button>
+                        </div>
+                    </form>
+                @endcan
             </div>
 
             {{-- 2. ACTION BAR (SEARCH, FILTER) --}}
@@ -132,7 +192,8 @@
                     class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-red-600 flex flex-col justify-between transition-transform hover:scale-[1.02]">
                     <div class="flex items-center gap-3 mb-3">
                         <div class="p-2 bg-red-50 rounded-lg">
-                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>

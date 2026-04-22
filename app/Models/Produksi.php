@@ -41,7 +41,6 @@ class Produksi extends Model
             ->join('detail_inventory', 'barang_keluar.id_detail_inventory', '=', 'detail_inventory.id')
             ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
             ->select('inventory.id_barang')
-            // Gunakan jumlah_keluar dan total_harga dari tabel barang_keluar
             ->selectRaw('SUM(barang_keluar.jumlah_keluar) as total_qty')
             ->selectRaw('SUM(barang_keluar.total_harga) as total_nilai')
             ->groupBy('inventory.id_barang')

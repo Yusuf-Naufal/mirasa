@@ -227,9 +227,28 @@
                     <td>
                         <div style="font-weight: bold;">{{ $item['nama_barang'] }}</div>
                         <div class="unit-label">Satuan: {{ $item['satuan'] }}</div>
+
+                        {{-- Keterangan Tambahan Jika Ada Afkir --}}
+                        @if (($item['qty_afkir'] ?? 0) > 0)
+                            <div style="font-size: 9px; color: #d97706; margin-top: 2px;">
+                                <i>*Diproses Afkir: -{{ number_format($item['qty_afkir'], 2) }}
+                                    {{ $item['satuan'] }}</i>
+                            </div>
+                        @endif
                     </td>
-                    <td class="text-right font-mono">{{ number_format($item['total_qty'], 2) }}</td>
-                    <td class="text-right font-mono">Rp {{ number_format($item['total_nilai'], 0, ',', '.') }}</td>
+                    <td class="text-right font-mono" style="vertical-align: top;">
+                        {{-- Coret Qty Asli (Gross) jika ada afkir --}}
+                        @if (($item['qty_afkir'] ?? 0) > 0)
+                            <span style="text-decoration: line-through; color: #a0aec0; font-size: 9px;">
+                                {{ number_format($item['qty_asli'], 2) }}
+                            </span><br>
+                        @endif
+                        {{-- Qty Netto (Bersih) --}}
+                        <strong>{{ number_format($item['total_qty'], 2) }}</strong>
+                    </td>
+                    <td class="text-right font-mono" style="vertical-align: bottom;">
+                        Rp {{ number_format($item['total_nilai'], 0, ',', '.') }}
+                    </td>
                 </tr>
             @endforeach
         </tbody>
@@ -274,7 +293,8 @@
                 <tbody>
                     @foreach ($items as $item)
                         <tr>
-                            <td>{{ $item['nama_barang'] }} <br><span class="unit-label">{{ $item['satuan'] }}</span></td>
+                            <td>{{ $item['nama_barang'] }} <br><span class="unit-label">{{ $item['satuan'] }}</span>
+                            </td>
                             <td class="text-right font-mono">{{ number_format($item['qty'], 2) }}</td>
                             <td class="text-right font-mono">Rp {{ number_format($item['nilai'], 0, ',', '.') }}</td>
                         </tr>
@@ -283,8 +303,10 @@
                 <tfoot>
                     <tr class="bg-light">
                         <td class="text-right" style="font-weight: bold;">SUBTOTAL PROSES</td>
-                        <td class="text-right font-mono" style="font-weight: bold;">{{ number_format($items->sum('qty'), 2) }}</td>
-                        <td class="text-right font-mono" style="font-weight: bold;">Rp {{ number_format($items->sum('nilai'), 0, ',', '.') }}</td>
+                        <td class="text-right font-mono" style="font-weight: bold;">
+                            {{ number_format($items->sum('qty'), 2) }}</td>
+                        <td class="text-right font-mono" style="font-weight: bold;">Rp
+                            {{ number_format($items->sum('nilai'), 0, ',', '.') }}</td>
                     </tr>
                 </tfoot>
             </table>

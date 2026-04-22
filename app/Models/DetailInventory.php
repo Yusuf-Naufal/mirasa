@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Spatie\Activitylog\LogOptions;
+use App\Models\KartuStok;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class DetailInventory extends Model
@@ -11,6 +12,8 @@ class DetailInventory extends Model
     use LogsActivity;
 
     protected $table = 'detail_inventory';
+
+    public $keterangan_transaksi = null;
 
     protected $fillable = [
         'id_inventory',
@@ -51,22 +54,54 @@ class DetailInventory extends Model
 
     protected static function booted()
     {
-        static::saved(function ($detail) {
-            if ($detail->Inventory) {
+        static::created(function ($detail) {
+
+            $keteranganDinamis = $detail->keterangan_transaksi ?? 'Barang Masuk';
+            
+            // 1. Catat ke Kartu Stok
+            KartuStok::create([
+                'id_inventory'      => $detail->id_inventory,
+                'tanggal_transaksi' => $detail->tanggal_masuk,
+                'keterangan'        => $keteranganDinamis,
+                'nomor_batch'       => $detail->nomor_batch,
+                'qty'               => $detail->jumlah_diterima,
+                'harga'             => $detail->total_harga,
+                'source_type'       => get_class($detail),
+                'source_id'         => $detail->id,
+                'saldo_qty'         => 0,
+            ]);
+
+            // 2. Sinkronisasi Stok Global & Hitung Ulang Saldo Ledger
+            $detail->Inventory->syncTotalStock();
+            $detail->Inventory->recalculateLedger($detail->tanggal_masuk);
+        });
+
+        static::updated(function ($detail) {
+            // Update baris di kartu stok jika ada perubahan qty/tanggal
+            $kartu = KartuStok::where('source_type', get_class($detail))
+                ->where('source_id', $detail->id)
+                ->first();
+
+            if ($kartu) {
+                $kartu->update([
+                    'qty'               => $detail->jumlah_diterima,
+                    'tanggal_transaksi' => $detail->tanggal_masuk,
+                    'harga'             => $detail->total_harga,
+                ]);
+
                 $detail->Inventory->syncTotalStock();
+                $detail->Inventory->recalculateLedger($detail->tanggal_masuk);
             }
         });
 
         static::deleted(function ($detail) {
-            if ($detail->Inventory) {
-                $detail->Inventory->syncTotalStock();
-            }
-            // Jika dihapus, tetap sync produksi terkait
-            if ($detail->id_produksi && $detail->Produksi) {
-                $detail->Produksi->syncTotals();
-            }
+            KartuStok::where('source_type', get_class($detail))
+                ->where('source_id', $detail->id)
+                ->delete();
+
+            $detail->Inventory->syncTotalStock();
+            $detail->Inventory->recalculateLedger($detail->tanggal_masuk);
         });
-        
     }
 
     public function Supplier()
@@ -77,5 +112,10 @@ class DetailInventory extends Model
     public function BarangKeluar()
     {
         return $this->hasMany(BarangKeluar::class, 'id_detail_inventory');
+    }
+
+    public function KartuStok()
+    {
+        return $this->hasMany(KartuStok::class, 'source_id')->where('source_type', self::class);
     }
 }

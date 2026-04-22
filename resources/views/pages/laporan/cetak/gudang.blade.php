@@ -127,7 +127,7 @@
         <tr>
             <td style="border:none; padding:0; width: 32%;">
                 <div class="summary-box">
-                    <div class="summary-title">Total Nilai Aset</div>
+                    <div class="summary-title">Total Nilai Aset Saat Ini</div>
                     <div class="summary-value">Rp {{ number_format($summary['total_asset'], 0, ',', '.') }}</div>
                 </div>
             </td>

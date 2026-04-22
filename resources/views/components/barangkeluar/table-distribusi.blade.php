@@ -15,6 +15,43 @@
         nama_supir: '',
         varietas: '',
         ppn: 11
+    },
+
+    returOpen: false,
+    returData: {
+        id: '',
+        nama: '',
+        qtyAsal: 0,
+        total_retur: 0,
+        afkir: 0,
+        bagus: 0,
+
+        // State Konversi Tambahan
+        isKonversi: false,
+        hasilKonversiQty: 0,
+        hargaBaru: 0,
+        batchBaru: '',
+
+        // State Dropdown Barang Tujuan
+        barangTujuanId: '',
+        barangTujuanNama: '',
+        barangTujuanSatuan: '',
+        barangSearch: '',
+        barangDropdownOpen: false
+    },
+    // Injeksi data dari Laravel ke JS
+    listBarangTujuan: {{ isset($barangTujuan) ? $barangTujuan->map(fn($b) => ['id' => $b->id, 'nama' => $b->nama_barang, 'satuan' => $b->satuan])->toJson() : '[]' }},
+
+    get filteredBarangTujuan() {
+        return this.listBarangTujuan.filter(b => b.nama.toLowerCase().includes(this.returData.barangSearch.toLowerCase()));
+    },
+
+    pilihBarangTujuan(b) {
+        this.returData.barangTujuanId = b.id;
+        this.returData.barangTujuanNama = b.nama;
+        this.returData.barangTujuanSatuan = b.satuan;
+        this.returData.barangDropdownOpen = false;
+        this.returData.barangSearch = '';
     }
 }">
     <div class="overflow-x-auto">
@@ -45,7 +82,11 @@
                             : $firstItem->Perusahaan->nama_perusahaan ?? 'Cabang Utama';
 
                         $jumlahJenisBarang = $items->pluck('DetailInventory.Inventory.id_barang')->unique()->count();
-                        $totalGroupNilai = $items->sum('total_harga');
+                        $totalGroupNilai = $items->sum(function ($item) {
+                            $hargaSatuan =
+                                $item->jumlah_keluar > 0 ? $item->total_harga / $item->jumlah_keluar : $item->harga;
+                            return ($item->jumlah_keluar - ($item->jumlah_dikonversi ?? 0)) * $hargaSatuan;
+                        });
                         $groupId = 'group-' . $loop->index;
                     @endphp
 
@@ -108,12 +149,22 @@
                                                 printData.asal = '{{ auth()->user()->perusahaan->nama_perusahaan ?? 'PT. Mirasa Food Industri' }}';
                                                 printData.ringkasanBarang = [
                                                     @foreach ($items as $item)
+                                                        @php
+                                                            $qtyAsli = $item->jumlah_keluar;
+                                                            $qtyAfkir = $item->jumlah_dikonversi ?? 0;
+                                                            $qtyNetto = $qtyAsli - $qtyAfkir;
+                                                            $totalNetto = $qtyNetto * $item->harga;
+                                                        @endphp
                                                         {
                                                             nama: '{{ $item->DetailInventory->Inventory->Barang->nama_barang }}',
-                                                            qty: '{{ number_format($item->jumlah_keluar, 0) }}',
+                                                            qty_asli: '{{ number_format($qtyAsli, 0) }}',
+                                                            qty_afkir: '{{ number_format($qtyAfkir, 0) }}',
+                                                            qty_netto: '{{ number_format($qtyNetto, 0) }}',
                                                             satuan: '{{ $item->DetailInventory->Inventory->Barang->satuan }}',
+                                                            batch: '{{ $item->DetailInventory->nomor_batch ?? '-' }}',
                                                             harga: '{{ number_format($item->harga, 0, ',', '.') }}',
-                                                            total: '{{ number_format($item->total_harga, 0, ',', '.') }}'
+                                                            total: '{{ number_format($totalNetto, 0, ',', '.') }}',
+                                                            is_afkir: {{ $qtyAfkir > 0 ? 'true' : 'false' }}
                                                         }, @endforeach
                                                 ];
                                                 printModal = true;
@@ -142,12 +193,22 @@
                                             printData.asal = '{{ auth()->user()->perusahaan->nama_perusahaan ?? 'PT. Mirasa Food Industri' }}';
                                             printData.ringkasanBarang = [
                                                 @foreach ($items as $item)
+                                                    @php
+                                                        $qtyAsli = $item->jumlah_keluar;
+                                                        $qtyAfkir = $item->jumlah_dikonversi ?? 0;
+                                                        $qtyNetto = $qtyAsli - $qtyAfkir;
+                                                        $totalNetto = $qtyNetto * $item->harga;
+                                                    @endphp
                                                     {
                                                         nama: '{{ $item->DetailInventory->Inventory->Barang->nama_barang }}',
-                                                        qty: '{{ number_format($item->jumlah_keluar, 0) }}',
+                                                        qty_asli: '{{ number_format($qtyAsli, 0) }}',
+                                                        qty_afkir: '{{ number_format($qtyAfkir, 0) }}',
+                                                        qty_netto: '{{ number_format($qtyNetto, 0) }}',
                                                         satuan: '{{ $item->DetailInventory->Inventory->Barang->satuan }}',
+                                                        batch: '{{ $item->DetailInventory->nomor_batch ?? '-' }}',
                                                         harga: '{{ number_format($item->harga, 0, ',', '.') }}',
-                                                        total: '{{ number_format($item->total_harga, 0, ',', '.') }}'
+                                                        total: '{{ number_format($totalNetto, 0, ',', '.') }}',
+                                                        is_afkir: {{ $qtyAfkir > 0 ? 'true' : 'false' }}
                                                     }, @endforeach
                                             ];
                                             printModal = true;
@@ -191,56 +252,178 @@
                                                 <td class="py-3 text-center font-mono text-[10px] text-gray-400">
                                                     {{ $item->DetailInventory->nomor_batch ?? '-' }}
                                                 </td>
-                                                <td class="py-3 text-right text-xs font-bold">
-                                                    {{ number_format($item->jumlah_keluar, 0) }} {{ $barang->satuan }}
+                                                <td class="py-3 text-right">
+                                                    @php
+                                                        $qAsli = $item->jumlah_keluar;
+                                                        $qAfkir = $item->jumlah_dikonversi ?? 0;
+                                                        $qNetto = $qAsli - $qAfkir;
+                                                    @endphp
+
+                                                    @if ($qAfkir > 0)
+                                                        <div class="flex flex-col items-end">
+                                                            {{-- Kuantitas Netto (Sisa Bersih) --}}
+                                                            <span class="font-black text-emerald-600 text-xs"
+                                                                title="Kuantitas Bersih (Netto)">
+                                                                {{ number_format($qNetto, 0) }} {{ $barang->satuan }}
+                                                            </span>
+                                                            {{-- Keterangan Coretan Asli & Afkir --}}
+                                                            <span
+                                                                class="text-[9px] font-bold text-gray-400 mt-0.5 flex gap-1">
+                                                                <span class="line-through"
+                                                                    title="Kuantitas Awal yang dikeluarkan">
+                                                                    {{ number_format($qAsli, 0) }}
+                                                                </span>
+                                                                <span class="text-amber-500 bg-amber-50 px-1 rounded"
+                                                                    title="Didaur Ulang / Afkir">
+                                                                    -{{ number_format($qAfkir, 0) }}
+                                                                </span>
+                                                            </span>
+                                                        </div>
+                                                    @else
+                                                        <span class="font-bold text-xs text-gray-800">
+                                                            {{ number_format($qAsli, 0) }} {{ $barang->satuan }}
+                                                        </span>
+                                                    @endif
                                                 </td>
                                                 <td class="py-3 text-right text-xs text-gray-500">
                                                     Rp {{ number_format($item->harga, 0, ',', '.') }}
                                                 </td>
-                                                <td class="py-3 text-right text-xs font-black text-gray-800">
-                                                    Rp {{ number_format($item->total_harga, 0, ',', '.') }}
+                                                <td class="py-3 text-right">
+                                                    @php
+                                                        $hargaSatuan =
+                                                            $item->jumlah_keluar > 0
+                                                                ? $item->total_harga / $item->jumlah_keluar
+                                                                : $item->harga;
+                                                        $tAsli = $item->total_harga;
+                                                        $tAfkir = ($item->jumlah_dikonversi ?? 0) * $hargaSatuan;
+                                                        $tNetto = $tAsli - $tAfkir;
+                                                    @endphp
+
+                                                    @if (($item->jumlah_dikonversi ?? 0) > 0)
+                                                        <div class="flex flex-col items-end">
+                                                            {{-- Subtotal Netto (Nilai Bersih) --}}
+                                                            <span class="text-xs font-black text-emerald-600"
+                                                                title="Total Nilai Bersih">
+                                                                Rp {{ number_format($tNetto, 0, ',', '.') }}
+                                                            </span>
+                                                            {{-- Keterangan Nilai Kotor Dicoret --}}
+                                                            <span
+                                                                class="text-[9px] font-bold text-gray-400 mt-0.5 flex gap-1">
+                                                                <span class="line-through" title="Total Nilai Awal">
+                                                                    Rp {{ number_format($tAsli, 0, ',', '.') }}
+                                                                </span>
+                                                                <span class="text-amber-500 bg-amber-50 px-1 rounded"
+                                                                    title="Potongan Retur/Afkir">
+                                                                    -Rp {{ number_format($tAfkir, 0, ',', '.') }}
+                                                                </span>
+                                                            </span>
+                                                        </div>
+                                                    @else
+                                                        <span class="text-xs font-black text-gray-800">
+                                                            Rp {{ number_format($tAsli, 0, ',', '.') }}
+                                                        </span>
+                                                    @endif
                                                 </td>
                                                 <td class="py-3 text-right">
-                                                    <div class="flex justify-end items-center gap-1">
-                                                        {{-- Edit Button --}}
-                                                        @can('barang-keluar.edit')
-                                                            <button
-                                                                @click="editOpen = true; editData = {
-                                                                id: '{{ $item->id }}', 
-                                                                nama: '{{ $barang->nama_barang }}',
-                                                                jumlah: '{{ $item->jumlah_keluar }}',
-                                                                jenis: '{{ $item->jenis_keluar }}',
-                                                                tanggal: '{{ $item->tanggal_keluar }}',
-                                                                maxStok: {{ $item->DetailInventory->stok + $item->jumlah_keluar }}
-                                                            }"
-                                                                class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
-                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                                    viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                                </svg>
-                                                            </button>
-                                                        @endcan
+                                                    <div class="flex justify-end" x-data="{ actionOpen: false }">
 
-                                                        {{-- Delete Button --}}
-                                                        @can('barang-keluar.delete')
-                                                            <form action="{{ route('barang-keluar.destroy', $item->id) }}"
-                                                                method="POST"
-                                                                onsubmit="return confirm('Hapus data ini? Stok akan dikembalikan ke inventaris.')">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit"
-                                                                    class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                                                    <svg class="w-4 h-4" fill="none"
-                                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                                            stroke-width="2"
-                                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                    </svg>
-                                                                </button>
-                                                            </form>
-                                                        @endcan
+                                                        {{-- Tombol Toggle Dropdown (Titik Tiga) --}}
+                                                        <button type="button" x-ref="btnDropdown"
+                                                            @click="actionOpen = !actionOpen"
+                                                            class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                                                            <svg class="w-5 h-5" fill="currentColor"
+                                                                viewBox="0 0 20 20">
+                                                                <path
+                                                                    d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                            </svg>
+                                                        </button>
+
+                                                        {{-- Menu Dropdown (Di-teleport ke Body agar keluar dari tabel) --}}
+                                                        <template x-teleport="body">
+                                                            <div x-show="actionOpen" @click.away="actionOpen = false"
+                                                                x-cloak x-transition.opacity.duration.200ms
+                                                                x-init="$watch('actionOpen', val => {
+                                                                    if (val) {
+                                                                        const rect = $refs.btnDropdown.getBoundingClientRect();
+                                                                        // Kalkulasi posisi agar pas di bawah tombol
+                                                                        $el.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+                                                                        $el.style.left = (rect.right - 176 + window.scrollX) + 'px'; // 176px adalah lebar w-44
+                                                                    }
+                                                                })"
+                                                                @scroll.window="actionOpen = false"
+                                                                @resize.window="actionOpen = false"
+                                                                class="absolute w-44 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[150] overflow-hidden">
+
+                                                                {{-- Edit Button --}}
+                                                                @can('barang-keluar.edit')
+                                                                    <button type="button"
+                                                                        @click="
+                                                                            editOpen = true; 
+                                                                            actionOpen = false; 
+                                                                            editData = {
+                                                                                id: '{{ $item->id }}', 
+                                                                                nama: '{{ $barang->nama_barang }}',
+                                                                                jumlah: '{{ $item->jumlah_keluar }}',
+                                                                                jenis: '{{ $item->jenis_keluar }}',
+                                                                                tanggal: '{{ $item->tanggal_keluar }}',
+                                                                                maxStok: {{ $item->DetailInventory->stok + $item->jumlah_keluar }},
+                                                                                // TAMBAHKAN BARIS INI: Batas minimum karena sudah direcycle
+                                                                                minBolehEdit: {{ $item->jumlah_dikonversi ?? 0 }} 
+                                                                            }
+                                                                        "
+                                                                        class="w-full px-4 py-2.5 text-left text-xs font-bold text-gray-600 hover:bg-amber-50 hover:text-amber-600 transition-colors flex items-center gap-2.5">
+                                                                        <svg class="w-4 h-4" fill="none"
+                                                                            stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round" stroke-width="2"
+                                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                        </svg>
+                                                                        Edit Data
+                                                                    </button>
+                                                                @endcan
+
+                                                                {{-- AFkir Button --}}
+                                                                @can('barang-keluar.afkir-ulang')
+                                                                    <a type="button"
+                                                                        href="{{ route('barang-keluar.afkir-ulang', $item->id) }}"
+                                                                        class="w-full px-4 py-2.5 text-left text-xs font-bold text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition-colors flex items-center gap-2.5 border-t border-gray-50">
+                                                                        <svg class="w-4 h-4" fill="none"
+                                                                            stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round"
+                                                                                stroke-linejoin="round" stroke-width="2"
+                                                                                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                                                        </svg>
+                                                                        Afkir Ulang
+                                                                    </a>
+                                                                @endcan
+
+                                                                {{-- Delete Button --}}
+                                                                @if ($item->jumlah_dikonversi == 0)
+                                                                    @can('barang-keluar.delete')
+                                                                        <form
+                                                                            action="{{ route('barang-keluar.destroy', $item->id) }}"
+                                                                            method="POST"
+                                                                            onsubmit="return confirm('Hapus data ini? Stok akan dikembalikan ke inventaris.')">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="submit"
+                                                                                class="w-full px-4 py-2.5 text-left text-xs font-bold text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center gap-2.5 border-t border-gray-50">
+                                                                                <svg class="w-4 h-4" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                                </svg>
+                                                                                Hapus Data
+                                                                            </button>
+                                                                        </form>
+                                                                    @endcan
+                                                                @endif
+
+                                                            </div>
+                                                        </template>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -421,22 +604,55 @@
                                                     <div class="max-h-[350px] overflow-y-auto pr-2 space-y-3">
                                                         <template x-for="(item, index) in printData.ringkasanBarang"
                                                             :key="index">
-                                                            <div
-                                                                class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm transition-none">
+                                                            <div class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm transition-none"
+                                                                :class="item.is_afkir ? 'border-amber-200 bg-amber-50/30' : ''">
+
                                                                 <div class="flex justify-between items-start mb-1">
-                                                                    <span
-                                                                        class="text-[10px] font-black text-gray-800 uppercase"
-                                                                        x-text="item.nama"></span>
-                                                                    <span
-                                                                        class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded"
-                                                                        x-text="item.qty + ' ' + item.satuan"></span>
+                                                                    <div class="flex flex-col">
+                                                                        <span
+                                                                            class="text-[10px] font-black text-gray-800 uppercase"
+                                                                            x-text="item.nama"></span>
+                                                                        <span
+                                                                            class="text-[9px] text-gray-500 font-medium mt-0.5"
+                                                                            x-text="'Batch: ' + item.batch"></span>
+
+                                                                        {{-- Label Warning Jika Ada Afkir --}}
+                                                                        <template x-if="item.is_afkir">
+                                                                            <span
+                                                                                class="text-[8px] font-bold text-amber-600 mt-1 bg-amber-100 px-1.5 py-0.5 rounded w-max">
+                                                                                ⚠️ Terdapat Afkir/Retur: <span
+                                                                                    x-text="item.qty_afkir"></span>
+                                                                                <span x-text="item.satuan"></span>
+                                                                            </span>
+                                                                        </template>
+                                                                    </div>
+
+                                                                    <div class="text-right">
+                                                                        {{-- Coret Qty Asli jika ada afkir --}}
+                                                                        <template x-if="item.is_afkir">
+                                                                            <span
+                                                                                class="text-[8px] font-bold text-gray-400 line-through block"
+                                                                                x-text="item.qty_asli + ' ' + item.satuan"></span>
+                                                                        </template>
+                                                                        {{-- Qty Final/Netto --}}
+                                                                        <span
+                                                                            class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded"
+                                                                            :class="item.qty_netto == 0 ?
+                                                                                'bg-red-50 text-red-600' : ''"
+                                                                            x-text="item.qty_netto + ' ' + item.satuan"></span>
+                                                                    </div>
                                                                 </div>
+
                                                                 <div
-                                                                    class="flex justify-between items-center text-[9px] font-bold text-gray-400">
+                                                                    class="flex justify-between items-center text-[9px] font-bold text-gray-400 mt-1.5 pt-1.5 border-t border-gray-50">
                                                                     <span>Harga: Rp <span
                                                                             x-text="item.harga"></span></span>
-                                                                    <span class="text-gray-700">Total: Rp <span
-                                                                            x-text="item.total"></span></span>
+                                                                    <span
+                                                                        :class="item.is_afkir ? 'text-amber-700' :
+                                                                            'text-gray-700'">
+                                                                        Total Bersih: Rp <span
+                                                                            x-text="item.total"></span>
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         </template>
@@ -506,12 +722,22 @@
                                             Max: <span x-text="parseFloat(editData.maxStok).toFixed(2)"></span>
                                         </span>
                                     </div>
+
+                                    {{-- Tambahkan :min="editData.minBolehEdit" --}}
                                     <input type="number" name="jumlah_keluar" x-model="editData.jumlah"
-                                        :max="editData.maxStok" step="any" required
+                                        :max="editData.maxStok" :min="editData.minBolehEdit" step="any" required
                                         class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 outline-none font-black text-lg transition-all"
-                                        :class="parseFloat(editData.jumlah) > parseFloat(editData.maxStok) ?
-                                            'focus:ring-red-500 border-red-200 bg-red-50 text-red-600' :
-                                            'focus:ring-emerald-500 text-gray-700'">
+                                        :class="(parseFloat(editData.jumlah) > parseFloat(editData.maxStok) || parseFloat(
+                                            editData.jumlah) < parseFloat(editData.minBolehEdit)) ?
+                                        'focus:ring-red-500 border-red-200 bg-red-50 text-red-600' :
+                                        'focus:ring-emerald-500 text-gray-700'">
+
+                                    {{-- Pesan Peringatan Jika Angka Di Bawah Batas Minimum --}}
+                                    <p x-show="parseFloat(editData.jumlah) < parseFloat(editData.minBolehEdit)" x-cloak
+                                        class="text-[10px] text-red-500 font-bold mt-1">
+                                        Minimal <span x-text="editData.minBolehEdit"></span> karena sebagian sudah
+                                        didaur ulang!
+                                    </p>
                                 </div>
                             </div>
 
@@ -538,7 +764,8 @@
                                 Batal
                             </button>
                             <button type="submit"
-                                :disabled="parseFloat(editData.jumlah) > parseFloat(editData.maxStok) || editData.jumlah <= 0"
+                                :disabled="parseFloat(editData.jumlah) > parseFloat(editData.maxStok) || parseFloat(editData
+                                    .jumlah) < parseFloat(editData.minBolehEdit)"
                                 class="px-8 py-4 text-xs font-black uppercase tracking-widest text-white bg-emerald-600 rounded-2xl shadow-xl shadow-emerald-200 disabled:bg-gray-300 disabled:shadow-none transition-all active:scale-95">
                                 Simpan Perubahan
                             </button>

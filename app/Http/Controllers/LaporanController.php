@@ -8,9 +8,10 @@ use App\Models\Inventory;
 use App\Models\Pengeluaran;
 use App\Models\Perusahaan;
 use App\Models\Produksi;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 class LaporanController extends Controller
 {
@@ -53,51 +54,45 @@ class LaporanController extends Controller
                 $q->where('id_perusahaan', $idPerusahaan);
             })
             ->whereBetween('tanggal_keluar', [$startDate, $endDate])
-            // Tambahkan 'Proses' di eager loading agar tidak N+1 query
             ->with(['DetailInventory.Inventory.Barang', 'Proses']);
 
         $dataKeluarRaw = $queryBarangKeluar->get();
 
         $totalBiayaBP = $dataKeluarRaw->filter(function ($item) {
             return optional(optional(optional($item->DetailInventory)->Inventory)->Barang->jenisBarang)->kode == 'BP';
-        })->sum('total_harga');
+        })->sum(function ($item) {
+            // Menghitung Biaya Netto (Potong Retur)
+            $qtyNetto = $item->jumlah_keluar - ($item->jumlah_dikonversi ?? 0);
+            $hargaSatuan = $item->jumlah_keluar > 0 ? ($item->total_harga / $item->jumlah_keluar) : $item->harga;
+            return $qtyNetto * $hargaSatuan;
+        });
 
-        // Grouping Utama untuk Tabel Ringkasan
+        // Grouping BP (Gross)
         $barangKeluar = $dataKeluarRaw->groupBy('DetailInventory.Inventory.id_barang')
-            ->map(function ($group) {
-                $first = $group->first();
-                return [
-                    'nama_barang' => $first->DetailInventory->Inventory->Barang->nama_barang,
-                    'total_qty' => $group->sum('jumlah_keluar'),
-                    'satuan' => $first->DetailInventory->Inventory->Barang->satuan,
-                    'total_nilai' => $group->sum('total_harga')
-                ];
-            });
+            ->map(fn($group) => [
+                'nama_barang' => $group->first()->DetailInventory->Inventory->Barang->nama_barang,
+                'total_qty'   => $group->sum('jumlah_keluar'),
+                'satuan'      => $group->first()->DetailInventory->Inventory->Barang->satuan,
+                'total_nilai' => $group->sum('total_harga')
+            ]);
 
         // --- 5. LOGIKA RINCIAN BARANG PER ID PROSES (Untuk Tabel di View) ---
-        $rincianPerProses = $dataKeluarRaw->groupBy(function ($item) {
-            // Menggunakan nama proses jika ada, jika tidak pakai ID atau 'N/A'
-            return $item->Proses ? $item->Proses->nama_proses : ($item->id_proses ?? 'Tanpa Proses');
-        })->map(function ($group) {
-            return $group->groupBy('DetailInventory.Inventory.id_barang')->map(function ($barangGroup) {
-                $first = $barangGroup->first();
-                return [
-                    'nama_barang' => $first->DetailInventory->Inventory->Barang->nama_barang,
-                    'qty'         => $barangGroup->sum('jumlah_keluar'),
-                    'satuan'      => $first->DetailInventory->Inventory->Barang->satuan,
-                    'nilai'       => $barangGroup->sum('total_harga')
-                ];
-            });
-        });
+        $rincianPerProses = $dataKeluarRaw->groupBy(fn($item) => $item->Proses->nama_proses ?? 'Tanpa Proses')
+            ->map(fn($group) => $group->groupBy('DetailInventory.Inventory.id_barang')->map(fn($bg) => [
+                'nama_barang' => $bg->first()->DetailInventory->Inventory->Barang->nama_barang,
+                'qty'         => $bg->sum('jumlah_keluar'),
+                'satuan'      => $bg->first()->DetailInventory->Inventory->Barang->satuan,
+                'nilai'       => $bg->sum('total_harga')
+            ]));
 
         // --- 6. LOGIKA AGREGASI UNTUK GRAFIK ---
         $chartLabels = $rincianPerProses->keys()->toArray();
         $chartValues = $rincianPerProses->map(function ($items) {
-            return $items->sum('qty'); // Menghitung total qty per proses
+            return $items->sum('qty');
         })->values()->toArray();
 
         // --- 7. PRODUK JADI ---
-        $hasilProduksi = DetailInventory::whereHas('Inventory.Barang.jenisBarang', function ($q) {
+        $hasilProduksiGross = DetailInventory::whereHas('Inventory.Barang.jenisBarang', function ($q) {
             $q->whereIn('kode', ['FG', 'WIP', 'EC']);
         })
             ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
@@ -105,18 +100,49 @@ class LaporanController extends Controller
             })
             ->whereBetween('tanggal_masuk', [$startDate, $endDate])
             ->with(['Inventory.Barang.jenisBarang'])
-            ->get()
-            ->groupBy('Inventory.id_barang')
-            ->map(function ($group) {
+            ->get();
+
+        // Cari data Afkir Gudang atau Retur Daur Ulang untuk dipotongkan
+        $afkirProduksi = BarangKeluar::where(function ($q) {
+            $q->where('jumlah_dikonversi', '>', 0)->orWhere('jenis_keluar', 'AFKIR ULANG');
+        })
+            ->whereHas('DetailInventory.Inventory.Barang.JenisBarang', function ($q) {
+                $q->whereIn('kode', ['FG', 'WIP', 'EC']);
+            })
+            ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
+                $q->where('id_perusahaan', $idPerusahaan);
+            })
+            ->whereBetween('tanggal_keluar', [$startDate, $endDate])
+            ->get();
+
+        $hasilProduksi = $hasilProduksiGross->groupBy('Inventory.id_barang')
+            ->map(function ($group, $idBarang) use ($afkirProduksi) {
                 $first = $group->first();
+                $qtyAsli = $group->sum('jumlah_diterima');
+                $nilaiAsli = $group->sum('total_harga');
+
+                // Hitung potongan afkir untuk barang ini
+                $afkirItems = $afkirProduksi->where('DetailInventory.Inventory.id_barang', $idBarang);
+                $qtyAfkir = $afkirItems->sum(function ($i) {
+                    return $i->jenis_keluar === 'AFKIR ULANG' ? $i->jumlah_keluar : ($i->jumlah_dikonversi ?? 0);
+                });
+
+                $nilaiAfkir = $afkirItems->sum(function ($i) {
+                    $qtyPotong = $i->jenis_keluar === 'AFKIR ULANG' ? $i->jumlah_keluar : ($i->jumlah_dikonversi ?? 0);
+                    $hargaSatuan = $i->jumlah_keluar > 0 ? ($i->total_harga / $i->jumlah_keluar) : $i->harga;
+                    return $qtyPotong * $hargaSatuan;
+                });
+
                 return [
                     'nama_barang' => $first->Inventory->Barang->nama_barang,
-                    'jenis' => $first->Inventory->Barang->jenisBarang->kode,
-                    'total_qty' => $group->sum('jumlah_diterima'),
-                    'satuan' => $first->Inventory->Barang->satuan,
-                    'total_nilai' => $group->sum('total_harga')
+                    'jenis'       => $first->Inventory->Barang->jenisBarang->kode,
+                    'total_qty'   => $qtyAsli - $qtyAfkir,
+                    'qty_asli'    => $qtyAsli,
+                    'qty_afkir'   => $qtyAfkir,
+                    'satuan'      => $first->Inventory->Barang->satuan,
+                    'total_nilai' => $nilaiAsli - $nilaiAfkir
                 ];
-            });
+            })->filter(fn($item) => $item['total_qty'] > 0);
 
         $namaPerusahaan = $idPerusahaan ? Perusahaan::find($idPerusahaan)->nama_perusahaan : 'Semua Perusahaan';
 
@@ -132,7 +158,7 @@ class LaporanController extends Controller
                 'namaPerusahaan' => $namaPerusahaan
             ];
 
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pages.laporan.cetak.produksi', $pdfData);
+            $pdf = Pdf::loadView('pages.laporan.cetak.produksi', $pdfData);
             return $pdf->download('Laporan_Produksi_' . str_replace(' ', '_', $dateRange) . '.pdf');
         }
 
@@ -191,7 +217,8 @@ class LaporanController extends Controller
             'total_asset' => DetailInventory::where('stok', '>', 0)
                 ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
                     $q->whereHas('Inventory', fn($sq) => $sq->where('id_perusahaan', $idPerusahaan));
-                })->sum('total_harga'),
+                })
+                ->sum(DB::raw('stok * harga')),
 
             // Menghitung jumlah JENIS barang unik yang terdaftar di Inventory
             'count_produksi' => $stokRaw->filter(function ($item) {
@@ -403,57 +430,124 @@ class LaporanController extends Controller
             $prevEnd = $currentStart->copy()->subYear()->endOfYear();
         }
 
-        // 1. DATA PRODUKSI (HPP)
+        // ========================================================================
+        // 1. DATA PRODUKSI (HPP) - DENGAN LOGIKA NETTO AFKIR ULANG
+        // ========================================================================
+
+        // A. Query Barang Masuk (Produksi Murni + Hasil Afkir)
         $queryMain = DetailInventory::whereHas('Inventory.Barang.JenisBarang', function ($q) {
             $q->whereIn('kode', ['FG', 'WIP', 'EC']);
-        })
-            ->whereHas('Inventory', function ($q) use ($idPerusahaan) {
-                if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
-            })
-            ->with(['Inventory.Barang.JenisBarang']);
+        })->whereHas('Inventory', function ($q) use ($idPerusahaan) {
+            if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
+        })->with(['Inventory.Barang.JenisBarang']);
 
         $currentRaw = (clone $queryMain)->whereBetween('tanggal_masuk', [$currentStart, $currentEnd])->get();
         $prevRaw = (clone $queryMain)->whereBetween('tanggal_masuk', [$prevStart, $prevEnd])->get();
 
-        $calculate = function ($data) {
-            $vol = 0;
-            $cost = 0;
+        // B. Query Barang Keluar (Hanya Khusus Afkir Ulang & Afkir Gudang untuk Dipotongkan)
+        $queryAfkirOut = BarangKeluar::where(function ($q) {
+            $q->where('jumlah_dikonversi', '>', 0)
+                ->orWhere('jenis_keluar', 'AFKIR ULANG');
+        })
+            ->whereHas('DetailInventory.Inventory.Barang.JenisBarang', function ($q) {
+                $q->whereIn('kode', ['FG', 'WIP', 'EC']);
+            })->whereHas('DetailInventory.Inventory', function ($q) use ($idPerusahaan) {
+                if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
+            })->with(['DetailInventory.Inventory.Barang.JenisBarang']);
+
+        $currentAfkirOutRaw = (clone $queryAfkirOut)->whereBetween('tanggal_keluar', [$currentStart, $currentEnd])->get();
+        $prevAfkirOutRaw = (clone $queryAfkirOut)->whereBetween('tanggal_keluar', [$prevStart, $prevEnd])->get();
+
+        // C. Fungsi Hitung Netto (Masuk - Keluar Afkir)
+        $calculateNetto = function ($dataIn, $dataOutAfkir) {
+            $volIn = 0;
+            $costIn = 0;
             $skus = [];
-            foreach ($data as $item) {
-                $konversi = $item->Inventory->Barang->nilai_konversi ?? 1;
-                $vol += ($item->jumlah_diterima * $konversi);
-                $cost += $item->total_harga;
+
+            foreach ($dataIn as $item) {
+                $konv = $item->Inventory->Barang->nilai_konversi ?? 1;
+                $volIn += ($item->jumlah_diterima * $konv);
+                $costIn += $item->total_harga;
                 $skus[] = $item->Inventory->id_barang;
             }
-            return ['vol' => $vol, 'cost' => $cost, 'skus' => array_unique($skus)];
+
+            $volOut = 0;
+            $costOut = 0;
+            foreach ($dataOutAfkir as $itemOut) {
+                $konv = $itemOut->DetailInventory->Inventory->Barang->nilai_konversi ?? 1;
+
+                // PERBAIKAN: Tentukan Qty Potong secara Dinamis
+                $qtyPotong = $itemOut->jumlah_dikonversi > 0 ? $itemOut->jumlah_dikonversi : $itemOut->jumlah_keluar;
+                $volOut += ($qtyPotong * $konv);
+
+                $hargaSatuan = $itemOut->jumlah_keluar > 0 ? ($itemOut->total_harga / $itemOut->jumlah_keluar) : $itemOut->harga;
+                $costOut += ($qtyPotong * $hargaSatuan);
+            }
+
+            return [
+                'vol' => max(0, $volIn - $volOut),
+                'cost' => max(0, $costIn - $costOut),
+                'skus' => array_unique($skus)
+            ];
         };
 
-        $curr = $calculate($currentRaw);
-        $prev = $calculate($prevRaw);
+        $curr = $calculateNetto($currentRaw, $currentAfkirOutRaw);
+        $prev = $calculateNetto($prevRaw, $prevAfkirOutRaw);
 
         $summary = [
             'current_count_sku' => count($curr['skus']),
-            'diff_sku' => count($curr['skus']) - count($prev['skus']),
-            'current_volume' => $curr['vol'],
-            'diff_volume_pct' => $prev['vol'] > 0 ? (($curr['vol'] - $prev['vol']) / $prev['vol']) * 100 : ($curr['vol'] > 0 ? 100 : 0),
-            'total_cost' => $curr['cost'],
-            'avg_cost_per_kg' => $curr['vol'] > 0 ? $curr['cost'] / $curr['vol'] : 0
+            'diff_sku'          => count($curr['skus']) - count($prev['skus']),
+            'current_volume'    => $curr['vol'],
+            'diff_volume_pct'   => $prev['vol'] > 0 ? (($curr['vol'] - $prev['vol']) / $prev['vol']) * 100 : ($curr['vol'] > 0 ? 100 : 0),
+            'total_cost'        => $curr['cost'],
+            'avg_cost_per_kg'   => $curr['vol'] > 0 ? $curr['cost'] / $curr['vol'] : 0
         ];
 
-        $rincianProduksi = $currentRaw->groupBy('Inventory.id_barang')->map(function ($items) {
-            $barang = $items->first()->Inventory->Barang;
+        // D. Penggabungan Rincian Tabel Produksi (Netto per Barang)
+        $groupedIn = $currentRaw->groupBy('Inventory.id_barang');
+        $groupedOut = $currentAfkirOutRaw->groupBy('DetailInventory.Inventory.id_barang');
+        $allBarangIds = $groupedIn->keys()->merge($groupedOut->keys())->unique();
+
+        $rincianProduksi = $allBarangIds->map(function ($idBarang) use ($groupedIn, $groupedOut) {
+            $itemsIn = $groupedIn->get($idBarang, collect());
+            $itemsOut = $groupedOut->get($idBarang, collect());
+
+            $barang = $itemsIn->first()?->Inventory->Barang ?? $itemsOut->first()?->DetailInventory->Inventory->Barang;
+            $konversi = $barang->nilai_konversi ?? 1;
+
+            // Perhitungan Netto per Item
+            $qtyNetto = $itemsIn->sum('jumlah_diterima') - $itemsOut->sum(function ($i) {
+                return $i->jumlah_dikonversi > 0 ? $i->jumlah_dikonversi : $i->jumlah_keluar;
+            });
+
+            $kgNetto = ($itemsIn->sum(fn($i) => $i->jumlah_diterima * $konversi)) - ($itemsOut->sum(function ($i) use ($konversi) {
+                $qtyPotong = $i->jumlah_dikonversi > 0 ? $i->jumlah_dikonversi : $i->jumlah_keluar;
+                return $qtyPotong * $konversi;
+            }));
+
+            $biayaNetto = $itemsIn->sum('total_harga') - $itemsOut->sum(function ($itemOut) {
+                $qtyPotong = $itemOut->jumlah_dikonversi > 0 ? $itemOut->jumlah_dikonversi : $itemOut->jumlah_keluar;
+                $hargaSatuan = $itemOut->jumlah_keluar > 0 ? ($itemOut->total_harga / $itemOut->jumlah_keluar) : $itemOut->harga;
+                return $qtyPotong * $hargaSatuan;
+            });
+
             return [
-                'nama_barang' => $barang->nama_barang,
-                'satuan' => $barang->satuan,
-                'kode' => $barang->kode,
-                'tipe' => $barang->JenisBarang->kode ?? '-',
-                'total_diterima' => $items->sum('jumlah_diterima'),
-                'total_qty_kg' => $items->sum(fn($i) => $i->jumlah_diterima * ($barang->nilai_konversi ?? 1)),
-                'total_biaya' => $items->sum('total_harga'),
+                'nama_barang'    => $barang->nama_barang,
+                'satuan'         => $barang->satuan,
+                'kode'           => $barang->kode,
+                'tipe'           => $barang->JenisBarang->kode ?? '-',
+                'total_diterima' => $qtyNetto,
+                'total_qty_kg'   => $kgNetto,
+                'total_biaya'    => $biayaNetto,
             ];
+        })->filter(function ($item) {
+            // Hilangkan dari tabel jika setelah di-netto hasil Qty dan Biaya-nya = 0
+            return $item['total_diterima'] != 0 || $item['total_biaya'] != 0;
         })->sortByDesc('total_biaya')->values();
 
+        // ========================================================================
         // 2. DATA BAHAN KELUAR (BAHAN BAKU & PENOLONG)
+        // ========================================================================
         $bahanRaw = BarangKeluar::whereIn('jenis_keluar', ['BAHAN BAKU', 'PRODUKSI'])
             ->whereHas('DetailInventory.Inventory', function ($q) use ($idPerusahaan) {
                 if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
@@ -653,24 +747,25 @@ class LaporanController extends Controller
             ->whereHas('Inventory', function ($q) use ($idPerusahaan) {
                 if ($idPerusahaan) $q->where('id_perusahaan', $idPerusahaan);
             })
+            // PERBAIKAN: Filter langsung dari database agar tidak memuat FG, WIP, EC
+            ->whereHas('Inventory.Barang.JenisBarang', function ($q) {
+                $q->whereNotIn('kode', ['FG', 'WIP', 'EC']);
+            })
             ->whereBetween('tanggal_masuk', [$startDate->toDateString(), $endDate->toDateString()])
             ->get();
 
         $masukPerSupplier = $masukRaw->groupBy('id_supplier')->map(function ($items) {
             $supplier = $items->first()->Supplier;
-            $filteredItems = $items->filter(function ($item) {
-                $kode = optional(optional($item->Inventory->Barang)->JenisBarang)->kode;
-                return !in_array($kode, ['FG', 'WIP', 'EC']);
-            });
 
-            if ($filteredItems->isEmpty()) return null;
+            // Tidak perlu difilter ulang karena query database sudah membersihkannya
+            if ($items->isEmpty()) return null;
 
             return [
                 'nama_supplier' => $supplier->nama_supplier ?? 'Tanpa Nama',
                 'jenis_supplier' => $supplier->jenis_supplier,
-                'total_qty' => $filteredItems->sum('jumlah_diterima'),
-                'total_nilai' => $filteredItems->sum('total_harga'),
-                'details' => $filteredItems
+                'total_qty' => $items->sum('jumlah_diterima'),
+                'total_nilai' => $items->sum('total_harga'),
+                'details' => $items
             ];
         })->filter()->groupBy('jenis_supplier');
 
@@ -686,16 +781,27 @@ class LaporanController extends Controller
         $keluarPerCostumer = $keluarRaw->groupBy('id_costumer')->map(function ($items) {
             return [
                 'nama_costumer' => $items->first()->Costumer->nama_costumer ?? 'Tanpa Nama',
-                'total_qty' => $items->sum('jumlah_keluar'),
-                'total_nilai' => $items->sum('total_harga'),
+
+                // PERUBAHAN: Menghitung Netto
+                'total_qty' => $items->sum('jumlah_keluar') - $items->sum('jumlah_dikonversi'),
+
+                'total_nilai' => $items->sum(function ($item) {
+                    $hargaSatuan = $item->jumlah_keluar > 0 ? ($item->total_harga / $item->jumlah_keluar) : $item->harga;
+                    // PERUBAHAN: Menghitung Omset Netto (Gross - Retur)
+                    return ($item->jumlah_keluar - ($item->jumlah_dikonversi ?? 0)) * $hargaSatuan;
+                }),
+
                 'total_kg' => $items->sum(function ($item) {
                     $barang = optional(optional($item->DetailInventory)->Inventory)->Barang;
                     $kode = optional($barang->JenisBarang)->kode;
-                    return in_array($kode, ['FG', 'WIP', 'EC']) ? ($item->jumlah_keluar * ($barang->nilai_konversi ?? 1)) : 0;
+
+                    // PERUBAHAN: Menghitung Netto KG
+                    $nettoQty = $item->jumlah_keluar - ($item->jumlah_dikonversi ?? 0);
+                    return in_array($kode, ['FG', 'WIP', 'EC']) ? ($nettoQty * ($barang->nilai_konversi ?? 1)) : 0;
                 }),
                 'details' => $items
             ];
-        })->sortByDesc('total_kg');
+        })->filter(fn($item) => $item['total_qty'] > 0)->sortByDesc('total_kg');
 
         $namaPerusahaan = $idPerusahaan ? Perusahaan::find($idPerusahaan)->nama_perusahaan : 'Semua Perusahaan';
 

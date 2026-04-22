@@ -1,5 +1,5 @@
 <x-layout.beranda.app title="Detail Inventory">
-    <div class="min-h-screen bg-slate-50/50 md:px-10 py-8">
+    <div class="min-h-screen bg-slate-50/50 md:px-10 py-8 pb-40">
         <div class="mx-auto flex flex-col pt-12 gap-6">
 
             {{-- Breadcrumb & Header --}}
@@ -146,6 +146,24 @@
                                     </span>
                                 @endif
                             </div>
+
+                            @can('inventory.kartu-stok')
+                                <div>
+                                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Aksi
+                                    </p>
+
+                                    <a type="button" href="{{ route('inventory.kartu-stok', $inventory->id) }}"
+                                        class="w-fit flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 hover:border-blue-300 hover:text-blue-600 transition-all shadow-sm group">
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                            class="h-4 w-4 group-hover:rotate-12 transition-transform"
+                                            viewBox="0 0 1024 1024">
+                                            <path fill="currentColor"
+                                                d="M704 192h160v736H160V192h160v64h384zM288 512h448v-64H288zm0 256h448v-64H288zm96-576V96h256v96z" />
+                                        </svg>
+                                        <span class="text-sm font-bold">Kartu Stok</span>
+                                    </a>
+                                </div>
+                            @endcan
                         </div>
 
                         {{-- Modal Edit Stok Minimum --}}
@@ -164,7 +182,8 @@
                                 <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
                                     <h3 class="text-xl font-bold text-slate-800">Atur Stok Minimum</h3>
                                     <button @click="openModal = false" class="text-slate-400 hover:text-slate-600">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M6 18L18 6M6 6l12 12" />
                                         </svg>

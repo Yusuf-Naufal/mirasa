@@ -67,8 +67,8 @@ class AdminGudangDashboardController extends Controller
                 $item->jumlah_diterima * (float)($item->Inventory->Barang->nilai_konversi ?: 1)
             ));
 
-        // --- B. Hasil Produksi (Konversi ke KG jika ada nilai_konversi) ---
-        $prodData = DetailInventory::whereHas('Inventory', function ($q) use ($id_perusahaan) {
+        // --- 1. Ambil Data Masuk (Produksi Kotor / Gross In) ---
+        $prodInRaw = DetailInventory::whereHas('Inventory', function ($q) use ($id_perusahaan) {
             $q->where('id_perusahaan', $id_perusahaan)
                 ->whereHas('Barang.JenisBarang', fn($bj) => $bj->whereIn('kode', ['FG', 'WIP', 'EC']));
         })
@@ -76,11 +76,52 @@ class AdminGudangDashboardController extends Controller
             ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_masuk', $selectedMonth))
             ->with('Inventory.Barang')
             ->get()
-            ->groupBy(fn($item) => Carbon::parse($item->tanggal_masuk)->format($format))
-            ->map(fn($group) => $group->sum(
-                fn($item) =>
-                $item->jumlah_diterima * (float)($item->Inventory->Barang->nilai_konversi ?: 1)
-            ));
+            ->groupBy(fn($item) => \Carbon\Carbon::parse($item->tanggal_masuk)->format($format));
+
+        // --- 2. Ambil Data Afkir & Retur Daur Ulang (Produksi Keluar / Afkir Out) ---
+        $prodOutAfkirRaw = BarangKeluar::whereHas('DetailInventory.Inventory', function ($q) use ($id_perusahaan) {
+            $q->where('id_perusahaan', $id_perusahaan)
+                ->whereHas('Barang.JenisBarang', fn($bj) => $bj->whereIn('kode', ['FG', 'WIP', 'EC']));
+        })
+            ->where(function ($q) {
+                // Tangkap pembuangan stok gudang ATAU barang retur yang didaur ulang
+                $q->where('jenis_keluar', 'AFKIR ULANG')
+                    ->orWhere('jumlah_dikonversi', '>', 0);
+            })
+            ->whereYear('tanggal_keluar', $selectedYear)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $selectedMonth))
+            ->with('DetailInventory.Inventory.Barang')
+            ->get()
+            ->groupBy(fn($item) => \Carbon\Carbon::parse($item->tanggal_keluar)->format($format));
+
+        // --- 3. Gabungkan dan Hitung Selisih (Netto) per Periode ---
+        $allPeriods = $prodInRaw->keys()->concat($prodOutAfkirRaw->keys())->unique();
+
+        $prodData = $allPeriods->mapWithKeys(function ($period) use ($prodInRaw, $prodOutAfkirRaw) {
+            // Hitung Total Masuk di periode ini
+            $totalMasuk = $prodInRaw->get($period, collect())->sum(function ($item) {
+                $konversi = (float)($item->Inventory->Barang->nilai_konversi ?: 1);
+                return $item->jumlah_diterima * $konversi;
+            });
+
+            // Hitung Total Afkir/Dikonversi di periode ini
+            $totalAfkir = $prodOutAfkirRaw->get($period, collect())->sum(function ($item) {
+                // PERBAIKAN: Akses barang melalui DetailInventory
+                $barang = $item->DetailInventory->Inventory->Barang;
+                $konversi = (float)($barang->nilai_konversi ?: 1);
+
+                /** * LOGIKA PEMOTONGAN (Golden Rule):
+                 * Jika jenisnya AFKIR (pembuangan gudang), potong seluruh jumlah_keluar.
+                 * Jika selain itu (Retur Penjualan), potong hanya sebesar jumlah_dikonversi.
+                 */
+                $qtyPotong = ($item->jenis_keluar === 'AFKIR ULANG') ? $item->jumlah_keluar : ($item->jumlah_dikonversi ?? 0);
+
+                return $qtyPotong * $konversi;
+            });
+
+            // Hasil Produksi Netto = Masuk - Afkir
+            return [$period => max(0, $totalMasuk - $totalAfkir)];
+        });
 
         // --- C. Operasional (Multi-dataset per Kategori) ---
         $pemakaianDatasets = KategoriPemakaian::where('id_perusahaan', $id_perusahaan)

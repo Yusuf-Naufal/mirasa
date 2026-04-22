@@ -243,7 +243,7 @@
                     </tr>
                     <tr>
                         <td style="font-weight: bold; font-size: 11px;">
-                            {{ $firstItem->Costumer->nama_costumer ?? ($firstItem->Perusahaan->nama_perusahaan ?? 'Pelanggan Umum') }}
+                            {{ $firstItem->Costumer->nama_costumer ?? 'Pelanggan Umum' }}
                         </td>
                     </tr>
                     <tr style="height: 5px;"></tr>
@@ -285,10 +285,15 @@
                 @foreach ($items as $index => $item)
                     @php
                         $u = strtoupper($item->DetailInventory->Inventory->Barang->satuan);
-                        $ikat = $u == 'IKAT' ? $item->jumlah_keluar : 0;
-                        $bks = in_array($u, ['BUNGKUS', 'BKS']) ? $item->jumlah_keluar : 0;
-                        $ktn = in_array($u, ['KARTON', 'KTN']) ? $item->jumlah_keluar : 0;
-                        $ball = $ikat == 0 && $bks == 0 && $ktn == 0 ? $item->jumlah_keluar : 0;
+                        $qAsli = $item->jumlah_keluar;
+                        $qAfkir = $item->jumlah_dikonversi ?? 0;
+                        $qNetto = $qAsli - $qAfkir;
+
+                        $ikat = $u == 'IKAT' ? $qNetto : 0;
+                        $bks = in_array($u, ['BUNGKUS', 'BKS']) ? $qNetto : 0;
+                        $ktn = in_array($u, ['KARTON', 'KTN']) ? $qNetto : 0;
+                        $ball = $ikat == 0 && $bks == 0 && $ktn == 0 ? $qNetto : 0;
+
                         $tIkat += $ikat;
                         $tBks += $bks;
                         $tKtn += $ktn;
@@ -297,7 +302,12 @@
                     <tr style="height: 35px;">
                         <td>{{ $index + 1 }}</td>
                         <td style="text-align: left; padding-left: 5px;">
-                            {{ $item->DetailInventory->Inventory->Barang->nama_barang }}</td>
+                            {{ $item->DetailInventory->Inventory->Barang->nama_barang }}
+                            {{-- @if ($qAfkir > 0)
+                                <br><span style="font-size: 8px; color: #666;">(Netto. Asli: {{ $qAsli }},
+                                    Afkir: {{ $qAfkir }})</span>
+                            @endif --}}
+                        </td>
                         <td>{{ $ikat ?: '' }}</td>
                         <td>{{ $bks ?: '' }}</td>
                         <td>{{ $ktn ?: '' }}</td>
@@ -437,16 +447,23 @@
                 @foreach ($items as $index => $item)
                     @php
                         $u = strtoupper($item->DetailInventory->Inventory->Barang->satuan);
-                        $ikat = $u == 'IKAT' ? $item->jumlah_keluar : 0;
-                        $bks = in_array($u, ['BUNGKUS', 'BKS']) ? $item->jumlah_keluar : 0;
-                        $ktn = in_array($u, ['KARTON', 'KTN']) ? $item->jumlah_keluar : 0;
-                        $ball = $ikat == 0 && $bks == 0 && $ktn == 0 ? $item->jumlah_keluar : 0;
-                        $totalDPP += $item->total_harga;
+                        $qAsli = $item->jumlah_keluar;
+                        $qAfkir = $item->jumlah_dikonversi ?? 0;
+                        $qNetto = $qAsli - $qAfkir;
+
+                        $ikat = $u == 'IKAT' ? $qNetto : 0;
+                        $bks = in_array($u, ['BUNGKUS', 'BKS']) ? $qNetto : 0;
+                        $ktn = in_array($u, ['KARTON', 'KTN']) ? $qNetto : 0;
+                        $ball = $ikat == 0 && $bks == 0 && $ktn == 0 ? $qNetto : 0;
+
+                        $subTotal = $qNetto * $item->harga;
+                        $totalDPP += $subTotal;
                     @endphp
                     <tr style="height: 30px;">
                         <td>{{ $index + 1 }}</td>
                         <td style="text-align: left; padding-left: 5px;">
-                            {{ $item->DetailInventory->Inventory->Barang->nama_barang }}</td>
+                            {{ $item->DetailInventory->Inventory->Barang->nama_barang }}
+                        </td>
                         <td>{{ $ikat ?: '' }}</td>
                         <td>{{ $bks ?: '' }}</td>
                         <td>{{ $ktn ?: '' }}</td>
@@ -454,7 +471,7 @@
                         <td style="text-align: right; padding-right: 5px;">
                             {{ number_format($item->harga, 0, ',', '.') }}</td>
                         <td style="text-align: right; padding-right: 5px;">
-                            {{ number_format($item->total_harga, 0, ',', '.') }}</td>
+                            {{ number_format($subTotal, 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
                 <tr style="height: 30px;">

@@ -47,11 +47,14 @@
                                 <tbody x-data="{ selected: null }">
                                     @foreach ($sec['data']['table'] as $id => $item)
                                         <tr class="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer group"
-                                            @click="selected !== {{ $id }} ? selected = {{ $id }} : selected = null">
+                                            {{-- 1. Bungkus $id dengan kutip tunggal di sini --}}
+                                            @click="selected !== '{{ $id }}' ? selected = '{{ $id }}' : selected = null">
+
                                             <td class="p-3">
                                                 <div class="flex items-center gap-2">
+                                                    {{-- 2. Bungkus $id dengan kutip tunggal di sini --}}
                                                     <i class="fas text-[10px] text-gray-300 transition-transform duration-300"
-                                                        :class="selected === {{ $id }} ?
+                                                        :class="selected === '{{ $id }}' ?
                                                             'fa-chevron-down rotate-180 text-{{ $sec['color'] }}-500' :
                                                             'fa-chevron-right'"></i>
                                                     <span
@@ -68,8 +71,8 @@
                                             </td>
                                         </tr>
 
-                                        {{-- Detail Expand: Menampilkan Banyak Barang --}}
-                                        <tr x-show="selected === {{ $id }}"
+                                        {{-- 3. Bungkus $id dengan kutip tunggal di sini --}}
+                                        <tr x-show="selected === '{{ $id }}'"
                                             x-transition:enter="transition ease-out duration-200" x-cloak>
                                             <td colspan="2" class="bg-gray-50/50 p-0">
                                                 <div

@@ -225,7 +225,7 @@
                     </tr>
                     <tr>
                         <td style="font-weight: bold;">
-                            {{ $firstItem->Costumer->nama_costumer ?? ($firstItem->Perusahaan->nama_perusahaan ?? 'Pelanggan Umum') }}
+                            {{ $firstItem->Costumer->nama_costumer ?? 'Pelanggan Umum' }}
                         </td>
                     </tr>
                     <tr style="height: 5px;"></tr>
@@ -265,9 +265,13 @@
                 @foreach ($items as $index => $item)
                     @php
                         $satuan = strtoupper($item->DetailInventory->Inventory->Barang->satuan);
-                        // Logika pemetaan satuan: Karton masuk KTN, selain itu masuk KG
-                        $qtyKtn = $satuan == 'KARTON' || $satuan == 'KTN' ? $item->jumlah_keluar : 0;
-                        $qtyKg = $qtyKtn == 0 ? $item->jumlah_keluar : 0;
+                        $qAsli = $item->jumlah_keluar;
+                        $qAfkir = $item->jumlah_dikonversi ?? 0;
+                        $qNetto = $qAsli - $qAfkir;
+
+                        // Logika pemetaan satuan
+                        $qtyKtn = $satuan == 'KARTON' || $satuan == 'KTN' ? $qNetto : 0;
+                        $qtyKg = $qtyKtn == 0 ? $qNetto : 0;
 
                         $totalKtn += (float) $qtyKtn;
                         $totalKg += (float) $qtyKg;
@@ -275,7 +279,12 @@
                     <tr style="height: 35px;">
                         <td>{{ $index + 1 }}</td>
                         <td style="text-align: left; padding-left: 5px;">
-                            {{ $item->DetailInventory->Inventory->Barang->nama_barang }}</td>
+                            {{ $item->DetailInventory->Inventory->Barang->nama_barang }}
+                            {{-- @if ($qAfkir > 0)
+                                <br><span style="font-size: 8px; color: #666;">(Netto. Asli: {{ $qAsli }},
+                                    Afkir: {{ $qAfkir }})</span>
+                            @endif --}}
+                        </td>
                         <td>{{ $qtyKtn > 0 ? number_format($qtyKtn, 0, ',', '.') : '-' }}</td>
                         <td>{{ $qtyKg > 0 ? number_format($qtyKg, 0, ',', '.') : '-' }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->DetailInventory->tanggal_masuk)->format('d-M-y') }}</td>

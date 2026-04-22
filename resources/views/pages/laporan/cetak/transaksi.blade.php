@@ -160,18 +160,68 @@
             <tbody>
                 @foreach ($c['details'] as $item)
                     @php
+                        // Relasi Barang
                         $barang = optional(optional($item->DetailInventory)->Inventory)->Barang;
-                        $konversi = in_array(optional($barang->JenisBarang)->kode, ['FG', 'WIP', 'EC'])
-                            ? $item->jumlah_keluar * ($barang->nilai_konversi ?? 1)
-                            : 0;
+                        $isProduksi = in_array(optional($barang->JenisBarang)->kode, ['FG', 'WIP', 'EC']);
+
+                        // Kalkulasi Qty Netto
+                        $qAsli = $item->jumlah_keluar;
+                        $qAfkir = $item->jumlah_dikonversi ?? 0;
+                        $qNetto = $qAsli - $qAfkir;
+
+                        // Kalkulasi Konversi KG Netto
+                        $konversiAsli = $isProduksi ? $qAsli * ($barang->nilai_konversi ?? 1) : 0;
+                        $konversiNetto = $isProduksi ? $qNetto * ($barang->nilai_konversi ?? 1) : 0;
+
+                        // Kalkulasi Harga Netto
+                        $hargaSatuan = $qAsli > 0 ? $item->total_harga / $qAsli : $item->harga;
+                        $tAsli = $item->total_harga;
+                        $tNetto = $qNetto * $hargaSatuan;
                     @endphp
-                    <tr>
-                        <td>{{ \Carbon\Carbon::parse($item->tanggal_keluar)->translatedFormat('d M Y') }}</td>
-                        <td>{{ $barang->nama_barang }}</td>
-                        <td class="text-right">{{ number_format($item->jumlah_keluar, 2) }}</td>
-                        <td class="text-right">{{ $konversi > 0 ? number_format($konversi, 2) : '-' }}</td>
-                        <td class="text-right">Rp {{ number_format($item->total_harga, 0, ',', '.') }}</td>
-                    </tr>
+
+                    {{-- Hanya tampilkan jika masih ada sisa netto atau untuk histori afkir --}}
+                    @if ($qNetto > 0 || $qAfkir > 0)
+                        <tr>
+                            <td>{{ \Carbon\Carbon::parse($item->tanggal_keluar)->translatedFormat('d M Y') }}</td>
+                            <td>
+                                {{ $barang->nama_barang }}
+                                @if ($qAfkir > 0)
+                                    <br>
+                                    <span style="font-size: 7pt; color: #d97706;">
+                                        <i>(Terdapat Retur: {{ number_format($qAfkir, 2) }} {{ $barang->satuan }})</i>
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="text-right">
+                                @if ($qAfkir > 0)
+                                    <span style="text-decoration: line-through; color: #a0aec0; font-size: 7pt;">
+                                        {{ number_format($qAsli, 2) }}
+                                    </span><br>
+                                @endif
+                                <b>{{ number_format($qNetto, 2) }}</b>
+                            </td>
+                            <td class="text-right">
+                                @if ($konversiAsli > 0)
+                                    @if ($qAfkir > 0)
+                                        <span style="text-decoration: line-through; color: #a0aec0; font-size: 7pt;">
+                                            {{ number_format($konversiAsli, 2) }}
+                                        </span><br>
+                                    @endif
+                                    <b>{{ number_format($konversiNetto, 2) }}</b>
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td class="text-right">
+                                @if ($qAfkir > 0)
+                                    <span style="text-decoration: line-through; color: #a0aec0; font-size: 7pt;">
+                                        Rp {{ number_format($tAsli, 0, ',', '.') }}
+                                    </span><br>
+                                @endif
+                                <b>Rp {{ number_format($tNetto, 0, ',', '.') }}</b>
+                            </td>
+                        </tr>
+                    @endif
                 @endforeach
                 <tr class="summary-row">
                     <td colspan="2">TOTAL UNTUK {{ $c['nama_costumer'] }}</td>

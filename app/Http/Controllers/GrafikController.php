@@ -243,6 +243,7 @@ class GrafikController extends Controller implements HasMiddleware
     {
         $kategoriProduksi = ['FG', 'WIP', 'EC'];
 
+        // 1. Hitung Jumlah SKU per Kategori (Tetap)
         $countPerKategori = DB::table('detail_inventory')
             ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
             ->join('barang', 'inventory.id_barang', '=', 'barang.id')
@@ -256,7 +257,12 @@ class GrafikController extends Controller implements HasMiddleware
             ->groupBy('jenis_barang.kode')
             ->pluck('total', 'kode');
 
-        $totalBerat = DetailInventory::query()
+        // ========================================================================
+        // 2. MENGHITUNG VOLUME PRODUKSI NETTO & TOP 5 PRODUK
+        // ========================================================================
+
+        // A. Ambil total penerimaan kotor per barang (Gross In)
+        $grossIn = DetailInventory::query()
             ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
             ->join('barang', 'inventory.id_barang', '=', 'barang.id')
             ->join('jenis_barang', 'barang.id_jenis', '=', 'jenis_barang.id')
@@ -264,20 +270,65 @@ class GrafikController extends Controller implements HasMiddleware
             ->whereIn('jenis_barang.kode', $kategoriProduksi)
             ->whereYear('detail_inventory.tanggal_masuk', $year)
             ->when($filterType === 'month', fn($q) => $q->whereMonth('detail_inventory.tanggal_masuk', $month))
-            ->sum(DB::raw("detail_inventory.jumlah_diterima * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)"));
+            ->select(
+                'barang.id',
+                'barang.nama_barang',
+                'barang.satuan',
+                DB::raw("SUM(detail_inventory.jumlah_diterima * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)) as total_in")
+            )
+            ->groupBy('barang.id', 'barang.nama_barang', 'barang.satuan')
+            ->get()
+            ->keyBy('id');
 
-        $topProduk = DetailInventory::query()
+        // B. Ambil total pengeluaran KHUSUS yang didaur ulang (Afkir Retur & Afkir Gudang)
+        $afkirOut = BarangKeluar::query()
+            ->join('detail_inventory', 'barang_keluar.id_detail_inventory', '=', 'detail_inventory.id')
             ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
             ->join('barang', 'inventory.id_barang', '=', 'barang.id')
             ->join('jenis_barang', 'barang.id_jenis', '=', 'jenis_barang.id')
-            ->when($id_perusahaan, fn($q) => $q->where('inventory.id_perusahaan', $id_perusahaan))
+            ->when($id_perusahaan, fn($q) => $q->where('barang_keluar.id_perusahaan', $id_perusahaan))
             ->whereIn('jenis_barang.kode', $kategoriProduksi)
-            ->whereYear('detail_inventory.tanggal_masuk', $year)
-            ->when($filterType === 'month', fn($q) => $q->whereMonth('detail_inventory.tanggal_masuk', $month))
-            ->select('barang.nama_barang', 'barang.satuan', DB::raw("SUM(detail_inventory.jumlah_diterima * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)) as total_qty"))
-            ->groupBy('barang.nama_barang', 'barang.satuan')
-            ->orderByDesc('total_qty')->take(5)->get();
+            ->where(function ($q) {
+                $q->where('barang_keluar.jumlah_dikonversi', '>', 0)
+                    ->orWhere('barang_keluar.jenis_keluar', 'AFKIR ULANG');
+            })
+            ->whereYear('barang_keluar.tanggal_keluar', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('barang_keluar.tanggal_keluar', $month))
+            ->select(
+                'barang.id',
+                DB::raw("SUM(
+                    (CASE 
+                        WHEN barang_keluar.jenis_keluar = 'AFKIR ULANG' THEN barang_keluar.jumlah_keluar 
+                        ELSE COALESCE(barang_keluar.jumlah_dikonversi, 0) 
+                    END) * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)
+                ) as total_out")
+            )
+            ->groupBy('barang.id')
+            ->pluck('total_out', 'id');
 
+        // C. Hitung Netto Total Berat Keseluruhan Produksi
+        $totalGrossIn = $grossIn->sum('total_in');
+        $totalAfkirOut = $afkirOut->sum();
+        // Total Berat = Masuk - Keluar (Jika minus, set 0)
+        $totalBerat = max(0, $totalGrossIn - $totalAfkirOut);
+
+        // D. Hitung Netto Per Produk untuk Ranking Top 5
+        $topProduk = $grossIn->map(function ($item, $id) use ($afkirOut) {
+            $out = $afkirOut->get($id, 0); // Ambil jumlah keluarnya jika ada
+            return (object)[
+                'nama_barang' => $item->nama_barang,
+                'satuan'      => $item->satuan,
+                'total_qty'   => max(0, $item->total_in - $out) // Kurangi gross dengan afkir
+            ];
+        })->filter(function ($item) {
+            return $item->total_qty > 0; // Sembunyikan barang yang stok volumenya habis karena diafkir semua
+        })->sortByDesc('total_qty')
+            ->take(5)
+            ->values(); // Reset key array
+
+        // ========================================================================
+        // 3. DATA BAHAN BAKU & GRADING (Tetap Sama)
+        // ========================================================================
         $bbKeluar = BarangKeluar::when($id_perusahaan, fn($q) => $q->where('barang_keluar.id_perusahaan', $id_perusahaan))
             ->whereHas('DetailInventory.Inventory.Barang', function ($q) {
                 $q->where('jenis', 'Utama')->whereHas('JenisBarang', fn($q2) => $q2->where('kode', 'BB'));
@@ -302,16 +353,16 @@ class GrafikController extends Controller implements HasMiddleware
         $persentaseLoss = $bbKeluar > 0 ? ($totalPenyusutan / $bbKeluar) * 100 : 0;
 
         return [
-            'countPerKategori' => $countPerKategori,
-            'totalBerat' => $totalBerat,
-            'topProduk' => $topProduk,
-            'bbKeluar' => $bbKeluar,
-            'hasilGrading' => $hasilGrading,
-            'grading' => (object)['total_kupas' => $hasilGrading->sum('total_kupas'), 'total_a' => $hasilGrading->sum('total_a'), 'total_s' => $hasilGrading->sum('total_s'), 'total_j' => $hasilGrading->sum('total_j')],
-            'totalPenyusutan' => $totalPenyusutan,
+            'countPerKategori'   => $countPerKategori,
+            'totalBerat'         => $totalBerat,
+            'topProduk'          => $topProduk,
+            'bbKeluar'           => $bbKeluar,
+            'hasilGrading'       => $hasilGrading,
+            'grading'            => (object)['total_kupas' => $hasilGrading->sum('total_kupas'), 'total_a' => $hasilGrading->sum('total_a'), 'total_s' => $hasilGrading->sum('total_s'), 'total_j' => $hasilGrading->sum('total_j')],
+            'totalPenyusutan'    => $totalPenyusutan,
             'persentaseRendemen' => $persentaseRendemen,
-            'persentaseLoss' => $persentaseLoss,
-            'comparisonData' => ['labels' => ['Bahan Baku (Input)', 'Hasil Produksi (Output)', 'Loss'], 'values' => [(float)$bbKeluar, (float)$totalBerat, (float)$totalPenyusutan]]
+            'persentaseLoss'     => $persentaseLoss,
+            'comparisonData'     => ['labels' => ['Bahan Baku (Input)', 'Hasil Produksi (Output)', 'Loss'], 'values' => [(float)$bbKeluar, (float)$totalBerat, (float)$totalPenyusutan]]
         ];
     }
 
@@ -326,7 +377,8 @@ class GrafikController extends Controller implements HasMiddleware
 
         $datasetsProduksi = [];
         foreach ($daftarBarang as $barang) {
-            $data = DetailInventory::where('id_inventory', function ($query) use ($barang) {
+            // 1. AMBIL BARANG MASUK (Produksi Kotor)
+            $dataMasuk = DetailInventory::where('id_inventory', function ($query) use ($barang) {
                 $query->select('id')->from('inventory')->where('id_barang', $barang->id);
             })
                 ->whereYear('tanggal_masuk', $year)
@@ -334,16 +386,45 @@ class GrafikController extends Controller implements HasMiddleware
                 ->select(DB::raw("TO_CHAR(tanggal_masuk, '$format') as period"), DB::raw("SUM(jumlah_diterima) as total"))
                 ->groupBy('period')->pluck('total', 'period');
 
+            // 2. AMBIL BARANG KELUAR (Khusus Afkir Gudang & Retur Daur Ulang)
+            $dataAfkir = BarangKeluar::whereHas('DetailInventory.Inventory', fn($q) => $q->where('id_barang', $barang->id))
+                ->where(function ($q) {
+                    $q->where('jumlah_dikonversi', '>', 0)
+                        ->orWhere('jenis_keluar', 'AFKIR ULANG');
+                })
+                ->when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
+                ->whereYear('tanggal_keluar', $year)
+                ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $month))
+                ->select(
+                    DB::raw("TO_CHAR(tanggal_keluar, '$format') as period"),
+                    DB::raw("SUM(CASE WHEN jenis_keluar = 'AFKIR ULANG' THEN jumlah_keluar ELSE COALESCE(jumlah_dikonversi, 0) END) as total_afkir")
+                )
+                ->groupBy('period')->pluck('total_afkir', 'period');
+
+            // 3. GABUNGKAN MENJADI PRODUKSI NETTO HARIAN/BULANAN
             $dailyData = [];
             foreach ($range as $r) {
                 $key = str_pad($r, 2, '0', STR_PAD_LEFT);
-                $dailyData[] = (float)($data[$key] ?? 0);
+
+                $masuk = (float)($dataMasuk[$key] ?? 0);
+                $afkir = (float)($dataAfkir[$key] ?? 0);
+
+                // Produksi Bersih = Masuk Kotor - Afkir
+                $dailyData[] = $masuk - $afkir;
             }
 
-            if (array_sum($dailyData) > 0) {
-                $datasetsProduksi[] = ['label' => $barang->nama_barang, 'data' => $dailyData, 'satuan' => $barang->satuan, 'borderColor' => $this->getRandomColor($barang->id, 'in'), 'backgroundColor' => 'transparent'];
+            // Validasi: Tampilkan di grafik jika ada pergerakan (masuk/keluar)
+            if (array_sum(array_map('abs', $dailyData)) > 0) {
+                $datasetsProduksi[] = [
+                    'label' => $barang->nama_barang,
+                    'data' => $dailyData,
+                    'satuan' => $barang->satuan,
+                    'borderColor' => $this->getRandomColor($barang->id, 'in'),
+                    'backgroundColor' => 'transparent'
+                ];
             }
         }
+
         return ['labels' => $range, 'datasetsProduksi' => $datasetsProduksi];
     }
 
@@ -592,8 +673,10 @@ class GrafikController extends Controller implements HasMiddleware
             }
         }
 
-        // --- E. VOLUME PRODUKSI ---
-        $volumeProduksi = DetailInventory::join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
+        // --- E. VOLUME PRODUKSI (DENGAN PENYESUAIAN AFKIR) ---
+
+        // 1. Ambil Volume Masuk
+        $volumeMasuk = DetailInventory::join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
             ->join('barang', 'inventory.id_barang', '=', 'barang.id')
             ->join('jenis_barang', 'barang.id_jenis', '=', 'jenis_barang.id')
             ->whereIn('jenis_barang.kode', ['FG', 'WIP', 'EC'])
@@ -605,6 +688,43 @@ class GrafikController extends Controller implements HasMiddleware
                 DB::raw("SUM(detail_inventory.jumlah_diterima * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)) as vol")
             )
             ->groupBy('period')->pluck('vol', 'period');
+
+        // 2. Ambil Volume Keluar (Khusus Afkir yang Didaur Ulang / Afkir Gudang)
+        $volumeKeluarAfkir = BarangKeluar::join('detail_inventory', 'barang_keluar.id_detail_inventory', '=', 'detail_inventory.id')
+            ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
+            ->join('barang', 'inventory.id_barang', '=', 'barang.id')
+            ->join('jenis_barang', 'barang.id_jenis', '=', 'jenis_barang.id')
+            ->whereIn('jenis_barang.kode', ['FG', 'WIP', 'EC'])
+            // PERBAIKAN: Tangkap keduanya
+            ->where(function ($q) {
+                $q->where('barang_keluar.jumlah_dikonversi', '>', 0)
+                    ->orWhere('barang_keluar.jenis_keluar', 'AFKIR ULANG');
+            })
+            ->when($id_perusahaan, fn($q) => $q->where('barang_keluar.id_perusahaan', $id_perusahaan))
+            ->whereYear('barang_keluar.tanggal_keluar', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('barang_keluar.tanggal_keluar', $month))
+            ->select(
+                DB::raw("TO_CHAR(barang_keluar.tanggal_keluar, '$format') as period"),
+                // PERBAIKAN: Gunakan logika CASE WHEN
+                DB::raw("SUM(
+                    (CASE 
+                        WHEN barang_keluar.jumlah_dikonversi > 0 THEN barang_keluar.jumlah_dikonversi 
+                        ELSE barang_keluar.jumlah_keluar 
+                    END) * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)
+                ) as vol")
+            )
+            ->groupBy('period')->pluck('vol', 'period');
+
+        // 3. Kalkulasi Netto
+        $volumeProduksi = [];
+        foreach ($range as $r) {
+            $key = str_pad($r, 2, '0', STR_PAD_LEFT);
+            $masuk = (float)($volumeMasuk[$key] ?? 0);
+            $keluarAfkir = (float)($volumeKeluarAfkir[$key] ?? 0);
+
+            // Netto = Masuk - Keluar Afkir
+            $volumeProduksi[$key] = $masuk - $keluarAfkir;
+        }
 
         // --- F. PENGGABUNGAN DATA ---
         $rincianHarian = [];
@@ -702,7 +822,11 @@ class GrafikController extends Controller implements HasMiddleware
         $keluarHarian = BarangKeluar::whereYear('tanggal_keluar', $year)
             ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $month))
             ->when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
-            ->select(DB::raw("TO_CHAR(tanggal_keluar, '$format') as period"), DB::raw("SUM(total_harga) as total"))
+            // PERBAIKAN: Hitung Total Rupiah Netto ((Keluar - Retur) * Harga)
+            ->select(
+                DB::raw("TO_CHAR(tanggal_keluar, '$format') as period"),
+                DB::raw("SUM((jumlah_keluar - COALESCE(jumlah_dikonversi, 0)) * harga) as total")
+            )
             ->groupBy('period')->pluck('total', 'period');
 
         $chartMasuk = [];
@@ -779,15 +903,17 @@ class GrafikController extends Controller implements HasMiddleware
         $trend = $data->groupBy('id_costumer')->map(function ($items, $id) use ($range, $format) {
             $points = [];
             foreach ($range as $r) {
-                $points[] = (float)$items->filter(fn($i) => (int)Carbon::parse($i->tanggal_keluar)->format($format) === $r)->sum('jumlah_keluar');
+                // PERBAIKAN: Hitung titik grafik berdasarkan Netto (Keluar - Dikonversi)
+                $points[] = (float)$items->filter(fn($i) => (int)Carbon::parse($i->tanggal_keluar)->format($format) === $r)
+                    ->sum(fn($item) => $item->jumlah_keluar - ($item->jumlah_dikonversi ?? 0));
             }
 
-            // PERBAIKAN: Mengambil SEMUA rincian barang unik dalam satu costumer
+            // PERBAIKAN: Rincian barang unik dalam satu costumer (Netto)
             $barangRincian = $items->groupBy('DetailInventory.Inventory.id_barang')->map(function ($b) {
                 $brg = $b->first()->DetailInventory->Inventory->Barang;
                 return [
                     'nama' => $brg->nama_barang ?? 'Unknown',
-                    'total' => $b->sum('jumlah_keluar'),
+                    'total' => $b->sum('jumlah_keluar') - $b->sum('jumlah_dikonversi'), // NETTO
                     'satuan' => $brg->satuan ?? 'Unit'
                 ];
             })->values()->toArray();
@@ -795,11 +921,12 @@ class GrafikController extends Controller implements HasMiddleware
             return [
                 'label' => optional($items->first()->Costumer)->nama_costumer ?? 'Tanpa Nama',
                 'data' => $points,
-                'total_volume' => $items->sum('jumlah_keluar'),
+                // PERBAIKAN: Total Keseluruhan Volume (Netto)
+                'total_volume' => $items->sum('jumlah_keluar') - $items->sum('jumlah_dikonversi'),
                 'barang' => $barangRincian,
                 'borderColor' => $this->getRandomColor($id, 'out')
             ];
-        })->filter(fn($item) => $item['total_volume'] > 0);
+        })->filter(fn($item) => $item['total_volume'] > 0); // Sembunyikan jika volume 0 karena di-retur semua
 
         return [
             'dsCostumerTrend' => $trend->values()->toArray(),
@@ -809,7 +936,8 @@ class GrafikController extends Controller implements HasMiddleware
 
     private function getRandomColor($id, $type)
     {
-        $hue = ($id * 137.508) % 360;
+        $hue = (int) ((int) $id * 137.508) % 360;
+
         return $type === 'in' ? "hsla($hue, 70%, 50%, 1)" : "hsla($hue, 40%, 40%, 0.8)";
     }
 }

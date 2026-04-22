@@ -178,7 +178,7 @@
                 class="bg-white border border-gray-100 rounded-[1.5rem] md:rounded-[2rem] shadow-sm overflow-hidden flex flex-col">
                 <div
                     class="px-5 py-4 md:px-8 md:py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
-                    <h3 class="text-[10px] md:text-[11px] font-black text-gray-800 uppercase tracking-widest">Output:
+                    <h3 class="text-[10px] md:text-[11px] font-black text-gray-800 uppercase tracking-widest">Input:
                         Produk Dihasilkan</h3>
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 </div>
@@ -204,9 +204,22 @@
                                         <p class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase">
                                             {{ $item['satuan'] }}</p>
                                     </td>
-                                    <td
-                                        class="px-3 py-3 md:px-4 md:py-4 text-center text-xs md:text-sm font-black text-gray-800">
-                                        {{ number_format($item['total_qty'], 2) }}
+                                    <td class="px-3 py-3 md:px-4 md:py-4 text-center">
+                                        @if (($item['qty_afkir'] ?? 0) > 0)
+                                            <div class="flex flex-col items-center">
+                                                <span
+                                                    class="text-xs md:text-sm font-black text-gray-800">{{ number_format($item['total_qty'], 2) }}</span>
+                                                <span class="text-[9px] font-bold text-gray-400 mt-0.5 flex gap-1">
+                                                    <span class="line-through"
+                                                        title="Produksi Kotor">{{ number_format($item['qty_asli'], 2) }}</span>
+                                                    <span class="text-amber-500 bg-amber-50 px-1 rounded"
+                                                        title="Afkir/Daur Ulang">-{{ number_format($item['qty_afkir'], 2) }}</span>
+                                                </span>
+                                            </div>
+                                        @else
+                                            <span
+                                                class="text-xs md:text-sm font-black text-gray-800">{{ number_format($item['total_qty'], 2) }}</span>
+                                        @endif
                                     </td>
                                     <td
                                         class="px-5 py-3 md:px-8 md:py-4 text-right text-xs md:text-sm font-bold text-gray-600 font-mono italic">
@@ -220,13 +233,13 @@
                 </div>
             </div>
 
-            {{-- RINCIAN BARANG DIKELUARKAN (BB & BP) --}}
+            {{-- RINCIAN BARANG DIKELUARKAN --}}
             <div
                 class="bg-white border border-gray-100 rounded-[1.5rem] md:rounded-[2rem] shadow-sm overflow-hidden flex flex-col">
                 <div
                     class="px-5 py-4 md:px-8 md:py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
-                    <h3 class="text-[10px] md:text-[11px] font-black text-gray-800 uppercase tracking-widest">Input:
-                        Bahan Keluar</h3>
+                    <h3 class="text-[10px] md:text-[11px] font-black text-gray-800 uppercase tracking-widest">Output:
+                        Bahan Penolong Keluar</h3>
                     <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
                 </div>
 

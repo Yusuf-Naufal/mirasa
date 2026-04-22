@@ -11,6 +11,7 @@ use App\Models\Supplier;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BarangMasukController extends Controller
 {
@@ -197,8 +198,13 @@ class BarangMasukController extends Controller
             // Mulai Transaksi Database
             DB::beginTransaction();
 
+            // 1. Cari atau buat Produksi
+            $produksi = Produksi::firstOrCreate([
+                'id_perusahaan'    => $request->id_perusahaan,
+                'tanggal_produksi' => $request->tanggal_masuk,
+            ]);
+
             // 2. Update atau Buat data di tabel Inventory (Master Stok)
-            // Kita gunakan updateOrCreate agar jika barang & perusahaan sudah ada, stoknya ditambah
             $inventory = Inventory::where('id_perusahaan', $request->id_perusahaan)
                 ->where('id_barang', $request->id_barang)
                 ->first();
@@ -219,8 +225,9 @@ class BarangMasukController extends Controller
             }
 
             // 3. Simpan Riwayat ke tabel DetailInventory
-            DB::table('detail_inventory')->insert([
+            $detail = new DetailInventory([
                 'id_inventory'       => $inventory->id,
+                'id_produksi'        => $produksi->id,
                 'tanggal_masuk'      => $request->tanggal_masuk,
                 'tanggal_exp'        => $request->tanggal_exp,
                 'stok'               => $request->jumlah_diterima,
@@ -234,6 +241,9 @@ class BarangMasukController extends Controller
                 'updated_at'         => now(),
             ]);
 
+            $detail->keterangan_transaksi = 'Hasil Produksi';
+            $detail->save();
+
             // Commit jika semua berhasil
             DB::commit();
 
@@ -242,6 +252,12 @@ class BarangMasukController extends Controller
         } catch (\Exception $e) {
             // Batalkan jika ada error
             DB::rollBack();
+
+            // 1. TAMBAHKAN BARIS INI UNTUK MEMAKSA LOGGING
+            Log::error('Error Simpan Barang: ' . $e->getMessage() . ' di baris ' . $e->getLine());
+        
+            // 2. TAMPILKAN ERROR KE LAYAR (DUMP & DIE) SEMENTARA
+            // dd('Error dari Try-Catch: ' . $e->getMessage());
 
             return back()
                 ->withInput()
@@ -287,7 +303,7 @@ class BarangMasukController extends Controller
             );
 
             // 3. Simpan Riwayat Detail
-            DetailInventory::create([
+            $detail = new DetailInventory([
                 'id_inventory'       => $inventory->id,
                 'id_supplier'        => $request->id_supplier,
                 'id_produksi'        => $produksi->id,
@@ -300,6 +316,9 @@ class BarangMasukController extends Controller
                 'tempat_penyimpanan' => $request->tempat_penyimpanan,
                 'status'             => 'Tersedia',
             ]);
+
+            $detail->keterangan_transaksi = 'Hasil Produksi';
+            $detail->save();
 
             // 4. Refresh Produksi
             $produksi->syncTotals();

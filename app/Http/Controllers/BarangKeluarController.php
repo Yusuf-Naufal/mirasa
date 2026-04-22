@@ -3,14 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
-use App\Models\Proses;
+use App\Models\BarangKeluar;
 use App\Models\Costumer;
-use App\Models\Produksi;
+use App\Models\DetailInventory;
 use App\Models\Inventory;
 use App\Models\Perusahaan;
-use App\Models\BarangKeluar;
+use App\Models\Produksi;
+use App\Models\Proses;
 use Illuminate\Http\Request;
-use App\Models\DetailInventory;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class BarangKeluarController extends Controller
@@ -37,7 +38,7 @@ class BarangKeluarController extends Controller
         $defaultTab = 'PRODUKSI';
         if (!$canProduksi) {
             if ($canBahanBaku) $defaultTab = 'BAHAN BAKU';
-            elseif ($canPenjualan) $defaultTab = 'DISTRIBUSI';
+            elseif ($canPenjualan) $defaultTab = 'PENJUALAN';
         }
 
         $activeTab = $request->get('tab', $defaultTab);
@@ -45,7 +46,7 @@ class BarangKeluarController extends Controller
         // --- 3. SECURITY CHECK: Mencegah user ganti Tab via URL manual tanpa permission ---
         if ($activeTab === 'PRODUKSI' && !$canProduksi) abort(403);
         if ($activeTab === 'BAHAN BAKU' && !$canBahanBaku) abort(403);
-        if ($activeTab === 'DISTRIBUSI' && !$canPenjualan) abort(403);
+        if ($activeTab === 'PENJUALAN' && !$canPenjualan) abort(403);
 
         // --- 4. PARAMETER FILTER ---
         $search = $request->get('search');
@@ -83,7 +84,7 @@ class BarangKeluarController extends Controller
             $query->where('jenis_keluar', 'BAHAN BAKU');
             $barangDropdownQuery->whereHas('jenisBarang', fn($q) => $q->where('kode', 'BB'));
         } else {
-            $query->whereIn('jenis_keluar', ['PENJUALAN', 'TRANSFER']);
+            $query->where('jenis_keluar', 'PENJUALAN');
             $barangDropdownQuery->whereHas('jenisBarang', fn($q) => $q->whereNotIn('kode', ['BP', 'BB']));
         }
 
@@ -213,7 +214,7 @@ class BarangKeluarController extends Controller
             'tanggal_keluar' => 'required|date',
             'jenis_keluar'   => 'required|in:PRODUKSI,PENJUALAN,TRANSFER,BAHAN BAKU',
             'jumlah_keluar'  => 'required|numeric|min:0.001',
-            'id_costumer'    => 'required_if:jenis_keluar,PENJUALAN|nullable|exists:costumer,id',
+            'id_costumer'    => 'nullable|exists:costumer,id',
             'id_tujuan'      => 'required_if:jenis_keluar,TRANSFER|nullable|exists:perusahaan,id',
             'id_proses'      => 'required_if:jenis_keluar,PRODUKSI|nullable|exists:proses,id',
             'keterangan'     => 'nullable|string',
@@ -255,7 +256,7 @@ class BarangKeluarController extends Controller
                 $jumlahDiambil = min($batch->stok, $sisaKebutuhan);
 
                 // Simpan ke tabel barang_keluar
-                BarangKeluar::create([
+                $detail = new BarangKeluar([
                     'id_perusahaan'       => $id_perusahaan_auth,
                     'id_produksi'         => $produksi->id,
                     'id_costumer'         => $request->id_costumer,
@@ -274,6 +275,9 @@ class BarangKeluarController extends Controller
 
                 $sisaKebutuhan -= $jumlahDiambil;
 
+                $detail->keterangan_transaksi = 'Barang Keluar';
+                $detail->save();
+
                 $produksi->syncTotals();
             }
 
@@ -284,6 +288,13 @@ class BarangKeluarController extends Controller
                 ->with('success', "Transaksi $jenis berhasil dicatat menggunakan metode FIFO.");
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // dd([
+            //     'Pesan Error' => $e->getMessage(),
+            //     'File' => $e->getFile(),
+            //     'Baris' => $e->getLine()
+            // ]);
+
             // Pastikan error dikirim kembali ke session 'error'
             return back()->withInput()->with('error', 'Gagal memproses transaksi: ' . $e->getMessage());
         }
@@ -316,46 +327,50 @@ class BarangKeluarController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
-
             $user = auth()->user();
-            $keluar = BarangKeluar::findOrFail($id);
+
+            // Gunakan lockForUpdate agar data tidak berubah saat diproses
+            $keluar = BarangKeluar::lockForUpdate()->findOrFail($id);
+
             if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $keluar->id_perusahaan) {
                 abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
             }
 
-            $detail = $keluar->DetailInventory;
-            $id_perusahaan = auth()->user()->id_perusahaan;
+            // 1. PROTEKSI: Cek batas minimum karena Daur Ulang (Afkir Ulang)
+            if ($request->jumlah_keluar < $keluar->jumlah_dikonversi) {
+                return back()->with('error', "Gagal! Barang ini sudah didaur ulang sebanyak {$keluar->jumlah_dikonversi}. Jumlah tidak boleh lebih kecil dari itu.");
+            }
 
-            // 1. Logika Sinkronisasi id_produksi jika Tanggal Berubah
+            // 2. Ambil Detail Inventory dengan Lock untuk cek stok
+            $detail = DetailInventory::lockForUpdate()->findOrFail($keluar->id_detail_inventory);
+
+            // 3. Hitung selisih (Diff)
+            $selisih = $request->jumlah_keluar - $keluar->jumlah_keluar;
+
+            // 4. Cek apakah stok di batch mencukupi (hanya jika ada penambahan jumlah)
+            if ($selisih > 0 && $detail->stok < $selisih) {
+                return back()->with('error', "Stok tidak mencukupi. Sisa stok di batch ini hanya {$detail->stok}, Anda mencoba menambah pengeluaran sebesar {$selisih}.");
+            }
+
+            // 5. Logika Sinkronisasi id_produksi (Grup per tanggal)
             $produksi = Produksi::firstOrCreate([
-                'id_perusahaan'    => $id_perusahaan,
+                'id_perusahaan'    => $keluar->id_perusahaan,
                 'tanggal_produksi' => $request->tanggal_keluar,
             ]);
 
-            // 2. Hitung selisih (Diff) stok
-            $selisih = $request->jumlah_keluar - $keluar->jumlah_keluar;
-
-            // 3. Cek apakah stok di batch mencukupi jika ada penambahan jumlah keluar
-            if ($selisih > 0 && $detail->stok < $selisih) {
-                return back()->with('error', 'Stok pada batch ini tidak mencukupi untuk penambahan jumlah tersebut.');
-            }
-
-            // 4. Update DetailInventory (Stok fisik)
-            $detail->stok -= $selisih;
-            $detail->save();
-
-            // 5. Update Data BarangKeluar
+            // 6. Update Data
             $keluar->update([
-                'id_produksi'       => $produksi->id,
-                'tanggal_keluar'    => $request->tanggal_keluar,
-                'jumlah_keluar'     => $request->jumlah_keluar,
-                'total_harga'       => $request->jumlah_keluar * $keluar->harga,
+                'id_produksi'    => $produksi->id,
+                'tanggal_keluar' => $request->tanggal_keluar,
+                'jumlah_keluar'  => $request->jumlah_keluar,
+                'keterangan'     => $request->keterangan,
+                'total_harga'    => $request->jumlah_keluar * $keluar->harga,
             ]);
 
             DB::commit();
-            return back()->with('success', 'Data pengeluaran dan relasi produksi berhasil diperbarui.');
+            return back()->with('success', 'Data pengeluaran berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -371,6 +386,11 @@ class BarangKeluarController extends Controller
             DB::beginTransaction();
 
             $keluar = BarangKeluar::findOrFail($id);
+
+            // PROTEKSI: Cek apakah sudah ada yang didaur ulang
+            if ($keluar->jumlah_dikonversi > 0) {
+                return back()->with('error', "Akses Ditolak! Barang ini sudah didaur ulang sebanyak {$keluar->jumlah_dikonversi}.");
+            }
 
             $keluar->delete();
 
@@ -402,13 +422,13 @@ class BarangKeluarController extends Controller
         ];
 
         // Update data secara massal ke database
-        \App\Models\BarangKeluar::whereIn('id', $request->ids)->update([
+        BarangKeluar::whereIn('id', $request->ids)->update([
             'no_faktur'  => $request->no_faktur,
             'no_jalan'   => $request->no_jalan,
             'keterangan' => json_encode($dataKeterangan), // Simpan sebagai JSON
         ]);
 
-        $items = \App\Models\BarangKeluar::with(['DetailInventory.Inventory.Barang', 'Costumer', 'Perusahaan'])
+        $items = BarangKeluar::with(['DetailInventory.Inventory.Barang', 'Costumer', 'Perusahaan'])
             ->whereIn('id', $request->ids)
             ->get();
 
@@ -421,5 +441,115 @@ class BarangKeluarController extends Controller
         $view = ($request->template === 'indofood') ? 'pages.print.sj-Indofood' : 'pages.print.sj-biasa';
 
         return view($view, compact('items', 'firstItem', 'perusahaan', 'keterangan', 'ppnPercent'));
+    }
+
+    public function showAfkirUlang($id)
+    {
+        $afkirAsal = BarangKeluar::with(['DetailInventory.Inventory.Barang'])->findOrFail($id);
+
+        // Hitung Sisa untuk dilempar ke View
+        $jumlahSudahDikonversi = $afkirAsal->jumlah_dikonversi ?? 0;
+        $sisaBisaDikonversi = $afkirAsal->jumlah_keluar - $jumlahSudahDikonversi;
+
+        // Cegah admin masuk ke halaman form jika stok afkir sudah habis di-recycle
+        if ($sisaBisaDikonversi <= 0) {
+            return back()->with('error', 'Barang afkir ini sudah habis dikonversi secara keseluruhan.');
+        }
+
+        $barangTujuan = Barang::whereHas('JenisBarang', function ($q) {
+            $q->whereIn('kode', ['FG', 'WIP', 'EC']);
+        })
+            ->where('id_perusahaan', Auth::user()->id_perusahaan)
+            ->where('id', '!=', $afkirAsal->DetailInventory->Inventory->id_barang)
+            ->get();
+
+        // Lempar variabel $sisaBisaDikonversi ke view
+        return view('pages.barangkeluar.afkir-ulang', compact('afkirAsal', 'barangTujuan', 'sisaBisaDikonversi'));
+    }
+
+    public function eksekusiAfkirUlang(Request $request, $id)
+    {
+        $request->validate([
+            'jumlah_afkir_dikonversi' => 'required|numeric|min:0.1',
+            'id_barang_tujuan'        => 'required|exists:barang,id',
+            'jumlah_hasil_konversi'   => 'required|numeric|min:0.1',
+            'harga'                   => 'required|numeric|min:0',
+            'tanggal_masuk'           => 'required|date',
+            'tanggal_exp'             => 'nullable|date',
+            'nomor_batch'             => 'nullable|string|max:255',
+            'tempat_penyimpanan'      => 'nullable|string|max:255', // Tambahan validasi
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // 1. MENCEGAH RACE CONDITION
+            // lockForUpdate() memaksa request lain untuk antre jika mengakses ID yang sama
+            $afkirAsal = BarangKeluar::with('DetailInventory.Inventory.Barang')
+                ->lockForUpdate()
+                ->findOrFail($id);
+
+            // 2. MENGHITUNG SISA AFKIR YANG BISA DIDAUR ULANG
+            $jumlahSudahDikonversi = $afkirAsal->jumlah_dikonversi ?? 0;
+            $sisaBisaDikonversi = $afkirAsal->jumlah_keluar - $jumlahSudahDikonversi;
+
+            // 3. VALIDASI SISA STOK (Lapis Keamanan Backend)
+            if ($sisaBisaDikonversi <= 0) {
+                return back()->with('error', 'Semua barang dari catatan afkir ini sudah habis didaur ulang.');
+            }
+
+            if ($request->jumlah_afkir_dikonversi > $sisaBisaDikonversi) {
+                return back()->with('error', "Jumlah ditolak! Anda mencoba mendaur ulang {$request->jumlah_afkir_dikonversi}, padahal sisa yang belum didaur ulang hanya {$sisaBisaDikonversi}.");
+            }
+
+            // 4. MEMBUAT BARANG MASUK (HASIL KONVERSI)
+            $inventoryTujuan = Inventory::firstOrCreate([
+                'id_perusahaan' => $afkirAsal->id_perusahaan,
+                'id_barang'     => $request->id_barang_tujuan,
+            ]);
+
+            // Beri penanda unik jika batch tidak diisi
+            $batchBaru = $request->nomor_batch ?? ('RCY-' . ($afkirAsal->DetailInventory->Inventory->Barang->kode ?? 'UNK') . '-' . now()->format('ymdHi'));
+
+            $hasilKonversi = new DetailInventory([
+                'id_inventory'       => $inventoryTujuan->id,
+                'id_produksi'        => $afkirAsal->DetailInventory->id_produksi,
+                'nomor_batch'        => $batchBaru,
+                'tanggal_masuk'      => $request->tanggal_masuk,
+                'tanggal_exp'        => $request->tanggal_exp ?? $afkirAsal->DetailInventory->tanggal_exp,
+                'jumlah_diterima'    => $request->jumlah_hasil_konversi,
+                'stok'               => $request->jumlah_hasil_konversi,
+                'harga'              => $request->harga,
+                'total_harga'        => $request->jumlah_hasil_konversi * $request->harga,
+                'tempat_penyimpanan' => $request->tempat_penyimpanan ?? $afkirAsal->DetailInventory->tempat_penyimpanan,
+                'status'             => 'Konversi',
+            ]);
+
+            // Keterangan sangat detail untuk kebutuhan Audit Keuangan
+            $hasilKonversi->keterangan_transaksi = "Afkir Ulang";
+            $hasilKonversi->save();
+
+            // 5. UPDATE PENCATATAN DI SUMBER ASAL (Update Tracker)
+            $afkirAsal->jumlah_dikonversi = $jumlahSudahDikonversi + $request->jumlah_afkir_dikonversi;
+
+            // (Opsional) Jika Anda menggunakan kolom status di BarangKeluar
+            // if ($afkirAsal->jumlah_dikonversi >= $afkirAsal->jumlah_keluar) {
+            //     $afkirAsal->status = 'DIDAUR ULANG FULL';
+            // }
+
+            $afkirAsal->save();
+
+            DB::commit();
+
+            // Pesan Sukses yang informatif
+            $sisaSekarang = $sisaBisaDikonversi - $request->jumlah_afkir_dikonversi;
+            $pesan = $sisaSekarang > 0
+                ? "Berhasil didaur ulang sebagian. Sisa yang masih bisa didaur ulang: {$sisaSekarang}."
+                : "Sempurna! Seluruh kuantitas pada catatan afkir ini telah habis didaur ulang.";
+
+            return redirect()->route('barang-keluar.index',['tab' => 'PENJUALAN',])->with('success', $pesan);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
     }
 }
