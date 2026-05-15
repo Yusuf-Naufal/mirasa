@@ -40,9 +40,9 @@
             </div>
 
             <div
-                class="p-8 md:p-12 lg:p-14 md:w-1/3 flex justify-start md:justify-end border-t md:border-t-0 md:border-l border-slate-800 relative z-10 w-full bg-white/[0.02] backdrop-blur-sm h-full items-center">
+                class="p-8 md:p-12 lg:p-14 md:w-1/3 flex justify-start md:justify-end border-t md:border-t-0 md:border-l border-slate-800 relative z-10 w-full backdrop-blur-sm h-full items-center">
 
-                <a href="http://bahtera.test" target="_blank"
+                <a href="http://bahteramandiri.nopaldev.my.id" target="_blank"
                     class="group w-full flex items-center justify-between gap-6 bg-blue-600 hover:bg-blue-500 text-white px-6 py-4 lg:py-5 rounded-2xl transition-all duration-300 shadow-lg shadow-blue-900/20 hover:shadow-blue-600/40 border border-blue-500/50">
 
                     <div class="flex flex-col text-left">
@@ -50,7 +50,7 @@
                             @translate('Kunjungi Portal')
                         </span>
                         <span class="text-lg font-black tracking-tight">
-                            bahtera.test
+                            Bahtera
                         </span>
                     </div>
 
