@@ -425,7 +425,7 @@ class BarangKeluarController extends Controller
         BarangKeluar::whereIn('id', $request->ids)->update([
             'no_faktur'  => $request->no_faktur,
             'no_jalan'   => $request->no_jalan,
-            'keterangan' => json_encode($dataKeterangan), // Simpan sebagai JSON
+            'keterangan' => json_encode($dataKeterangan),
         ]);
 
         $items = BarangKeluar::with(['DetailInventory.Inventory.Barang', 'Costumer', 'Perusahaan'])

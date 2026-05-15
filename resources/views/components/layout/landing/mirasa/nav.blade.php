@@ -55,6 +55,13 @@
                         <span
                             class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
                     </a>
+
+                    <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#news"
+                        class="relative hover:text-brand-red transition-all duration-300 group">
+                        @translate('Berita')
+                        <span
+                            class="absolute -bottom-2 left-0 w-0 h-[2px] bg-brand-red transition-all duration-300 group-hover:w-full"></span>
+                    </a>
                 </div>
 
                 <div class="flex items-center gap-6 border-l border-slate-200 pl-8">
@@ -96,13 +103,6 @@
                                 @endif
                             </a>
 
-                            <a href="{{ request()->fullUrlWithQuery(['lang' => 'JA']) }}"
-                                class="flex items-center justify-between px-5 py-3 text-[10px] font-black uppercase tracking-widest {{ request('lang') == 'JA' ? 'text-brand-red bg-slate-50' : 'text-slate-600 hover:bg-slate-50' }}">
-                                Japanese
-                                @if (request('lang') == 'JA')
-                                    <i class="fa-solid fa-check"></i>
-                                @endif
-                            </a>
                         </div>
                     </div>
 
@@ -166,6 +166,16 @@
                     class="fa-solid fa-arrow-right text-brand-red opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
             </a>
 
+            <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#news" onclick="toggleMobileMenu()"
+                class="group flex justify-between items-center py-4 border-b border-slate-50 transition-all">
+                <span
+                    class="text-xl font-black text-slate-900 uppercase tracking-tighter group-hover:text-brand-red transition-colors">
+                    @translate('Berita')
+                </span>
+                <i
+                    class="fa-solid fa-arrow-right text-brand-red opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"></i>
+            </a>
+
             <a href="{{ url('/') }}?lang={{ request('lang', 'ID') }}#partners" onclick="toggleMobileMenu()"
                 class="group flex justify-between items-center py-4 transition-all">
                 <span
@@ -198,10 +208,6 @@
                     <a href="{{ request()->fullUrlWithQuery(['lang' => 'EN-US']) }}"
                         class="block w-full p-4 rounded-xl text-[11px] font-black uppercase tracking-widest {{ request('lang') == 'EN-US' ? 'bg-brand-red text-white' : 'text-slate-600 bg-white border border-slate-50' }}">
                         English
-                    </a>
-                    <a href="{{ request()->fullUrlWithQuery(['lang' => 'JA']) }}"
-                        class="block w-full p-4 rounded-xl text-[11px] font-black uppercase tracking-widest {{ request('lang') == 'JA' ? 'bg-brand-red text-white' : 'text-slate-600 bg-white border border-slate-50' }}">
-                        Japanese
                     </a>
                 </div>
             </div>

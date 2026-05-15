@@ -188,7 +188,7 @@
                         </tr>
                         <tr>
                             <td>Tgl. Terbit</td>
-                            <td>: 01-07-2022</td>
+                            <td>: {{ \Carbon\Carbon::today()->format('d-m-Y') }}</td>
                         </tr>
                         <tr>
                             <td>Hal</td>
@@ -269,9 +269,18 @@
                         $qAfkir = $item->jumlah_dikonversi ?? 0;
                         $qNetto = $qAsli - $qAfkir;
 
-                        // Logika pemetaan satuan
-                        $qtyKtn = $satuan == 'KARTON' || $satuan == 'KTN' ? $qNetto : 0;
-                        $qtyKg = $qtyKtn == 0 ? $qNetto : 0;
+                        $nilaiKonversi = $item->DetailInventory->Inventory->Barang->nilai_konversi ?? 1;
+
+                        // Logika pemetaan dan konversi satuan
+                        if ($satuan != 'KG') {
+                            // Jika bukan KG (misal KARTON), isi kolom karton dan hitung konversi KG-nya
+                            $qtyKtn = ($satuan == 'KARTON' || $satuan == 'KTN') ? $qNetto : 0;
+                            $qtyKg = $qNetto * $nilaiKonversi; 
+                        } else {
+                            // Jika satuannya sudah KG, nilai KARTON kosong dan KG ambil dari netto
+                            $qtyKtn = 0;
+                            $qtyKg = $qNetto;
+                        }
 
                         $totalKtn += (float) $qtyKtn;
                         $totalKg += (float) $qtyKg;
@@ -280,13 +289,9 @@
                         <td>{{ $index + 1 }}</td>
                         <td style="text-align: left; padding-left: 5px;">
                             {{ $item->DetailInventory->Inventory->Barang->nama_barang }}
-                            {{-- @if ($qAfkir > 0)
-                                <br><span style="font-size: 8px; color: #666;">(Netto. Asli: {{ $qAsli }},
-                                    Afkir: {{ $qAfkir }})</span>
-                            @endif --}}
                         </td>
                         <td>{{ $qtyKtn > 0 ? number_format($qtyKtn, 0, ',', '.') : '-' }}</td>
-                        <td>{{ $qtyKg > 0 ? number_format($qtyKg, 0, ',', '.') : '-' }}</td>
+                        <td>{{ $qtyKg > 0 ? number_format($qtyKg, 2, ',', '.') : '-' }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->DetailInventory->tanggal_masuk)->format('d-M-y') }}</td>
                         <td>{{ $keterangan->varietas }}</td>
                     </tr>
@@ -306,7 +311,7 @@
                 <tr style="font-weight: bold; background: #eee;">
                     <td colspan="2">TOTAL</td>
                     <td>{{ $totalKtn > 0 ? number_format($totalKtn, 0, ',', '.') : '-' }}</td>
-                    <td>{{ $totalKg > 0 ? number_format($totalKg, 0, ',', '.') : '-' }}</td>
+                    <td>{{ $totalKg > 0 ? number_format($totalKg, 2, ',', '.') : '-' }}</td>
                     <td colspan="2"></td>
                 </tr>
             </tfoot>
