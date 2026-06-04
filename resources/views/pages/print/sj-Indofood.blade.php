@@ -209,7 +209,7 @@
                         </tr>
                         <tr>
                             <td>Tgl. Terbit</td>
-                            <td>: 01-07-2022</td>
+                            <td>: {{ \Carbon\Carbon::today()->format('d-m-Y') }}</td>
                         </tr>
                         <tr>
                             <td>Hal</td>
@@ -265,14 +265,15 @@
                 <tr>
                     <th rowspan="2" width="30">No.</th>
                     <th rowspan="2">NAMA BARANG</th>
-                    <th colspan="4">BANYAKNYA</th>
+                    <th colspan="5">BANYAKNYA</th>
                     <th rowspan="2" width="150">KETERANGAN</th>
                 </tr>
                 <tr>
                     <th width="60">IKAT</th>
                     <th width="60">BUNGKUS</th>
                     <th width="60">KARTON</th>
-                    <th width="60">BALL/KG</th>
+                    <th width="60">BALL</th>
+                    <th width="60">KG</th>
                 </tr>
             </thead>
             <tbody>
@@ -281,6 +282,7 @@
                     $tBks = 0;
                     $tKtn = 0;
                     $tBall = 0;
+                    $tKg = 0;
                 @endphp
                 @foreach ($items as $index => $item)
                     @php
@@ -289,33 +291,48 @@
                         $qAfkir = $item->jumlah_dikonversi ?? 0;
                         $qNetto = $qAsli - $qAfkir;
 
+                        // Ambil nilai konversi KG dari database
+                        $nilaiKonversi = $item->DetailInventory->Inventory->Barang->nilai_konversi ?? 1;
+
                         $ikat = $u == 'IKAT' ? $qNetto : 0;
                         $bks = in_array($u, ['BUNGKUS', 'BKS']) ? $qNetto : 0;
                         $ktn = in_array($u, ['KARTON', 'KTN']) ? $qNetto : 0;
-                        $ball = $ikat == 0 && $bks == 0 && $ktn == 0 ? $qNetto : 0;
+                        $ball = 0;
+                        $kg = 0;
+
+                        if ($u != 'KG') {
+                            // Konversi ke KG untuk satuan lain
+                            $kg = $qNetto * $nilaiKonversi;
+                            // Menghindari satuan KG masuk ke BALL seperti logika sebelumnya
+                            if ($ikat == 0 && $bks == 0 && $ktn == 0) {
+                                $ball = $qNetto;
+                            }
+                        } else {
+                            // Jika satuan sudah KG
+                            $kg = $qNetto;
+                        }
 
                         $tIkat += $ikat;
                         $tBks += $bks;
                         $tKtn += $ktn;
                         $tBall += $ball;
+                        $tKg += $kg;
                     @endphp
                     <tr style="height: 35px;">
                         <td>{{ $index + 1 }}</td>
                         <td style="text-align: left; padding-left: 5px;">
                             {{ $item->DetailInventory->Inventory->Barang->nama_barang }}
-                            {{-- @if ($qAfkir > 0)
-                                <br><span style="font-size: 8px; color: #666;">(Netto. Asli: {{ $qAsli }},
-                                    Afkir: {{ $qAfkir }})</span>
-                            @endif --}}
                         </td>
-                        <td>{{ $ikat ?: '' }}</td>
-                        <td>{{ $bks ?: '' }}</td>
-                        <td>{{ $ktn ?: '' }}</td>
-                        <td>{{ $ball ?: '' }}</td>
+                        <td>{{ $ikat > 0 ? number_format($ikat, 0, ',', '.') : '' }}</td>
+                        <td>{{ $bks > 0 ? number_format($bks, 0, ',', '.') : '' }}</td>
+                        <td>{{ $ktn > 0 ? number_format($ktn, 0, ',', '.') : '' }}</td>
+                        <td>{{ $ball > 0 ? number_format($ball, 0, ',', '.') : '' }}</td>
+                        <td>{{ $kg > 0 ? number_format($kg, 2, ',', '.') : '' }}</td>
                         <td></td>
                     </tr>
                 @endforeach
                 <tr style="height: 35px;">
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -328,10 +345,11 @@
             <tfoot>
                 <tr style="font-weight: bold; background-color: #f9f9f9;">
                     <td colspan="2">TOTAL</td>
-                    <td>{{ $tIkat ?: '' }}</td>
-                    <td>{{ $tBks ?: '' }}</td>
-                    <td>{{ $tKtn ?: '' }}</td>
-                    <td>{{ $tBall ?: '' }}</td>
+                    <td>{{ $tIkat > 0 ? number_format($tIkat, 0, ',', '.') : '' }}</td>
+                    <td>{{ $tBks > 0 ? number_format($tBks, 0, ',', '.') : '' }}</td>
+                    <td>{{ $tKtn > 0 ? number_format($tKtn, 0, ',', '.') : '' }}</td>
+                    <td>{{ $tBall > 0 ? number_format($tBall, 0, ',', '.') : '' }}</td>
+                    <td>{{ $tKg > 0 ? number_format($tKg, 2, ',', '.') : '' }}</td>
                     <td></td>
                 </tr>
             </tfoot>
@@ -374,7 +392,7 @@
                         </tr>
                         <tr>
                             <td>Tgl. Terbit</td>
-                            <td>: 01-07-2022</td>
+                            <td>: {{ \Carbon\Carbon::today()->format('d-m-Y') }}</td>
                         </tr>
                         <tr>
                             <td>Hal</td>
@@ -431,7 +449,7 @@
                 <tr>
                     <th rowspan="2" width="30">No.</th>
                     <th rowspan="2">NAMA BARANG</th>
-                    <th colspan="4">BANYAKNYA</th>
+                    <th colspan="5">BANYAKNYA</th>
                     <th rowspan="2" width="80">HARGA</th>
                     <th rowspan="2" width="100">JUMLAH (Rp)</th>
                 </tr>
@@ -440,6 +458,7 @@
                     <th width="40">BUNGKUS</th>
                     <th width="50">KARTON</th>
                     <th width="40">BALL</th>
+                    <th width="40">KG</th>
                 </tr>
             </thead>
             <tbody>
@@ -451,10 +470,23 @@
                         $qAfkir = $item->jumlah_dikonversi ?? 0;
                         $qNetto = $qAsli - $qAfkir;
 
+                        // Ambil nilai konversi KG dari database
+                        $nilaiKonversi = $item->DetailInventory->Inventory->Barang->nilai_konversi ?? 1;
+
                         $ikat = $u == 'IKAT' ? $qNetto : 0;
                         $bks = in_array($u, ['BUNGKUS', 'BKS']) ? $qNetto : 0;
                         $ktn = in_array($u, ['KARTON', 'KTN']) ? $qNetto : 0;
-                        $ball = $ikat == 0 && $bks == 0 && $ktn == 0 ? $qNetto : 0;
+                        $ball = 0;
+                        $kg = 0;
+
+                        if ($u != 'KG') {
+                            $kg = $qNetto * $nilaiKonversi;
+                            if ($ikat == 0 && $bks == 0 && $ktn == 0) {
+                                $ball = $qNetto;
+                            }
+                        } else {
+                            $kg = $qNetto;
+                        }
 
                         $subTotal = $qNetto * $item->harga;
                         $totalDPP += $subTotal;
@@ -464,10 +496,11 @@
                         <td style="text-align: left; padding-left: 5px;">
                             {{ $item->DetailInventory->Inventory->Barang->nama_barang }}
                         </td>
-                        <td>{{ $ikat ?: '' }}</td>
-                        <td>{{ $bks ?: '' }}</td>
-                        <td>{{ $ktn ?: '' }}</td>
-                        <td>{{ $ball ?: '' }}</td>
+                        <td>{{ $ikat > 0 ? number_format($ikat, 0, ',', '.') : '' }}</td>
+                        <td>{{ $bks > 0 ? number_format($bks, 0, ',', '.') : '' }}</td>
+                        <td>{{ $ktn > 0 ? number_format($ktn, 0, ',', '.') : '' }}</td>
+                        <td>{{ $ball > 0 ? number_format($ball, 0, ',', '.') : '' }}</td>
+                        <td>{{ $kg > 0 ? number_format($kg, 2, ',', '.') : '' }}</td>
                         <td style="text-align: right; padding-right: 5px;">
                             {{ number_format($item->harga, 0, ',', '.') }}</td>
                         <td style="text-align: right; padding-right: 5px;">
@@ -475,6 +508,7 @@
                     </tr>
                 @endforeach
                 <tr style="height: 30px;">
+                    <td></td>
                     <td></td>
                     <td></td>
                     <td></td>
@@ -493,17 +527,17 @@
                             <strong>Sistem pembayaran:</strong><br>[ ] Tunai [ ] Cek / BG
                         </div>
                     </td>
-                    <td colspan="4" style="font-weight: bold;"></td>
+                    <td colspan="5" style="font-weight: bold;"></td>
                     <td style="font-weight: bold; text-align: left; padding-left: 5px;">DPP</td>
                     <td style="text-align: right; padding-right: 5px;">{{ number_format($totalDPP, 0, ',', '.') }}</td>
                 </tr>
                 <tr>
-                    <td colspan="4" style="border: none;"></td>
+                    <td colspan="5" style="border: none;"></td>
                     <td style="font-weight: bold; text-align: left; padding-left: 5px;">PPN {{ $ppnPercent }}%</td>
                     <td style="text-align: right; padding-right: 5px;">{{ number_format($ppnVal, 0, ',', '.') }}</td>
                 </tr>
                 <tr style="background-color: #f9f9f9; font-weight: bold;">
-                    <td colspan="4" style="border: none;"></td>
+                    <td colspan="5" style="border: none;"></td>
                     <td style="text-align: left; padding-left: 5px;">JUMLAH DIBAYAR</td>
                     <td style="text-align: right; padding-right: 5px;">
                         {{ number_format($totalDPP + $ppnVal, 0, ',', '.') }}</td>

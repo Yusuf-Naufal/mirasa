@@ -890,6 +890,7 @@ class GrafikController extends Controller implements HasMiddleware
         $range = ($filterType === 'year') ? range(1, 12) : range(1, Carbon::create($year, $month)->daysInMonth);
 
         $data = BarangKeluar::with(['DetailInventory.Inventory.Barang.JenisBarang', 'Costumer'])
+            ->where('jenis_keluar', 'PENJUALAN')
             ->whereYear('tanggal_keluar', $year)
             ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $month))
             ->when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))

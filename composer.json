@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
+        "deeplcom/deepl-php": "^1.18",
         "intervention/image": "^3.11",
         "ladumor/laravel-pwa": "^1.0",
         "laravel/framework": "^12.0",
