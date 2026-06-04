@@ -72,7 +72,10 @@ class BarangKeluar extends Model
         // 1. SEBELUM SIMPAN (CREATING)
         static::creating(function ($keluar) {
             $detail = $keluar->DetailInventory;
-            if ($detail) {
+
+            $kodeJenis = $detail->Inventory->Barang->JenisBarang->kode ?? null;
+
+            if ($detail && $kodeJenis === 'BB') {
                 // Hitung Harga Netto FIFO
                 $hargaNetto = $detail->jumlah_diterima > 0
                     ? ($detail->total_harga / $detail->jumlah_diterima)
@@ -99,7 +102,7 @@ class BarangKeluar extends Model
                     'tanggal_transaksi' => $keluar->tanggal_keluar,
                     'keterangan'        => $keteranganDinamis,
                     'nomor_batch'       => $detail->nomor_batch,
-                    'qty'               => -$keluar->jumlah_keluar, // Negatif karena barang keluar
+                    'qty'               => -$keluar->jumlah_keluar,
                     'harga'             => $keluar->total_harga,
                     'source_type'       => get_class($keluar),
                     'source_id'         => $keluar->id,

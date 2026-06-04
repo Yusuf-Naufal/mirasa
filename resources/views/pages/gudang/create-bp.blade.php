@@ -2,13 +2,41 @@
     <div class="min-h-screen bg-gray-50/50 md:px-10 py-8">
         <div class="mx-auto flex flex-col pt-12" x-data="{
             jumlah: 0,
-            rusak: 0,
+            jumlah_rusak: 0,
+            jumlah_return: 0,
+            ada_rusak: false,
             harga: 0,
             selectedFoto: '',
             selectedKode: '-',
             selectedSatuan: '-',
-            get stok() { return Math.max(0, this.jumlah - this.rusak) },
-            get total() { return this.stok * this.harga },
+            
+            // Watcher untuk mereset nilai otomatis ketika checkbox uncheck
+            init() {
+                this.$watch('ada_rusak', (value) => {
+                    if (!value) {
+                        this.jumlah_rusak = 0;
+                        this.jumlah_return = 0;
+                    }
+                });
+            },
+
+            get stok() {
+                let j = parseFloat(this.jumlah) || 0;
+                let rusakInternal = this.ada_rusak ? (parseFloat(this.jumlah_rusak) || 0) : 0;
+                let rusakReturn = this.ada_rusak ? (parseFloat(this.jumlah_return) || 0) : 0;
+                return Math.max(0, j - (rusakInternal + rusakReturn));
+            },
+            
+            get total() { return this.stok * (parseFloat(this.harga) || 0) },
+
+            // Validasi error jika rusak + return > diterima
+            get isInvalidStok() {
+                let j = parseFloat(this.jumlah) || 0;
+                let rusakInternal = this.ada_rusak ? (parseFloat(this.jumlah_rusak) || 0) : 0;
+                let rusakReturn = this.ada_rusak ? (parseFloat(this.jumlah_return) || 0) : 0;
+                return (rusakInternal + rusakReturn) > j;
+            },
+
             updateBarang(e) {
                 const opt = e.target.options[e.target.selectedIndex];
                 this.selectedKode = opt.dataset.kode || '-';
@@ -35,7 +63,6 @@
                 </div>
             </div>
 
-            {{-- Hapus overflow-hidden di sini agar dropdown bisa keluar dari batas card --}}
             <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100">
                 <form action="{{ route('inventory.store-bahan') }}" method="POST"
                     class="form-prevent-multiple-submits p-6 md:p-10">
@@ -44,7 +71,7 @@
 
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
-                        {{-- Kiri: Pemilihan Barang & Supplier (Ditambah z-index agar di atas kolom kanan) --}}
+                        {{-- Kiri: Pemilihan Barang & Supplier --}}
                         <div class="lg:col-span-5 space-y-6 relative z-30" x-data="{
                             barangOpen: false,
                             barangSearch: '',
@@ -228,7 +255,7 @@
                             </div>
                         </div>
 
-                        {{-- Kanan: Detail Input (Ditambah z-index lebih rendah) --}}
+                        {{-- Kanan: Detail Input --}}
                         <div class="lg:col-span-7 space-y-8 relative z-10">
                             <div>
                                 <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
@@ -268,20 +295,6 @@
                                             class="w-full px-4 py-3 bg-blue-50/30 border border-blue-100 rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold outline-none">
                                     </div>
                                     <div class="space-y-1.5">
-                                        <label class="text-xs font-bold text-red-500 uppercase ml-1">Jumlah
-                                            Rusak</label>
-                                        <input type="number" step="any" name="jumlah_rusak"
-                                            x-model.number="rusak"
-                                            class="w-full px-4 py-3 bg-red-50/30 border border-red-100 rounded-2xl focus:ring-2 focus:ring-red-500 font-bold text-red-600 outline-none">
-                                    </div>
-                                    <div class="space-y-1.5">
-                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Stok
-                                            Bersih</label>
-                                        <input type="number" step="any" name="stok" :value="stok"
-                                            readonly
-                                            class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-2xl font-black text-gray-800 shadow-inner">
-                                    </div>
-                                    <div class="space-y-1.5">
                                         <label class="text-xs font-bold text-gray-500 uppercase ml-1">Harga Per
                                             Satuan</label>
                                         <div class="relative">
@@ -292,6 +305,54 @@
                                                 class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 font-bold outline-none">
                                         </div>
                                     </div>
+
+                                    {{-- Checkbox Barang Rusak --}}
+                                    <div class="md:col-span-2 pt-2 pb-1">
+                                        <label
+                                            class="inline-flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <input type="checkbox" x-model="ada_rusak"
+                                                class="form-checkbox h-5 w-5 text-red-500 rounded border-gray-300 focus:ring-red-500">
+                                            <span class="ml-3 text-sm font-bold text-gray-700">Apakah ada barang yang
+                                                rusak / bermasalah saat diterima?</span>
+                                        </label>
+                                    </div>
+
+                                    {{-- Kondisional Form Rusak --}}
+                                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 p-5 bg-red-50/50 rounded-2xl border border-red-100 mb-2"
+                                        x-show="ada_rusak" x-cloak
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 -translate-y-2"
+                                        x-transition:enter-end="opacity-100 translate-y-0">
+
+                                        <div class="space-y-1.5">
+                                            <label class="text-xs font-bold text-red-600 uppercase ml-1">Rusak
+                                                Internal</label>
+                                            <input type="number" step="any" name="jumlah_rusak"
+                                                x-model.number="jumlah_rusak"
+                                                class="w-full px-4 py-3 bg-white border border-red-200 rounded-2xl focus:ring-2 focus:ring-red-500 font-bold text-red-600 outline-none">
+                                            <p class="text-[10px] text-red-500 font-medium ml-1">* Kesalahan sendiri
+                                                (Dianggap rugi)</p>
+                                        </div>
+
+                                        <div class="space-y-1.5">
+                                            <label class="text-xs font-bold text-orange-600 uppercase ml-1">Rusak
+                                                Supplier (Return)</label>
+                                            <input type="number" step="any" name="jumlah_return"
+                                                x-model.number="jumlah_return"
+                                                class="w-full px-4 py-3 bg-white border border-orange-200 rounded-2xl focus:ring-2 focus:ring-orange-500 font-bold text-orange-600 outline-none">
+                                            <p class="text-[10px] text-orange-500 font-medium ml-1">* Kesalahan
+                                                supplier (Dapat di-return)</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="md:col-span-2 space-y-1.5">
+                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Stok
+                                            Bersih</label>
+                                        <input type="number" step="any" name="stok" :value="stok"
+                                            readonly
+                                            class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-2xl font-black text-gray-800 shadow-inner">
+                                        <p class="text-[10px] text-gray-400 font-medium ml-1" x-show="ada_rusak">* Stok bersih = Diterima - (Rusak Internal + Return)</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -299,7 +360,7 @@
                             <div class="bg-green-200 rounded-3xl p-6 shadow-xl">
                                 <div
                                     class="flex justify-between items-center mb-1 text-green-700 text-xs font-bold uppercase">
-                                    <span>Total Nilai Barang</span>
+                                    <span>Total Nilai Barang (Berdasarkan Stok Bersih)</span>
                                 </div>
                                 <div class="text-3xl font-black tracking-tight text-green-700 flex items-center gap-2">
                                     <span>Rp</span>
@@ -308,8 +369,23 @@
                                 <input type="hidden" name="total_harga" :value="total">
                             </div>
 
-                            <button type="submit"
-                                class="btn-submit w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-green-200 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-3">
+                            {{-- Pesan Error Validasi --}}
+                            <div x-show="isInvalidStok" x-cloak 
+                                 x-transition:enter="transition ease-out duration-300"
+                                 x-transition:enter-start="opacity-0 translate-y-2"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <p class="text-xs font-bold text-red-600">
+                                    Total barang rusak dan return tidak boleh melebihi jumlah barang yang diterima!
+                                </p>
+                            </div>
+
+                            <button type="submit" :disabled="isInvalidStok"
+                                :class="isInvalidStok ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-green-700 hover:scale-[1.01] active:scale-95 shadow-lg shadow-green-200'"
+                                class="btn-submit w-full bg-green-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest transition-all flex items-center justify-center gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
                                     fill="currentColor">
                                     <path fill-rule="evenodd"

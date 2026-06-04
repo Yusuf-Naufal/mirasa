@@ -25,11 +25,14 @@ class DetailInventory extends Model
         'stok',
         'jumlah_diterima',
         'jumlah_rusak',
+        'jumlah_return',
         'harga',
         'total_harga',
         'diskon',
-        'kondisi_barang',
-        'kondisi_kendaraan',
+        'kondisi_kerusakan',
+        'status_return',
+        // 'kondisi_barang',
+        // 'kondisi_kendaraan',
         'tempat_penyimpanan',
         'status',
     ];
@@ -87,6 +90,7 @@ class DetailInventory extends Model
                     'qty'               => $detail->jumlah_diterima,
                     'tanggal_transaksi' => $detail->tanggal_masuk,
                     'harga'             => $detail->total_harga,
+                    'nomor_batch'       => $detail->nomor_batch,
                 ]);
 
                 $detail->Inventory->syncTotalStock();

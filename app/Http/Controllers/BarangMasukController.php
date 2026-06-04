@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Barang;
+use App\Models\BarangKeluar;
 use App\Models\DetailInventory;
 use App\Models\Inventory;
 use App\Models\Perusahaan;
@@ -255,7 +256,7 @@ class BarangMasukController extends Controller
 
             // 1. TAMBAHKAN BARIS INI UNTUK MEMAKSA LOGGING
             Log::error('Error Simpan Barang: ' . $e->getMessage() . ' di baris ' . $e->getLine());
-        
+
             // 2. TAMPILKAN ERROR KE LAYAR (DUMP & DIE) SEMENTARA
             // dd('Error dari Try-Catch: ' . $e->getMessage());
 
@@ -276,20 +277,23 @@ class BarangMasukController extends Controller
             'tempat_penyimpanan' => 'nullable|string|max:255',
             'jumlah_diterima'    => 'required|numeric|min:0',
             'jumlah_rusak'       => 'nullable|numeric|min:0',
-            'stok'               => 'nullable|numeric|min:0',
+            'jumlah_return'      => 'nullable|numeric|min:0',
             'harga'              => 'nullable|numeric|min:0',
             'total_harga'        => 'nullable|numeric|min:0',
         ], [
-            'id_barang.required' => 'Silahkan pilih barang terlebih dahulu.',
+            'id_barang.required'       => 'Silahkan pilih barang terlebih dahulu.',
             'jumlah_diterima.required' => 'Jumlah barang masuk harus diisi.',
         ]);
 
         try {
             DB::beginTransaction();
 
-            $jumlahMasuk = (float) $request->jumlah_diterima;
-            $jumlahRusak = (float) ($request->jumlah_rusak ?? 0);
-            $stokBersih = $request->stok > 0 ? (float) $request->stok : ($jumlahMasuk - $jumlahRusak);
+            $jumlahMasuk  = (float) $request->jumlah_diterima;
+            $jumlahRusak  = (float) ($request->jumlah_rusak ?? 0);
+            $jumlahReturn = (float) ($request->jumlah_return ?? 0);
+
+            // STOK AWAL: Hanya dikurangi jumlah return. 
+            $stokAwalDetail = $jumlahMasuk - $jumlahRusak - $jumlahReturn;
 
             // 1. Cari atau buat Produksi
             $produksi = Produksi::firstOrCreate([
@@ -310,28 +314,55 @@ class BarangMasukController extends Controller
                 'tanggal_masuk'      => $request->tanggal_masuk,
                 'jumlah_diterima'    => $jumlahMasuk,
                 'jumlah_rusak'       => $jumlahRusak,
-                'stok'               => $stokBersih,
+                'jumlah_return'      => $jumlahReturn,
+                'stok'               => $stokAwalDetail,
                 'harga'              => $request->harga ?? 0,
                 'total_harga'        => $request->total_harga ?? ($jumlahMasuk * ($request->harga ?? 0)),
                 'tempat_penyimpanan' => $request->tempat_penyimpanan,
+
+                // Logika Status Return: Jika ada return, statusnya ditandai agar bisa dilacak di gudang
+                'status_return'      => $jumlahReturn > 0 ? 'PENDING' : null,
                 'status'             => 'Tersedia',
             ]);
 
-            $detail->keterangan_transaksi = 'Hasil Produksi';
+            $detail->keterangan_transaksi = 'Barang Masuk (Bahan Penolong)';
             $detail->save();
 
-            // 4. Refresh Produksi
-            $produksi->syncTotals();
+            // 4. Proses Barang Rusak (Otomatis Buat Barang Keluar)
+            if ($jumlahRusak > 0) {
+                $barangKeluar = new BarangKeluar([
+                    'id_perusahaan'       => $request->id_perusahaan,
+                    'id_produksi'         => $produksi->id,
+                    'id_detail_inventory' => $detail->id,
+                    'tanggal_keluar'      => $request->tanggal_masuk,
+                    'jenis_keluar'        => 'RUSAK',
+                    'jumlah_keluar'       => $jumlahRusak,
+                    'harga'               => $request->harga ?? 0,
+                    'total_harga'         => $jumlahRusak * ($request->harga ?? 0),
+                    'status'              => 'BERHASIL',
+                ]);
 
-            // 5. Sinkronisasi Stok Master
-            if ($inventory) {
+                $barangKeluar->keterangan_transaksi = 'Barang Rusak';
+
+                // Saat di-save, event di model BarangKeluar akan:
+                // - Mengurangi nilai $detail->stok sebesar $jumlahRusak
+                // - Mencatat KartuStok sebagai pengeluaran/minus
+                // - Melakukan sinkronisasi $inventory->syncTotalStock()
+                $barangKeluar->save();
+            } else {
+                // Jika tidak ada barang rusak, pastikan stok inventory tetap tersinkronisasi
                 $inventory->syncTotalStock();
+            }
+
+            // 5. Refresh Data Pendukung
+            if (method_exists($produksi, 'syncTotals')) {
+                $produksi->syncTotals();
             }
 
             DB::commit();
 
             // Mengambil nama barang untuk pesan sukses
-            $namaBarang = $inventory->barang->nama_barang ?? 'Barang';
+            $namaBarang = $inventory->Barang->nama_barang ?? 'Barang';
 
             return redirect()->route('barang-masuk.index', ['tab' => 'penolong'])
                 ->with('success', "Data {$namaBarang} berhasil masuk gudang dan stok diperbarui.");
@@ -415,6 +446,7 @@ class BarangMasukController extends Controller
             'tanggal_exp'        => 'nullable|date',
             'jumlah_diterima'    => 'required|numeric|min:0',
             'jumlah_rusak'       => 'nullable|numeric|min:0',
+            'jumlah_return'      => 'nullable|numeric|min:0',
             'stok'               => 'nullable|numeric|min:0',
             'harga'              => 'required|numeric|min:0',
             'total_harga'        => 'nullable|numeric|min:0',
@@ -425,13 +457,17 @@ class BarangMasukController extends Controller
         try {
             $user = auth()->user();
             $detail = DetailInventory::findOrFail($id);
+
             if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $detail->Inventory->id_perusahaan) {
                 abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
             }
 
             // --- PROTEKSI UTAMA ---
-            if ($detail->BarangKeluar()->exists()) {
-                return redirect()->back()->with('error', 'Gagal! Data tidak dapat diubah karena stok dari batch ini sudah ada yang keluar/terpakai.');
+            // Diubah: Hanya blokir jika barang sudah dipakai untuk PRODUKSI.
+            // Jika ada record 'Rusak/Rugi', proses edit tetap diizinkan.
+            $isDigunakanProduksi = $detail->BarangKeluar()->where('jenis_keluar', 'PRODUKSI')->exists();
+            if ($isDigunakanProduksi) {
+                return redirect()->back()->with('error', 'Gagal! Data tidak dapat diubah karena barang sudah digunakan');
             }
 
             DB::beginTransaction();
@@ -440,44 +476,85 @@ class BarangMasukController extends Controller
             $idProduksiLama = $detail->id_produksi;
             $inventoryLama = $detail->Inventory;
 
-            // 2. Logika Perhitungan (Tetap sama)
-            $diterima = (float) $request->jumlah_diterima;
-            $rusak    = (float) ($request->jumlah_rusak ?? 0);
-            $stokBersih = $request->filled('stok') ? (float)$request->stok : ($diterima - $rusak);
+            // 2. Logika Perhitungan Baru
+            $diterima   = (float) $request->jumlah_diterima;
+            $rusak      = (float) ($request->jumlah_rusak ?? 0);
+            $return     = (float) ($request->jumlah_return ?? 0);
             $harga      = (float) $request->harga;
+
+            // Stok Bersih Absolut
+            $stokBersih = $diterima - $rusak - $return;
             $totalHarga = $request->filled('total_harga') ? (float)$request->total_harga : ($stokBersih * $harga);
 
-            // 3. Cari/Buat Grup Produksi (Tetap sama)
+            // 3. Cari/Buat Grup Produksi
             $produksiBaru = Produksi::firstOrCreate([
                 'id_perusahaan'    => auth()->user()->id_perusahaan,
                 'tanggal_produksi' => $request->tanggal_masuk,
             ]);
 
-            // 4. LOGIKA UPDATE / PINDAH INVENTORY
-            $inventoryTujuan = Inventory::firstOrCreate(
-                [
-                    'id_perusahaan' => auth()->user()->id_perusahaan,
-                    'id_barang'     => $request->id_barang,
-                ],
-            );
+            // 4. Cari/Buat Inventory Tujuan
+            $inventoryTujuan = Inventory::firstOrCreate([
+                'id_perusahaan' => auth()->user()->id_perusahaan,
+                'id_barang'     => $request->id_barang,
+            ]);
+
+            // --- MANAJEMEN BARANG KELUAR (RUSAK) ---
+            // Cari history rusak yang otomatis ter-create sebelumnya
+            $bkRusak = $detail->BarangKeluar()->where('jenis_keluar', 'RUSAK')->first();
+
+            if ($rusak > 0) {
+                if ($bkRusak) {
+                    // Update catatan rusak (Event akan otomatis update detail->stok)
+                    $bkRusak->update([
+                        'jumlah_keluar'  => $rusak,
+                        'total_harga'    => $rusak * $harga,
+                        'harga'          => $harga,
+                        'tanggal_keluar' => $request->tanggal_masuk,
+                    ]);
+                } else {
+                    // Jika dulu tidak rusak, sekarang jadi rusak, create baru
+                    $bkBaru = new BarangKeluar([
+                        'id_perusahaan'       => auth()->user()->id_perusahaan,
+                        'id_produksi'         => $produksiBaru->id,
+                        'id_detail_inventory' => $detail->id,
+                        'tanggal_keluar'      => $request->tanggal_masuk,
+                        'jenis_keluar'        => 'RUSAK',
+                        'jumlah_keluar'       => $rusak,
+                        'harga'               => $harga,
+                        'total_harga'         => $rusak * $harga,
+                        'status'              => 'BERHASIL',
+                    ]);
+                    $bkBaru->keterangan_transaksi = 'Barang Rusak';
+                    $bkBaru->save();
+                }
+            } else {
+                // Jika dulu rusak tapi sekarang direvisi jadi tidak rusak, hapus catatan keluarnya
+                if ($bkRusak) {
+                    $bkRusak->delete();
+                }
+            }
 
             // 5. UPDATE DATA DETAIL INVENTORY
+            // Dilakukan TERAKHIR agar nilai absolut $stokBersih menimpa 
+            // segala perubahan perhitungan otomatis dari event BarangKeluar (mengatasi selisih ganda).
             $detail->update([
                 'id_inventory'       => $inventoryTujuan->id,
                 'id_supplier'        => $request->id_supplier,
                 'id_produksi'        => $produksiBaru->id,
                 'tanggal_masuk'      => $request->tanggal_masuk,
                 'tanggal_exp'        => $request->tanggal_exp,
+                'nomor_batch'        => $request->nomor_batch,
                 'jumlah_diterima'    => $diterima,
                 'jumlah_rusak'       => $rusak,
-                'nomor_batch'        => $request->nomor_batch,
+                'jumlah_return'      => $return,
                 'stok'               => $stokBersih,
                 'harga'              => $harga,
                 'total_harga'        => $totalHarga,
                 'tempat_penyimpanan' => $request->tempat_penyimpanan,
+                'status_return'      => $return > 0 ? 'PENDING' : null,
             ]);
 
-            // 6. SINKRONISASI TOTAL PRODUKSI (Tetap sama)
+            // 6. SINKRONISASI TOTAL PRODUKSI
             $produksiBaru->syncTotals();
             if ($idProduksiLama && $idProduksiLama != $produksiBaru->id) {
                 $oldProd = Produksi::find($idProduksiLama);
@@ -485,16 +562,13 @@ class BarangMasukController extends Controller
             }
 
             // 7. SINKRONISASI STOK MASTER BARANG
-            // Sinkronkan stok barang baru
             $inventoryTujuan->syncTotalStock();
-
-            // Sinkronkan stok barang lama (karena datanya sudah pindah, stok lama harus berkurang)
             if ($inventoryLama && $inventoryLama->id != $inventoryTujuan->id) {
                 $inventoryLama->syncTotalStock();
             }
 
             // Penentuan Tab
-            $kodeJenis = $inventoryTujuan->Barang->JenisBarang->kode;
+            $kodeJenis = $inventoryTujuan->Barang->JenisBarang->kode ?? 'BP';
             $tab = in_array($kodeJenis, ['FG', 'WIP', 'EC']) ? 'produksi' : 'penolong';
 
             DB::commit();
