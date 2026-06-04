@@ -4,7 +4,43 @@
     x-data="{
         // Modal Edit Lengkap
         editModalOpen: false,
-        editData: { id: '', jumlah_diterima: 0, jumlah_rusak: 0, stok: 0, harga: 0, tgl_masuk: '', tgl_exp: '', lokasi: '', kondisi_brg: '', kondisi_knd: '' },
+        editAdaRusak: false,
+        editData: { 
+            id: '', 
+            jumlah_diterima: 0, 
+            jumlah_rusak: 0, 
+            jumlah_return: 0, 
+            stok: 0, 
+            harga: 0, 
+            tgl_masuk: '', 
+            lokasi: '' 
+        },
+        
+        // Memantau checkbox 'Ada Rusak?' pada Modal Edit
+        init() {
+            this.$watch('editAdaRusak', (val) => {
+                if (!val) {
+                    this.editData.jumlah_rusak = 0;
+                    this.editData.jumlah_return = 0;
+                }
+            });
+        },
+
+        // Kalkulasi Stok Bersih untuk Edit Modal
+        get stokBersihEdit() {
+            let j = parseFloat(this.editData.jumlah_diterima) || 0;
+            let rusak = this.editAdaRusak ? (parseFloat(this.editData.jumlah_rusak) || 0) : 0;
+            let ret = this.editAdaRusak ? (parseFloat(this.editData.jumlah_return) || 0) : 0;
+            return Math.max(0, j - (rusak + ret));
+        },
+
+        // Validasi Error Stok
+        get isInvalidStokEdit() {
+            let j = parseFloat(this.editData.jumlah_diterima) || 0;
+            let rusak = this.editAdaRusak ? (parseFloat(this.editData.jumlah_rusak) || 0) : 0;
+            let ret = this.editAdaRusak ? (parseFloat(this.editData.jumlah_return) || 0) : 0;
+            return (rusak + ret) > j;
+        },
     
         // Modal Edit Cepat (Tambah/Kurangi Stok & Ubah Harga)
         showActionModal: false,
@@ -15,7 +51,16 @@
         actionUrl: '{{ route('inventory.quick-update') }}',
     
         openEdit(item) {
-            this.editData = item;
+            this.editData = {
+                id: item.id,
+                jumlah_diterima: parseFloat(item.jumlah_diterima) || 0,
+                jumlah_rusak: parseFloat(item.jumlah_rusak) || 0,
+                jumlah_return: parseFloat(item.jumlah_return) || 0,
+                harga: parseFloat(item.harga) || 0,
+                tgl_masuk: item.tgl_masuk,
+                lokasi: item.lokasi
+            };
+            this.editAdaRusak = (this.editData.jumlah_rusak > 0 || this.editData.jumlah_return > 0);
             this.editModalOpen = true;
         },
         openAddQty(id) {
@@ -111,7 +156,7 @@
 
                         <td class="px-6 py-4">
                             <span class="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                                {{ $i->supplier->nama_supplier }}
+                                {{ $i->supplier->nama_supplier ?? 'Internal' }}
                             </span>
                         </td>
 
@@ -157,7 +202,6 @@
                                 </button>
 
                                 <template x-teleport="body">
-
                                     <div x-show="open" :style="`top: ${top}; left: ${left};`"
                                         @scroll.window="open = false"
                                         x-transition:enter="transition ease-out duration-100"
@@ -170,17 +214,22 @@
                                         style="display: none;">
 
                                         <div class="py-1">
-                                            @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
+                                            @if ($i->BarangKeluar->where('jenis_keluar', 'PRODUKSI')->isEmpty())
                                                 @can('inventory.detail-edit')
                                                     <button type="button"
                                                         @click="openEdit({ 
-                                    id: '{{ $i->id }}', stok: '{{ $i->stok }}', diterima: '{{ $i->jumlah_diterima }}', harga: '{{ $i->harga }}', tgl_masuk: '{{ $i->tanggal_masuk }}', no_batch: '{{ $i->nomor_batch }}', tempat: '{{ $i->tempat_penyimpanan }}', tgl_exp: '{{ $i->tanggal_exp }}' 
-                                }); open = false"
+                                                            id: '{{ $i->id }}', 
+                                                            jumlah_diterima: '{{ $i->jumlah_diterima }}', 
+                                                            jumlah_rusak: '{{ $i->jumlah_rusak ?? 0 }}', 
+                                                            jumlah_return: '{{ $i->jumlah_return ?? 0 }}', 
+                                                            harga: '{{ $i->harga }}', 
+                                                            tgl_masuk: '{{ $i->tanggal_masuk }}', 
+                                                            lokasi: '{{ $i->tempat_penyimpanan }}' 
+                                                        }); open = false"
                                                         class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
                                                         <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-blue-500"
                                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
                                                         Edit Data
@@ -191,10 +240,8 @@
                                                     <button type="button"
                                                         @click="openAddQty('{{ $i->id }}'); open = false"
                                                         class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
-                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-emerald-500"
-                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2" d="M12 4v16m8-8H4" />
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                                         </svg>
                                                         Tambah Stok
                                                     </button>
@@ -202,10 +249,8 @@
                                                     <button type="button"
                                                         @click="openReduceQty('{{ $i->id }}'); open = false"
                                                         class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition-colors">
-                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-rose-500"
-                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2" d="M20 12H4" />
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
                                                         </svg>
                                                         Kurangi Stok
                                                     </button>
@@ -213,10 +258,8 @@
                                                     <button type="button"
                                                         @click="openEditPrice({ id: '{{ $i->id }}', harga: '{{ $i->harga }}' }); open = false"
                                                         class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-amber-500"
-                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                         </svg>
                                                         Ubah Harga
@@ -225,7 +268,7 @@
                                             @endif
                                         </div>
 
-                                        @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
+                                        @if ($i->BarangKeluar->where('jenis_keluar', 'PRODUKSI')->isEmpty())
                                             @can('inventory.delete')
                                                 <div class="py-1">
                                                     <form action="{{ route('inventory.destroy', $i->id) }}"
@@ -235,10 +278,8 @@
                                                         @method('DELETE')
                                                         <button type="submit"
                                                             class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                            <svg class="mr-3 h-4 w-4 text-red-400 group-hover:text-red-600"
-                                                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path
-                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                            <svg class="mr-3 h-4 w-4 text-red-400 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                             </svg>
                                                             Hapus
                                                         </button>
@@ -247,27 +288,23 @@
                                             @endcan
                                         @endif
                                     </div>
-
                                 </template>
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-20 text-center">
+                        <td colspan="8" class="px-6 py-20 text-center">
                             <div class="flex flex-col items-center">
                                 <div
                                     class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100 shadow-inner">
-                                    <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
+                                    <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                             d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                     </svg>
                                 </div>
                                 <h4 class="text-slate-900 font-bold">Tidak ada riwayat</h4>
-                                <p class="text-slate-400 text-sm max-w-[240px] mt-1">Data riwayat transaksi barang
-                                    masuk
-                                    belum tersedia untuk produk ini.</p>
+                                <p class="text-slate-400 text-sm max-w-[240px] mt-1">Data riwayat transaksi barang masuk belum tersedia untuk produk ini.</p>
                             </div>
                         </td>
                     </tr>
@@ -276,7 +313,7 @@
         </table>
     </div>
 
-    {{-- Modal Update (Di luar loop, tapi masih dalam x-data) --}}
+    {{-- Modal Update (Lengkap) --}}
     <template x-teleport="body">
         <div x-show="editModalOpen"
             class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
@@ -295,8 +332,7 @@
                     <button @click="editModalOpen = false"
                         class="p-2 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 transition-colors shadow-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
@@ -313,42 +349,68 @@
                                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm">
                         </div>
                         <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Lokasi
-                                Penyimpanan</label>
+                            <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Lokasi Penyimpanan</label>
                             <input type="text" name="tempat_penyimpanan" x-model="editData.lokasi"
                                 class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
                                 placeholder="Contoh: Rak A1">
                         </div>
 
-                        {{-- Baris 3: Kuantitas --}}
-                        <div class="space-y-1.5">
+                        {{-- Baris 2: Kuantitas Diterima --}}
+                        <div class="space-y-1.5 md:col-span-2">
                             <label class="text-[11px] font-bold text-blue-600 uppercase ml-1">Jumlah Diterima</label>
-                            <input type="number" name="jumlah_diterima" x-model.number="editData.jumlah_diterima"
+                            <input type="number" step="any" name="jumlah_diterima" x-model.number="editData.jumlah_diterima"
                                 class="w-full px-4 py-2.5 bg-blue-50/30 border border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-sm">
                         </div>
-                        <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-red-500 uppercase ml-1">Jumlah Rusak
-                                (Reject)</label>
-                            <input type="number" name="jumlah_rusak" x-model.number="editData.jumlah_rusak"
-                                class="w-full px-4 py-2.5 bg-red-50/30 border border-red-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none transition-all font-bold text-red-600 text-sm">
+
+                        {{-- Checkbox Barang Rusak --}}
+                        <div class="md:col-span-2 pt-1">
+                            <label class="inline-flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                <input type="checkbox" x-model="editAdaRusak" class="form-checkbox h-5 w-5 text-red-500 rounded border-gray-300 focus:ring-red-500">
+                                <span class="ml-3 text-sm font-bold text-gray-700">Apakah ada barang yang rusak / bermasalah?</span>
+                            </label>
                         </div>
 
-                        {{-- Baris 4: Stok Akhir & Harga --}}
+                        {{-- Kondisional Form Rusak --}}
+                        <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 p-5 bg-red-50/50 rounded-2xl border border-red-100"
+                            x-show="editAdaRusak" x-cloak
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 -translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0">
+
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-red-600 uppercase ml-1">Rusak Internal (Rugi)</label>
+                                <input type="number" step="any" name="jumlah_rusak" x-model.number="editData.jumlah_rusak"
+                                    class="w-full px-4 py-2.5 bg-white border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-bold text-red-600 text-sm">
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-orange-600 uppercase ml-1">Rusak Supplier (Return)</label>
+                                <input type="number" step="any" name="jumlah_return" x-model.number="editData.jumlah_return"
+                                    class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-orange-600 text-sm">
+                            </div>
+                        </div>
+
+                        {{-- Baris 4: Stok Bersih & Harga --}}
                         <div class="space-y-1.5">
-                            <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Stok Bersih (Masuk
-                                Gudang)</label>
-                            <input type="number" name="stok"
-                                :value="editData.jumlah_diterima - editData.jumlah_rusak" readonly
+                            <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Stok Bersih (Masuk Gudang)</label>
+                            <input type="number" step="any" name="stok" :value="stokBersihEdit" readonly
                                 class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl outline-none font-black text-gray-800 shadow-inner cursor-not-allowed text-sm">
                         </div>
                         <div class="space-y-1.5">
                             <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Harga Per Satuan</label>
                             <div class="relative">
-                                <span
-                                    class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">Rp</span>
-                                <input type="number" name="harga" x-model.number="editData.harga"
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">Rp</span>
+                                <input type="number" step="any" name="harga" x-model.number="editData.harga"
                                     class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-bold text-sm">
                             </div>
+                        </div>
+                        
+                        {{-- Pesan Error Validasi --}}
+                        <div x-show="isInvalidStokEdit" x-cloak class="md:col-span-2 mt-2 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <p class="text-xs font-bold text-red-600">Total barang rusak dan return melebihi jumlah barang diterima!</p>
                         </div>
                     </div>
 
@@ -357,8 +419,10 @@
                             class="flex-1 px-4 py-3.5 rounded-2xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors text-sm">
                             Batalkan
                         </button>
-                        <button type="submit"
-                            class="flex-1 px-4 py-3.5 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all text-sm">
+                        <button type="submit" 
+                            :disabled="isInvalidStokEdit"
+                            :class="isInvalidStokEdit ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-blue-700 shadow-lg shadow-blue-200'"
+                            class="flex-1 px-4 py-3.5 rounded-2xl bg-blue-600 text-white font-bold transition-all text-sm">
                             Simpan Perubahan
                         </button>
                     </div>
@@ -367,6 +431,7 @@
         </div>
     </template>
 
+    {{-- Modal Update (Cepat) --}}
     <template x-teleport="body">
         <div x-show="showActionModal" class="fixed inset-0 z-[1000] overflow-y-auto" x-cloak>
             <div class="flex items-center justify-center min-h-screen px-4">
@@ -490,23 +555,19 @@
 </div>
 
 <script>
-    // Gunakan event delegation agar bekerja pada elemen yang muncul dinamis (Alpine template)
     document.addEventListener('submit', function(e) {
         const form = e.target.closest('.form-prevent-multiple-submits');
 
         if (form) {
-            // Cek validitas HTML5
             if (form.checkValidity()) {
                 const btn = form.querySelector('.btn-submit');
                 const btnText = form.querySelector('.btn-text');
                 const btnSpinner = form.querySelector('.btn-spinner');
 
                 if (btn) {
-                    // Kunci tombol
                     btn.disabled = true;
                     btn.classList.add('opacity-70', 'cursor-not-allowed');
 
-                    // Update UI
                     if (btnText) btnText.innerText = "Proses...";
                     if (btnSpinner) btnSpinner.classList.remove('hidden');
                 }

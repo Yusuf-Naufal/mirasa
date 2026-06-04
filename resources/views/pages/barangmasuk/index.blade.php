@@ -31,7 +31,7 @@
             {{-- 2. SEARCH & BUTTON --}}
             <div class="mb-8 flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div class="flex gap-2 items-center w-full">
-                    <form action="{{ route('bahan-baku.index') }}" method="GET" class="relative w-full md:max-w-md">
+                    <form action="{{ route('barang-masuk.index') }}" method="GET" class="relative w-full md:max-w-md">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -141,9 +141,9 @@
                 @endif
             </div>
 
-            {{-- <div class="mt-6">
-                {{ $data->links('vendor.pagination.custom') }}
-            </div> --}}
+            <div class="mt-6">
+                {{ $barangMasukPagination->links('vendor.pagination.custom') }}
+            </div>
 
         </div>
     </div>
@@ -164,7 +164,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('bahan-baku.index') }}" method="GET" class="p-6">
+            <form action="{{ route('barang-masuk.index') }}" method="GET" class="p-6">
                 <input type="hidden" name="search" value="{{ request('search') }}">
 
                 <div class="space-y-5">
@@ -225,7 +225,7 @@
                 </div>
 
                 <div class="mt-8 flex items-center gap-3">
-                    <a href="{{ route('bahan-baku.index') }}"
+                    <a href="{{ route('barang-masuk.index') }}"
                         class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50">Reset</a>
                     <button type="submit"
                         class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm">Terapkan

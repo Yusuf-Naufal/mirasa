@@ -1,11 +1,13 @@
 <x-layout.beranda.app title="Riwayat Stok Masuk - {{ $inventory->barang->nama_barang }}">
     <div class="min-h-screen bg-slate-50/50 md:px-10 py-8" x-data="{
-        // Modal Edit Full (Lama)
+        // Modal Edit Full
         editModalOpen: false,
+        editAdaRusak: false,
         editData: {
             id: '',
             diterima: 0,
             jumlah_rusak: 0,
+            jumlah_return: 0,
             stok: 0,
             diskon: 0,
             harga: 0,
@@ -15,8 +17,34 @@
             tempat: '',
             lokasi: ''
         },
+
+        // Watcher untuk mereset nilai otomatis ketika checkbox uncheck
+        init() {
+            this.$watch('editAdaRusak', (val) => {
+                if (!val) {
+                    this.editData.jumlah_rusak = 0;
+                    this.editData.jumlah_return = 0;
+                }
+            });
+        },
+
+        // Kalkulasi Stok Bersih untuk Edit Modal
+        get stokBersihEdit() {
+            let j = parseFloat(this.editData.diterima) || 0;
+            let rusak = this.editAdaRusak ? (parseFloat(this.editData.jumlah_rusak) || 0) : 0;
+            let ret = this.editAdaRusak ? (parseFloat(this.editData.jumlah_return) || 0) : 0;
+            return Math.max(0, j - (rusak + ret));
+        },
+
+        // Validasi Error Stok
+        get isInvalidStokEdit() {
+            let j = parseFloat(this.editData.diterima) || 0;
+            let rusak = this.editAdaRusak ? (parseFloat(this.editData.jumlah_rusak) || 0) : 0;
+            let ret = this.editAdaRusak ? (parseFloat(this.editData.jumlah_return) || 0) : 0;
+            return (rusak + ret) > j;
+        },
     
-        // Modal Quick Action (Baru)
+        // Modal Quick Action
         showActionModal: false,
         modalTitle: '',
         actionType: '',
@@ -27,18 +55,20 @@
         openEdit(item) {
             this.editData = {
                 id: item.id,
-                diterima: item.diterima,
-                jumlah_diterima: item.diterima,
-                jumlah_rusak: item.rusak || 0,
-                harga: item.harga,
+                diterima: parseFloat(item.diterima) || 0,
+                jumlah_diterima: parseFloat(item.diterima) || 0,
+                jumlah_rusak: parseFloat(item.rusak) || 0,
+                jumlah_return: parseFloat(item.return_qty) || 0,
+                harga: parseFloat(item.harga) || 0,
                 tgl_masuk: item.tgl_masuk,
                 tgl_exp: item.tgl_exp,
                 no_batch: item.no_batch,
                 tempat: item.tempat,
-                lokasi: item.tempat,
-                diskon: item.diskon,
-                diskon_lama: item.diskon
+                lokasi: item.tempat, // Mapping sesuai dengan controller
+                diskon: parseFloat(item.diskon) || 0,
+                diskon_lama: parseFloat(item.diskon) || 0
             };
+            this.editAdaRusak = (this.editData.jumlah_rusak > 0 || this.editData.jumlah_return > 0);
             this.editModalOpen = true;
         },
         openAddQty(id) {
@@ -250,7 +280,7 @@
                                                     style="display: none;">
 
                                                     <div class="py-1">
-                                                        @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
+                                                        @if ($i->BarangKeluar->whereIn('jenis_keluar', ['PRODUKSI', 'PENJUALAN', 'BAHAN BAKU'])->isEmpty())
                                                             @can('inventory.detail-edit')
                                                                 <button type="button"
                                                                     @click="openEdit({ 
@@ -258,6 +288,7 @@
                                                                         stok: '{{ $i->stok }}', 
                                                                         diterima: '{{ $i->jumlah_diterima }}', 
                                                                         rusak: '{{ $i->jumlah_rusak ?? 0 }}',
+                                                                        return_qty: '{{ $i->jumlah_return ?? 0 }}',
                                                                         harga: '{{ $i->harga }}', 
                                                                         diskon: '{{ $i->diskon ?? 0 }}',
                                                                         tgl_masuk: '{{ $i->tanggal_masuk }}', 
@@ -377,7 +408,6 @@
             </div>
         </div>
 
-        <!-- Pagination -->
         <div class="mt-6">
             <div class="flex justify-end">
                 {{ $details->links('vendor.pagination.custom') }}
@@ -428,7 +458,7 @@
                                 <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-blue-600 uppercase ml-1">Jumlah
                                         Diterima</label>
-                                    <input type="number" name="jumlah_diterima" x-model.number="editData.diterima"
+                                    <input type="number" step="any" name="jumlah_diterima" x-model.number="editData.diterima"
                                         class="w-full px-4 py-2.5 bg-blue-50/30 border border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm">
                                 </div>
                                 <div class="space-y-1.5">
@@ -437,7 +467,7 @@
                                     <div class="relative">
                                         <span
                                             class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">Rp</span>
-                                        <input type="number" name="harga" x-model.number="editData.harga"
+                                        <input type="number" step="any" name="harga" x-model.number="editData.harga"
                                             class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm">
                                     </div>
                                 </div>
@@ -465,7 +495,7 @@
 
                             {{-- --- KONDISI 2: BAHAN PENOLONG (BP) --- --}}
                         @elseif($inventory->barang->jenisBarang->kode == 'BP')
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
                                 <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Tanggal
                                         Masuk</label>
@@ -478,29 +508,54 @@
                                     <input type="text" name="tempat_penyimpanan" x-model="editData.lokasi"
                                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm">
                                 </div>
-                                <div class="space-y-1.5">
+                                
+                                {{-- Kuantitas Diterima --}}
+                                <div class="space-y-1.5 md:col-span-2">
                                     <label class="text-[11px] font-bold text-blue-600 uppercase ml-1">Jumlah
                                         Diterima</label>
-                                    <input type="number" name="jumlah_diterima" x-model.number="editData.diterima"
+                                    <input type="number" step="any" name="jumlah_diterima" x-model.number="editData.diterima"
                                         class="w-full px-4 py-2.5 bg-blue-50/30 border border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm">
                                 </div>
-                                <div class="space-y-1.5">
-                                    <label class="text-[11px] font-bold text-red-500 uppercase ml-1">Jumlah Rusak
-                                        (Reject)</label>
-                                    <input type="number" name="jumlah_rusak" x-model.number="editData.jumlah_rusak"
-                                        class="w-full px-4 py-2.5 bg-red-50/30 border border-red-100 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-bold text-red-600 text-sm">
+
+                                {{-- Checkbox Barang Rusak --}}
+                                <div class="md:col-span-2 pt-1">
+                                    <label class="inline-flex items-center cursor-pointer p-2 rounded-lg hover:bg-slate-50 transition-colors">
+                                        <input type="checkbox" x-model="editAdaRusak" class="form-checkbox h-5 w-5 text-red-500 rounded border-gray-300 focus:ring-red-500">
+                                        <span class="ml-3 text-sm font-bold text-slate-700">Apakah ada barang yang rusak / bermasalah?</span>
+                                    </label>
                                 </div>
+
+                                {{-- Kondisional Form Rusak --}}
+                                <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 p-5 bg-red-50/50 rounded-2xl border border-red-100"
+                                    x-show="editAdaRusak" x-cloak
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 -translate-y-2"
+                                    x-transition:enter-end="opacity-100 translate-y-0">
+
+                                    <div class="space-y-1.5">
+                                        <label class="text-[11px] font-bold text-red-600 uppercase ml-1">Rusak Internal (Rugi)</label>
+                                        <input type="number" step="any" name="jumlah_rusak" x-model.number="editData.jumlah_rusak"
+                                            class="w-full px-4 py-2.5 bg-white border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none font-bold text-red-600 text-sm">
+                                    </div>
+
+                                    <div class="space-y-1.5">
+                                        <label class="text-[11px] font-bold text-orange-600 uppercase ml-1">Rusak Supplier (Return)</label>
+                                        <input type="number" step="any" name="jumlah_return" x-model.number="editData.jumlah_return"
+                                            class="w-full px-4 py-2.5 bg-white border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-orange-600 text-sm">
+                                    </div>
+                                </div>
+
                                 <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Stok
                                         Bersih</label>
-                                    <input type="number" name="stok"
-                                        :value="editData.diterima - editData.jumlah_rusak" readonly
+                                    <input type="number" step="any" name="stok"
+                                        :value="stokBersihEdit" readonly
                                         class="w-full px-4 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-sm font-bold cursor-not-allowed text-gray-800">
                                 </div>
                                 <div class="space-y-1.5">
                                     <label class="text-[11px] font-bold text-gray-500 uppercase ml-1">Harga
                                         Satuan</label>
-                                    <input type="number" name="harga" x-model.number="editData.harga"
+                                    <input type="number" step="any" name="harga" x-model.number="editData.harga"
                                         class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl font-bold text-sm">
                                 </div>
                             </div>
@@ -512,14 +567,14 @@
                                     <label
                                         class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Jumlah
                                         Diterima</label>
-                                    <input type="number" name="jumlah_diterima" x-model.number="editData.diterima"
+                                    <input type="number" step="any" name="jumlah_diterima" x-model.number="editData.diterima"
                                         class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-bold text-slate-700 transition-all">
                                 </div>
                                 <div class="col-span-1 space-y-1.5">
                                     <label
                                         class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Harga
                                         Satuan (Rp)</label>
-                                    <input type="number" name="harga" x-model.number="editData.harga"
+                                    <input type="number" step="any" name="harga" x-model.number="editData.harga"
                                         class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-bold text-slate-700 transition-all">
                                 </div>
                                 <div class="col-span-1 space-y-1.5">
@@ -553,6 +608,14 @@
                             </div>
                         @endif
 
+                        {{-- Pesan Error Validasi (Hanya aktif jika rusak/return melebihi diterima) --}}
+                        <div x-show="isInvalidStokEdit" x-cloak class="mb-5 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <p class="text-xs font-bold text-red-600">Total barang rusak dan return melebihi jumlah barang diterima!</p>
+                        </div>
+
                         {{-- Footer Modal --}}
                         <div class="flex gap-4">
                             <button type="button" @click="editModalOpen = false"
@@ -560,7 +623,9 @@
                                 Batalkan
                             </button>
                             <button type="submit"
-                                class="flex-1 px-4 py-3.5 rounded-2xl bg-yellow-600 text-white font-bold hover:bg-yellow-700 shadow-lg shadow-yellow-200 transition-all text-sm">
+                                :disabled="isInvalidStokEdit"
+                                :class="isInvalidStokEdit ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:bg-yellow-700 shadow-lg shadow-yellow-200'"
+                                class="flex-1 px-4 py-3.5 rounded-2xl bg-yellow-600 text-white font-bold transition-all text-sm">
                                 Simpan Perubahan
                             </button>
                         </div>
@@ -591,7 +656,7 @@
                                 <div class="space-y-1">
                                     <label class="text-[11px] font-bold text-slate-500 uppercase ml-1"
                                         x-text="actionType === 'add' ? 'Jumlah Tambah' : 'Jumlah Kurangi'"></label>
-                                    <input type="number" name="qty" required min="1"
+                                    <input type="number" step="any" name="qty" required min="1"
                                         :max="actionType === 'reduce' ? activeStokLimit : ''"
                                         class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
@@ -606,7 +671,7 @@
                                 <div class="space-y-1">
                                     <label class="text-[11px] font-bold text-slate-500 uppercase ml-1">Harga Baru
                                         (Rp)</label>
-                                    <input type="number" name="harga" x-model="activeHarga" required
+                                    <input type="number" step="any" name="harga" x-model="activeHarga" required
                                         class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                             </div>
