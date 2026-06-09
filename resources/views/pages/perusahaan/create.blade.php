@@ -2,7 +2,7 @@
     <div class="py-2">
 
         <form action="{{ route('perusahaan.store') }}" method="POST" enctype="multipart/form-data"
-            class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
+            class="form-prevent-multiple-submits bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
             @csrf
 
             <div class="p-6 md:p-8 space-y-8">
@@ -87,6 +87,15 @@
                             </select>
                         </div>
 
+                        <div class="space-y-1">
+                            <label for="kontak" class="block text-sm font-semibold text-gray-700">
+                                Domain
+                            </label>
+                            <input type="text" id="domain" name="domain"
+                                placeholder="Masukkan domain / subdomain perusahaan"
+                                class="w-full rounded-xl border-gray-300 py-2.5 px-4 text-gray-900 shadow-sm focus:outline-none focus:border-[#FFC829] transition-colors border">
+                        </div>
+
                         <div class="space-y-1 md:col-span-2">
                             <label for="alamat" class="block text-sm font-semibold text-gray-700">Alamat Lengkap<span
                                     class="text-red-500">*</span></label>
@@ -105,8 +114,16 @@
                         Batal
                     </a>
                     <button type="submit"
-                        class="flex-1 sm:flex-none inline-flex items-center justify-center px-8 py-2.5 text-sm font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-all active:scale-95 shadow-sm">
-                        Simpan
+                        class="btn-submit flex-1 sm:flex-none inline-flex items-center justify-center px-8 py-2.5 text-sm font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-all active:scale-95 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                        <span class="btn-text">Simpan</span>
+                        <svg class="btn-spinner hidden animate-spin ml-2 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                            </path>
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -182,4 +199,5 @@
             closeCropper();
         }
     </script>
+
 </x-layout.user.app>

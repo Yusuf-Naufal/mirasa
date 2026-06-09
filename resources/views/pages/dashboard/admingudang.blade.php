@@ -11,11 +11,15 @@
                     </p>
                 </div>
                 <div class="flex gap-3">
-                    <a href="{{ route('produksi.index') }}"
-                        class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all">Riwayat
-                        Produksi</a>
-                    <a href="{{ route('inventory.index') }}"
-                        class="px-5 py-2.5 bg-blue-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">Gudang</a>
+                    @can('produksi.index')
+                        <a href="{{ route('produksi.index') }}"
+                            class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all">Riwayat
+                            Produksi</a>
+                    @endcan
+                    @can('inventory.index')
+                        <a href="{{ route('inventory.index') }}"
+                            class="px-5 py-2.5 bg-blue-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">Gudang</a>
+                    @endcan
                 </div>
             </div>
         </div>

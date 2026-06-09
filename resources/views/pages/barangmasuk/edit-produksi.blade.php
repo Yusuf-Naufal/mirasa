@@ -194,8 +194,8 @@
                             </div>
 
                             <button type="submit"
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg transition-all active:scale-95">
-                                Perbarui Data Produksi
+                                class="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg transition-all active:scale-95">
+                                Perbarui Data
                             </button>
                         </div>
                     </div>

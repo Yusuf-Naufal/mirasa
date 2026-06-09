@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
             PerusahaanSeeder::class,
             SupplierSeeder::class,
             CostumerSeeder::class,
+            PermissionSeeder::class,
+            PermissonAfkirSeeder::class,
+            RolePermissionSeeder::class,
         ]);
     }
 }

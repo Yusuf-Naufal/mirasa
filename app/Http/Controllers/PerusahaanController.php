@@ -68,6 +68,7 @@ class PerusahaanController extends Controller
             'jenis_perusahaan' => 'nullable|string',
             'kontak'           => 'nullable|string',
             'alamat'           => 'nullable|string',
+            'domain'           => 'nullable|string',
             'kota'             => 'nullable|string',
             'logo_cropped'     => 'nullable|string',
         ]);
@@ -125,8 +126,9 @@ class PerusahaanController extends Controller
             'jenis_perusahaan' => 'required|string',
             'kontak'           => 'required|string',
             'alamat'           => 'required|string',
+            'domain'           => 'required|string',
             'kota'             => 'nullable|string',
-            'logo_cropped'     => 'nullable|string', // Ini data Base64 dari Cropper
+            'logo_cropped'     => 'nullable|string',
         ]);
 
         // 1. Logika format kontak ke 62

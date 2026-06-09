@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <style>
+        @page {
+            margin: 1.2cm;
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10pt;
+            color: #2d3748;
+            line-height: 1.5;
+        }
+
+        /* Kop Surat / Header */
+        .header-container {
+            border-bottom: 2px solid #4a5568;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+
+        .company-name {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #1a202c;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .report-title {
+            font-size: 14pt;
+            color: #4a5568;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+
+        /* Info Periode */
+        .info-section {
+            margin-bottom: 25px;
+        }
+
+        .info-label {
+            color: #718096;
+            font-size: 9pt;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-weight: bold;
+            font-size: 11pt;
+        }
+
+        /* Ringkasan Box */
+        .summary-grid {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 10px;
+            width: 45%;
+        }
+
+        .summary-card.blue {
+            border-left: 5px solid #3182ce;
+        }
+
+        .summary-card.orange {
+            border-left: 5px solid #dd6b20;
+        }
+
+        .summary-label {
+            font-size: 8pt;
+            color: #718096;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .summary-price {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        /* Styling Tabel */
+        h3 {
+            font-size: 11pt;
+            text-transform: uppercase;
+            color: #2d3748;
+            border-left: 4px solid #4a5568;
+            padding-left: 10px;
+            margin-bottom: 15px;
+            margin-top: 25px;
+        }
+
+        .process-header {
+            background-color: #edf2f7;
+            padding: 8px 12px;
+            font-weight: bold;
+            font-size: 10pt;
+            color: #2d3748;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th {
+            background-color: #2d3748;
+            color: white;
+            text-align: left;
+            padding: 10px;
+            font-size: 8pt;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+            font-size: 9pt;
+        }
+
+        .bg-light {
+            background-color: #f8fafc;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .font-mono {
+            font-family: 'Courier', monospace;
+        }
+
+        .unit-label {
+            font-size: 7pt;
+            color: #718096;
+        }
+
+        /* Footer */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+            font-size: 8pt;
+            color: #a0aec0;
+            text-align: right;
+        }
+
+        /* Page Break Prevention */
+        .no-break {
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header-container">
+        <h1 class="company-name">{{ $namaPerusahaan }}</h1>
+        <div class="report-title">Laporan Analisis Produksi</div>
+    </div>
+
+    <table class="info-section">
+        <tr>
+            <td style="border:none; padding:0; width: 50%;">
+                <div class="info-label">Periode Laporan</div>
+                <div class="info-value">
+                    @php
+                        $dates = explode(' to ', $dateRange);
+                        $start = \Carbon\Carbon::parse($dates[0])->translatedFormat('d F Y');
+                        $end = isset($dates[1]) ? \Carbon\Carbon::parse($dates[1])->translatedFormat('d F Y') : $start;
+                    @endphp
+                    {{ $start === $end ? $start : $start . ' - ' . $end }}
+                </div>
+            </td>
+            <td style="border:none; padding:0; text-align: right;">
+                <div class="info-label">Status Dokumen</div>
+                <div class="info-value" style="color: #38a169;">Finalized</div>
+            </td>
+        </tr>
+    </table>
+
+    <table class="summary-grid">
+        <tr>
+            <td style="border:none; padding:0;">
+                <div class="summary-card blue">
+                    <div class="summary-label">Total Biaya Bahan Baku</div>
+                    <div class="summary-price">Rp {{ number_format($totalBiayaBB, 0, ',', '.') }}</div>
+                </div>
+            </td>
+            <td style="border:none; padding:0; width: 20px;"></td>
+            <td style="border:none; padding:0;">
+                <div class="summary-card orange">
+                    <div class="summary-label">Biaya Bahan Penolong</div>
+                    <div class="summary-price">Rp {{ number_format($totalBiayaBP, 0, ',', '.') }}</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <h3>I. Output: Hasil Produksi Jadi</h3>
+    <table>
+        <thead>
+            <tr>
+                <th width="50%">Deskripsi Produk</th>
+                <th class="text-right">Kuantitas</th>
+                <th class="text-right">Estimasi Nilai Asset</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($hasilProduksi as $item)
+                <tr>
+                    <td>
+                        <div style="font-weight: bold;">{{ $item['nama_barang'] }}</div>
+                        <div class="unit-label">Satuan: {{ $item['satuan'] }}</div>
+
+                        {{-- Keterangan Tambahan Jika Ada Afkir --}}
+                        @if (($item['qty_afkir'] ?? 0) > 0)
+                            <div style="font-size: 9px; color: #d97706; margin-top: 2px;">
+                                <i>*Diproses Afkir: -{{ number_format($item['qty_afkir'], 2) }}
+                                    {{ $item['satuan'] }}</i>
+                            </div>
+                        @endif
+                    </td>
+                    <td class="text-right font-mono" style="vertical-align: top;">
+                        {{-- Coret Qty Asli (Gross) jika ada afkir --}}
+                        @if (($item['qty_afkir'] ?? 0) > 0)
+                            <span style="text-decoration: line-through; color: #a0aec0; font-size: 9px;">
+                                {{ number_format($item['qty_asli'], 2) }}
+                            </span><br>
+                        @endif
+                        {{-- Qty Netto (Bersih) --}}
+                        <strong>{{ number_format($item['total_qty'], 2) }}</strong>
+                    </td>
+                    <td class="text-right font-mono" style="vertical-align: bottom;">
+                        Rp {{ number_format($item['total_nilai'], 0, ',', '.') }}
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <h3>II. Input: Ringkasan Total Bahan Keluar</h3>
+    <table>
+        <thead>
+            <tr>
+                <th width="50%">Nama Bahan Baku / Penolong</th>
+                <th class="text-right">Total Kuantitas</th>
+                <th class="text-right">Total Biaya</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($barangKeluar as $item)
+                <tr>
+                    <td>
+                        <div style="font-weight: bold;">{{ $item['nama_barang'] }}</div>
+                        <div class="unit-label">Satuan: {{ $item['satuan'] }}</div>
+                    </td>
+                    <td class="text-right font-mono">{{ number_format($item['total_qty'], 2) }}</td>
+                    <td class="text-right font-mono" style="color: #3182ce;">Rp
+                        {{ number_format($item['total_nilai'], 0, ',', '.') }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <h3>III. Rincian Bahan Keluar per Proses</h3>
+    @forelse($rincianPerProses as $idProses => $items)
+        <div class="no-break">
+            <div class="process-header">ID PROSES: {{ $idProses }}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th width="50%">Nama Barang</th>
+                        <th class="text-right">Kuantitas</th>
+                        <th class="text-right">Estimasi Nilai</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($items as $item)
+                        <tr>
+                            <td>{{ $item['nama_barang'] }} <br><span class="unit-label">{{ $item['satuan'] }}</span>
+                            </td>
+                            <td class="text-right font-mono">{{ number_format($item['qty'], 2) }}</td>
+                            <td class="text-right font-mono">Rp {{ number_format($item['nilai'], 0, ',', '.') }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr class="bg-light">
+                        <td class="text-right" style="font-weight: bold;">SUBTOTAL PROSES</td>
+                        <td class="text-right font-mono" style="font-weight: bold;">
+                            {{ number_format($items->sum('qty'), 2) }}</td>
+                        <td class="text-right font-mono" style="font-weight: bold;">Rp
+                            {{ number_format($items->sum('nilai'), 0, ',', '.') }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    @empty
+        <p style="text-align: center; color: #a0aec0; margin-top: 20px;">Tidak ada rincian data per proses.</p>
+    @endforelse
+
+    <div class="footer">
+        Generated by System | Waktu Cetak: {{ now()->translatedFormat('d F Y H:i') }}
+    </div>
+</body>
+
+</html>

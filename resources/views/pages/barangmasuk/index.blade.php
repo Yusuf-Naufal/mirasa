@@ -31,7 +31,7 @@
             {{-- 2. SEARCH & BUTTON --}}
             <div class="mb-8 flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div class="flex gap-2 items-center w-full">
-                    <form action="{{ route('bahan-baku.index') }}" method="GET" class="relative w-full md:max-w-md">
+                    <form action="{{ route('barang-masuk.index') }}" method="GET" class="relative w-full md:max-w-md">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -54,55 +54,82 @@
                 </div>
 
                 {{-- BUTTON TAMBAH BARANG DENGAN DROPDOWN (Pemisahan) --}}
-                <div class="relative inline-block text-left w-full md:w-56" x-data="{ open: false }">
-                    <button @click="open = !open" @click.away="open = false" type="button"
-                        class="inline-flex justify-center items-center w-full lg:w-auto gap-x-1.5 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Barang Masuk
-                        <svg class="-mr-1 h-5 w-5 text-green-200" viewBox="0 0 20 20" fill="currentColor"
-                            aria-hidden="true">
-                            <path fill-rule="evenodd"
-                                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
+                @canany(['barang-masuk.create-produksi', 'barang-masuk.create-bahan-penolong'])
+                    <div class="relative inline-block text-left w-full md:w-56" x-data="{ open: false }">
+                        <button @click="open = !open" @click.away="open = false" type="button"
+                            class="inline-flex justify-center items-center w-full lg:w-auto gap-x-1.5 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Barang Masuk
+                            <svg class="-mr-1 h-5 w-5 text-green-200" viewBox="0 0 20 20" fill="currentColor"
+                                aria-hidden="true">
+                                <path fill-rule="evenodd"
+                                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
 
-                    {{-- MENU PILIHAN --}}
-                    <div x-show="open" x-transition:enter="transition ease-out duration-100"
-                        x-transition:enter-start="transform opacity-0 scale-95"
-                        x-transition:enter-end="transform opacity-100 scale-100"
-                        x-transition:leave="transition ease-in duration-75"
-                        x-transition:leave-start="transform opacity-100 scale-100"
-                        x-transition:leave-end="transform opacity-0 scale-95"
-                        class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
-                        <div class="py-1">
-                            <a href="{{ route('barang-masuk.create-produksi') }}"
-                                class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
-                                <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Produksi
-                            </a>
-                            <a href="{{ route('barang-masuk.create-bp') }}"
-                                class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
-                                <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Bahan Penolong
-                            </a>
+                        {{-- MENU PILIHAN --}}
+                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg focus:outline-none overflow-hidden">
+                            <div class="py-1">
+                                @can('barang-masuk.create-produksi')
+                                    <a href="{{ route('barang-masuk.create-produksi') }}"
+                                        class="flex items-center gap-3 px-4 py-3 hover:bg-yellow-50 text-gray-700 transition-colors">
+                                        <div class="p-2 bg-yellow-100 text-yellow-600 rounded-lg">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 48 48">
+                                                <path fill="currentColor" fill-rule="evenodd"
+                                                    d="M24 1.5q-1.847 0-3.47.019c.056 2.59.186 5.094.294 6.863l2.104-1.335a2 2 0 0 1 2.144 0l2.104 1.335c.108-1.77.238-4.273.295-6.863A313 313 0 0 0 24 1.5m-12.788.308c1.557-.089 3.647-.18 6.318-.24c.068 3.12.24 6.104.356 7.876c.125 1.903 2.235 2.939 3.82 1.932L24 9.92l2.295 1.457c1.585 1.006 3.694-.03 3.82-1.933a188 188 0 0 0 .355-7.876c2.67.06 4.76.151 6.318.24c2.793.16 5.106 2.213 5.377 5.089c.179 1.895.335 4.564.335 8.103s-.156 6.208-.335 8.103c-.271 2.876-2.584 4.93-5.377 5.089c-2.646.15-6.832.308-12.788.308s-10.142-.157-12.788-.308c-2.793-.16-5.106-2.213-5.377-5.089C5.656 21.208 5.5 18.54 5.5 15s.156-6.208.335-8.103c.271-2.876 2.584-4.93 5.377-5.089M27 20.5a1.5 1.5 0 0 0 0 3h8a1.5 1.5 0 0 0 0-3zm1.5-4.5a1.5 1.5 0 0 1 1.5-1.5h5a1.5 1.5 0 0 1 0 3h-5a1.5 1.5 0 0 1-1.5-1.5M24 46.5a735 735 0 0 1-14.19-.12C5.704 46.3 1.5 43.776 1.5 39s4.203-7.3 8.31-7.38c3.251-.063 7.921-.12 14.19-.12s10.939.057 14.189.12c4.108.08 8.311 2.603 8.311 7.38s-4.203 7.3-8.31 7.38c-3.251.063-7.921.12-14.19.12M9 39a3 3 0 1 0 6 0a3 3 0 0 0-6 0m15 3a3 3 0 1 1 0-6a3 3 0 0 1 0 6m9-3a3 3 0 1 0 6 0a3 3 0 0 0-6 0"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex flex-col"><span class="text-sm font-bold">Produksi</span>
+                                            <span class="text-[10px] text-gray-400">Barang FG, WIP, EC</span>
+                                        </div>
+                                    </a>
+                                @endcan
+                                @can('barang-masuk.create-bahan-penolong')
+                                    <a href="{{ route('barang-masuk.create-bp') }}"
+                                        class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 text-gray-700 transition-colors border-t border-gray-50">
+                                        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 2048 2048">
+                                                <path fill="currentColor"
+                                                    d="m1344 2l704 352v785l-128-64V497l-512 256v258l-128 64V753L768 497v227l-128-64V354zm0 640l177-89l-463-265l-211 106zm315-157l182-91l-497-249l-149 75zm-507 654l-128 64v-1l-384 192v455l384-193v144l-448 224L0 1735v-676l576-288l576 288zm-640 710v-455l-384-192v454zm64-566l369-184l-369-185l-369 185zm576-1l448-224l448 224v527l-448 224l-448-224zm384 576v-305l-256-128v305zm384-128v-305l-256 128v305zm-320-288l241-121l-241-120l-241 120z" />
+                                            </svg>
+                                        </div>
+                                        <div class="flex flex-col"><span class="text-sm font-bold">Operasional</span>
+                                            <span class="text-[10px] text-gray-400">Barang Penolong</span>
+                                        </div>
+                                    </a>
+                                @endcan
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endcanany
             </div>
 
             {{-- 3. TABS NAVIGATION --}}
             <div class="flex gap-4 border-b border-gray-100 mb-6">
-                <a href="{{ route('barang-masuk.index', ['tab' => 'produksi']) }}"
-                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'produksi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
-                    Barang Produksi
-                </a>
+                @can('barang-masuk.produksi')
+                    <a href="{{ route('barang-masuk.index', ['tab' => 'produksi']) }}"
+                        class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'produksi' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
+                        Barang Produksi
+                    </a>
+                @endcan
 
-                <a href="{{ route('barang-masuk.index', ['tab' => 'penolong']) }}"
-                    class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'penolong' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
-                    Bahan Penolong
-                </a>
+                @can('barang-masuk.bahan-penolong')
+                    <a href="{{ route('barang-masuk.index', ['tab' => 'penolong']) }}"
+                        class="pb-4 px-2 border-b-2 font-bold text-sm transition-all {{ $activeTab === 'penolong' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600' }}">
+                        Bahan Penolong
+                    </a>
+                @endcan
             </div>
 
             {{-- AREA TABEL --}}
@@ -114,9 +141,9 @@
                 @endif
             </div>
 
-            {{-- <div class="mt-6">
-                {{ $data->links('vendor.pagination.custom') }}
-            </div> --}}
+            <div class="mt-6">
+                {{ $barangMasukPagination->links('vendor.pagination.custom') }}
+            </div>
 
         </div>
     </div>
@@ -137,7 +164,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('bahan-baku.index') }}" method="GET" class="p-6">
+            <form action="{{ route('barang-masuk.index') }}" method="GET" class="p-6">
                 <input type="hidden" name="search" value="{{ request('search') }}">
 
                 <div class="space-y-5">
@@ -198,7 +225,7 @@
                 </div>
 
                 <div class="mt-8 flex items-center gap-3">
-                    <a href="{{ route('bahan-baku.index') }}"
+                    <a href="{{ route('barang-masuk.index') }}"
                         class="flex-1 rounded-xl border border-gray-200 py-3 text-center text-sm font-bold text-gray-600 hover:bg-gray-50">Reset</a>
                     <button type="submit"
                         class="flex-1 rounded-xl bg-gray-600 py-3 text-sm font-bold text-white hover:bg-gray-800 transition-colors shadow-sm">Terapkan

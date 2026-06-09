@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Supplier extends Model
 {
     use SoftDeletes, LogsActivity;
-    
+
     protected $table = 'supplier';
 
     protected $fillable = [

@@ -1,4 +1,4 @@
-<x-layout.user.app title="Edit Pengguna">>
+<x-layout.user.app title="Edit Pengguna">
     <div class="py-2">
         {{-- Gunakan method PUT untuk update data --}}
         <form action="{{ route('user.update', $user->id) }}" method="POST"

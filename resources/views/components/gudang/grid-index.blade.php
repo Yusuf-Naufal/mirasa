@@ -16,15 +16,18 @@
         $statusColor = 'amber';
         $statusText = 'Limit';
     }
+
+    $hasAccess = auth()->user()->can('inventory.show');
 @endphp
 
-<a href="{{ route('inventory.show', $item->id) }}"
-    class="group relative bg-white border border-gray-100 rounded-2xl p-4 transition-all duration-200 hover:shadow-lg hover:border-{{ $accent }}-200 flex flex-col gap-3">
+<a @if ($hasAccess) href="{{ route('inventory.show', $item->id) }}" @endif
+    class="group relative bg-white border border-gray-100 rounded-2xl p-4 transition-all duration-200 flex flex-col gap-3 
+    {{ $hasAccess ? 'hover:shadow-lg hover:border-' . $accent . '-200 cursor-pointer' : 'cursor-not-allowed opacity-75 select-none' }}">
 
     {{-- Header: Foto & Badge Status --}}
     <div class="flex items-start justify-between">
         <div
-            class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 group-hover:scale-105 transition-transform">
+            class="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100 {{ $hasAccess ? 'group-hover:scale-105' : '' }} transition-transform">
             @if ($item->barang->foto)
                 <img src="{{ asset('storage/' . $item->barang->foto) }}" class="w-full h-full object-cover">
             @else
@@ -44,7 +47,7 @@
     {{-- Content: Nama & Kode --}}
     <div class="flex-1">
         <h4
-            class="text-sm font-bold text-gray-800 line-clamp-2 leading-snug group-hover:text-{{ $accent }}-600 transition-colors uppercase">
+            class="text-sm font-bold text-gray-800 line-clamp-2 leading-snug {{ $hasAccess ? 'group-hover:text-' . $accent . '-600' : '' }} transition-colors uppercase">
             {{ $item->barang->nama_barang }}
         </h4>
         <p class="text-[10px] font-mono text-gray-400 mt-1 uppercase">{{ $item->barang->kode }}</p>
@@ -52,18 +55,15 @@
 
     {{-- Footer: Stok --}}
     <div class="pt-4 mt-1 border-t border-gray-50 flex items-center justify-between">
-        {{-- Label Stok --}}
         <div class="flex flex-col">
             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Stok</span>
             <div class="flex items-center gap-1">
-                {{-- Dot Indicator Dinamis --}}
                 <span
                     class="flex h-1.5 w-1.5 rounded-full {{ $stokAktual <= $stokMin ? 'bg-red-500 animate-pulse' : ($stokAktual <= $ambangKuning ? 'bg-amber-500' : 'bg-emerald-500') }}"></span>
                 <span class="text-[9px] font-medium text-gray-500">Tersedia</span>
             </div>
         </div>
 
-        {{-- Angka Stok --}}
         <div class="text-right">
             <div class="flex items-baseline justify-end gap-1">
                 <span

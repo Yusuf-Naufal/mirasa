@@ -149,9 +149,14 @@ class BarangController extends Controller
      */
     public function edit(string $id)
     {
+        $user = auth()->user();
         $barang = Barang::withTrashed()->findOrFail($id);
         $perusahaan = Perusahaan::whereNull('deleted_at')->get();
         $jenis = JenisBarang::get();
+
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $barang->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit barang dari perusahaan lain.');
+        }
 
         return view('pages.barang.edit', compact('perusahaan', 'jenis', 'barang'));
     }
@@ -163,6 +168,10 @@ class BarangController extends Controller
     {
         $barang = Barang::withTrashed()->findOrFail($id);
         $user = auth()->user();
+
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $barang->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengubah data barang dari perusahaan lain.');
+        }
 
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->id_perusahaan : $user->id_perusahaan;
         $jenis = JenisBarang::findOrFail($request->id_jenis);
@@ -378,12 +387,17 @@ class BarangController extends Controller
                         $sheet = $event->sheet->getDelegate();
                         $rowCount = 100;
 
-                        // 1. Setup Kolom Otomatis
+                        // Setup Kolom Otomatis
                         foreach (range('A', 'G') as $col) {
                             $sheet->getColumnDimension($col)->setAutoSize(true);
                         }
 
-                        // 2. Dropdown Kategori Sistem (D)
+                        $msgKode = $sheet->getCell('B2')->getDataValidation();
+                        $msgKode->setShowInputMessage(true)
+                            ->setPromptTitle('Format Kode Barang')
+                            ->setPrompt('Wajib menggunakan prefix jenis barang. Contoh: FG-01, WIP-01, atau BB-01.');
+
+                        // Dropdown Kategori Sistem (D)
                         $validationKategori = $sheet->getCell('D2')->getDataValidation();
                         $validationKategori->setType(DataValidation::TYPE_LIST)
                             ->setErrorStyle(DataValidation::STYLE_STOP)
@@ -394,7 +408,7 @@ class BarangController extends Controller
                             ->setPrompt('Pilih salah satu: FG, WIP, EC, BB, BP')
                             ->setFormula1('"FG,WIP,EC,BB,BP"');
 
-                        // 3. Dropdown Sub Kategori BB (E)
+                        // Dropdown Sub Kategori BB (E)
                         $validationBB = $sheet->getCell('E2')->getDataValidation();
                         $validationBB->setType(DataValidation::TYPE_LIST)
                             ->setShowInputMessage(true)
@@ -402,7 +416,7 @@ class BarangController extends Controller
                             ->setPrompt('Isi Utama/Pendukung jika kategori adalah BB')
                             ->setFormula1('"Utama,Pendukung"');
 
-                        // 4. Input Message untuk Konversi (F & G)
+                        // Input Message untuk Konversi (F & G)
                         $msgKonversi = $sheet->getCell('F2')->getDataValidation();
                         $msgKonversi->setType(DataValidation::TYPE_WHOLE)
                             ->setShowInputMessage(true)
@@ -422,12 +436,15 @@ class BarangController extends Controller
                     },
                 ];
             }
-        }, 'template_barang_v2.xlsx');
+        }, 'template_barang.xlsx');
     }
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:xlsx,xls']);
+        // 1. Validasi awal
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls'
+        ]);
 
         try {
             $import = new BarangImport;
@@ -437,7 +454,6 @@ class BarangController extends Controller
             $gagal = $import->failures()->count();
 
             if ($gagal > 0) {
-                // Susun detail error baris demi baris
                 $details = collect($import->failures())->map(function ($failure) {
                     return "<li class='mb-1'><b>Baris " . $failure->row() . ":</b> " . implode(", ", $failure->errors()) . "</li>";
                 })->implode('');
@@ -452,7 +468,8 @@ class BarangController extends Controller
 
             return back()->with('success', "Berhasil mengimpor $berhasil data barang.");
         } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+            // Menangkap error jika path kosong atau file tidak terbaca
+            return back()->with('error', 'Gagal memproses file: ' . $e->getMessage());
         }
     }
 }

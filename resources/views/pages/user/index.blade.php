@@ -5,14 +5,16 @@
 
             <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
                 <div class="flex gap-2">
-                    <a href="{{ route('user.create') }}"
-                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
-                        </svg>
-                        <span class="hidden md:block md:ml-2">Tambah User</span>
-                    </a>
+                    @can('user.create')
+                        <a href="{{ route('user.create') }}"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
+                            </svg>
+                            <span class="hidden md:block md:ml-2">Tambah User</span>
+                        </a>
+                    @endcan
 
                     <button onclick="openModal('filterModal')"
                         class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
@@ -22,6 +24,23 @@
                         </svg>
                         <span class="hidden md:block md:ml-2">Filter User</span>
                     </button>
+
+                    @can('roles.index')
+                        <a href="{{ route('roles.index') }}"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                                <g fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path
+                                        d="M4.268 18.845c.225 1.67 1.608 2.979 3.292 3.056c1.416.065 2.855.099 4.44.099s3.024-.034 4.44-.1c1.684-.076 3.067-1.385 3.292-3.055c.147-1.09.268-2.207.268-3.345s-.121-2.255-.268-3.345c-.225-1.67-1.608-2.979-3.292-3.056A95 95 0 0 0 12 9c-1.585 0-3.024.034-4.44.1c-1.684.076-3.067 1.385-3.292 3.055C4.12 13.245 4 14.362 4 15.5s.121 2.255.268 3.345Z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M7.5 9V6.5a4.5 4.5 0 0 1 9 0V9" />
+                                    <path stroke-linecap="round" d="M8 17.5V16a4 4 0 0 1 8 0v1.5" />
+                                    <path stroke-linecap="round" d="M10.5 19v-3a1.5 1.5 0 0 1 3 0m0 3v-1" />
+                                </g>
+                            </svg>
+                            <span class="hidden md:block md:ml-2">Roles</span>
+                        </a>
+                    @endcan
 
                 </div>
 

@@ -3,7 +3,7 @@
         // Konfigurasi Dinamis berdasarkan Kategori
         $config = [
             'ADMINISTRASI' => ['color' => 'orange', 'icon' => 'clip'],
-            'KESEJAHTERAAN' => ['color' => 'purple', 'icon' => 'heart'],
+            'KESEJAHTERAAN' => ['color' => 'purple', 'options' => ['GAJI', 'BONUS', 'TUNJANGAN']],
             'LIMBAH' => ['color' => 'green', 'icon' => 'trash'],
             'MAINTENANCE' => ['color' => 'amber', 'options' => ['PERBAIKAN', 'SEWA']],
             'OFFICE' => ['color' => 'slate', 'options' => ['GALON', 'ATK', 'KERTAS', 'FOTOCOPY']],
@@ -43,7 +43,11 @@
                 @csrf
                 @method('PUT')
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 md:px-0">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 md:px-0" x-data="{
+                    selectedLayanan: '{{ $isCustom ? 'LAINNYA' : $pengeluaran->sub_kategori }}',
+                    selectedSub: '{{ $pengeluaran->sub_kategori }}',
+                    customLayanan: '{{ $isCustom ? $pengeluaran->sub_kategori : '' }}'
+                }">
 
                     {{-- LEFT SIDE: FORM INPUT --}}
                     <div class="lg:col-span-2 space-y-6 text-left">
@@ -61,15 +65,16 @@
                                         required>
                                 </div>
 
-                                {{-- DINAMIS SUB-KATEGORI (Dropdown vs Input) --}}
+                                {{-- DINAMIS SUB-KATEGORI --}}
                                 @if ($options)
-                                    <div x-data="{ selectedLayanan: '{{ $isCustom ? 'LAINNYA' : $pengeluaran->sub_kategori }}', customLayanan: '{{ $isCustom ? $pengeluaran->sub_kategori : '' }}' }">
-                                        <div class="mb-4">
-                                            <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis
-                                                Layanan</label>
+                                    <div class="md:col-span-1">
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Jenis
+                                            Layanan</label>
+                                        <div class="relative">
                                             <select :name="selectedLayanan !== 'LAINNYA' ? 'sub_kategori' : ''"
                                                 x-model="selectedLayanan"
-                                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none transition-all"
+                                                @change="selectedSub = $event.target.value; if(selectedSub !== 'GAJI') { absensi = null }"
+                                                class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-{{ $color }}-500 outline-none bg-white appearance-none transition-all"
                                                 required>
                                                 <option value="" disabled>-- Pilih Jenis Layanan --</option>
                                                 @foreach ($options as $opt)
@@ -77,16 +82,24 @@
                                                 @endforeach
                                                 <option value="LAINNYA">LAINNYA...</option>
                                             </select>
+                                            <div
+                                                class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path d="M19 9l-7 7-7-7"></path>
+                                                </svg>
+                                            </div>
                                         </div>
 
                                         <div x-show="selectedLayanan === 'LAINNYA'" class="mt-3">
                                             <label
-                                                class="block text-sm font-semibold text-gray-400 mb-2 uppercase">Sebutkan
+                                                class="block text-[10px] font-bold text-{{ $color }}-600 mb-1 uppercase">Sebutkan
                                                 Layanan</label>
                                             <input type="text"
                                                 :name="selectedLayanan === 'LAINNYA' ? 'sub_kategori' : ''"
                                                 x-model="customLayanan"
-                                                class="w-full px-4 py-3 rounded-xl border border-blue-200 focus:ring-2 focus:ring-blue-500 outline-none uppercase bg-blue-50/30 transition-all"
+                                                @input="selectedSub = $event.target.value.toUpperCase()"
+                                                class="w-full px-4 py-3 rounded-xl border border-{{ $color }}-200 focus:ring-2 focus:ring-{{ $color }}-500 outline-none uppercase bg-{{ $color }}-50/30 transition-all"
                                                 :required="selectedLayanan === 'LAINNYA'">
                                         </div>
                                     </div>
@@ -101,6 +114,7 @@
                                     </div>
                                 @endif
 
+                                {{-- Tanggal Bayar --}}
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Bayar</label>
                                     <input type="date" name="tanggal_pengeluaran"
@@ -108,21 +122,61 @@
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none">
                                 </div>
 
-                                <div class="md:col-span-2">
+                                {{-- INPUT ABSENSI: Muncul jika Kategori Kesejahteraan DAN Sub-Kategori GAJI --}}
+                                @if ($pengeluaran->kategori === 'KESEJAHTERAAN')
+                                    <div x-show="selectedSub === 'GAJI'" x-transition.duration.300ms
+                                        class="md:col-span-2">
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Total
+                                            Kehadiran</label>
+                                        <div class="relative">
+                                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                                    <circle cx="12" cy="7" r="4" />
+                                                </svg>
+                                            </span>
+                                            <input type="number" name="absensi"
+                                                value="{{ $pengeluaran->absensi ?? '' }}" placeholder="0"
+                                                class="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 focus:bg-white focus:border-{{ $color }}-500 focus:ring-0 outline-none text-2xl font-bold transition-all"
+                                                :required="selectedSub === 'GAJI'">
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div class="md:col-span-2" x-data="{
+                                    rawNominal: '{{ $pengeluaran->jumlah_pengeluaran }}',
+                                    formatRupiah(val) {
+                                        if (!val) return '';
+                                        return new Intl.NumberFormat('id-ID').format(val);
+                                    }
+                                }">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Total Nominal
                                         (Rp)</label>
                                     <div class="relative">
                                         <span
                                             class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">Rp</span>
-                                        <input type="number" name="jumlah_pengeluaran"
-                                            value="{{ $pengeluaran->jumlah_pengeluaran }}"
-                                            class="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 focus:bg-white focus:border-blue-500 outline-none text-2xl font-bold"
+
+                                        <input type="text" :value="formatRupiah(rawNominal)"
+                                            @input="
+                                                let val = $event.target.value.replace(/\D/g, '');
+                                                rawNominal = val;
+                                                $nextTick(() => { $event.target.value = formatRupiah(val) });
+                                            "
+                                            placeholder="0"
+                                            class="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 focus:bg-white focus:border-blue-500 outline-none text-2xl font-bold transition-all"
                                             required>
+
+                                        <input type="hidden" name="jumlah_pengeluaran" :value="rawNominal">
                                     </div>
+                                    <p class="text-[10px] text-gray-400 mt-1 italic">*Tampilan terformat otomatis
+                                        (Contoh: 1.500.000)</p>
                                 </div>
                             </div>
                         </div>
 
+                        {{-- Keterangan --}}
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Keterangan Tambahan</label>
                             <textarea name="keterangan" rows="4"
@@ -157,11 +211,13 @@
                                             </span>
                                             <div
                                                 class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-blue-500 flex items-center justify-center">
-                                                <div class="w-2 h-2 rounded-full bg-blue-500 hidden peer-checked:block">
+                                                <div
+                                                    class="w-2 h-2 rounded-full bg-blue-500 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">Biaya akan dibebankan untuk menghitung
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya akan dibebankan untuk
+                                            menghitung
                                             HPP</p>
                                     </div>
                                 </label>
@@ -186,6 +242,66 @@
                                         </div>
                                         <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak dibebankan ke
                                             HPP</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- METODE ALOKASI BIAYA --}}
+                        <div class="md:col-span-2 bg-amber-50/50 rounded-xl p-4 border border-amber-100">
+                            <label class="block text-sm font-bold text-amber-900 mb-3 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                                Metode Alokasi Biaya
+                            </label>
+                            <div class="flex flex-wrap gap-4">
+                                {{-- Radio Fixed / Beban Harian --}}
+                                <label class="flex-1 cursor-pointer group">
+                                    <input type="radio" name="metode_alokasi" value="FIXED" id="radio_fixed"
+                                        class="peer hidden"
+                                        {{ $pengeluaran->metode_alokasi == 'FIXED' ? 'checked' : '' }}>
+                                    <div
+                                        class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all group-hover:border-amber-300">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm font-bold text-gray-700 peer-checked:text-amber-700">
+                                                Beban Harian
+                                            </span>
+                                            <div
+                                                class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-amber-500 flex items-center justify-center">
+                                                <div
+                                                    class="w-2 h-2 rounded-full bg-amber-500 hidden peer-checked:block">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-[10px] text-gray-500 mt-1">
+                                            Biaya dibebankan penuh pada tanggal pengeluaran (Harian).
+                                        </p>
+                                    </div>
+                                </label>
+
+                                {{-- Radio Spread / Beban Bulanan --}}
+                                <label class="flex-1 cursor-pointer group">
+                                    <input type="radio" name="metode_alokasi" value="SPREAD" id="radio_spread"
+                                        class="peer hidden"
+                                        {{ $pengeluaran->metode_alokasi == 'SPREAD' ? 'checked' : '' }}>
+                                    <div
+                                        class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-red-500 peer-checked:bg-red-50 transition-all group-hover:border-red-300">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm font-bold text-gray-700 peer-checked:text-red-700">
+                                                Beban Bulanan
+                                            </span>
+                                            <div
+                                                class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-red-500 flex items-center justify-center">
+                                                <div class="w-2 h-2 rounded-full bg-red-500 hidden peer-checked:block">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-[10px] text-gray-500 mt-1">
+                                            Biaya dibagi rata/proporsional selama satu periode (Bulanan).
+                                        </p>
                                     </div>
                                 </label>
                             </div>
@@ -249,15 +365,14 @@
 
                         {{-- SPECIAL GAS INFO --}}
                         @if ($pengeluaran->kategori === 'OPERASIONAL')
-                            <div id="gas-info-card"
-                                class="{{ $pengeluaran->sub_kategori !== 'GAS' ? 'hidden' : '' }} bg-blue-50 rounded-2xl p-6 border border-blue-100">
+                            <div id="gas-info-card" class="bg-blue-50 rounded-2xl p-6 border border-blue-100">
                                 <div class="flex gap-3">
                                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
                                     <p class="text-xs text-blue-700">Sistem akan otomatis mencocokkan data pemakaian
-                                        gas harian yang belum terbayar.</p>
+                                        harian yang belum terbayar.</p>
                                 </div>
                             </div>
                         @endif

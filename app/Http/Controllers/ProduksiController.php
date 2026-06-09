@@ -30,12 +30,21 @@ class ProduksiController extends Controller
             $query->where('id_perusahaan', auth()->user()->id_perusahaan);
         }
 
-        $query->withCount(['DetailInventory as BahanBakuMasuk' => function ($q) {
-            $q->whereHas('Inventory.Barang.jenisBarang', function ($sq) {
-                $sq->where('kode', 'BB');
+        $query->withCount(['BarangKeluar as BahanBakuDigunakan' => function ($q) {
+            $q->whereHas('DetailInventory.Inventory.Barang', function ($sq) {
+                $sq->where('jenis', 'Utama')
+                    ->whereHas('jenisBarang', function ($ssq) {
+                        $ssq->where('kode', 'BB');
+                    });
             });
         }])
-            ->with(['BarangKeluar.DetailInventory.Inventory.Barang'])
+            ->with([
+                'BarangKeluar' => function ($q) {
+                    $q->whereDoesntHave('DetailInventory.Inventory.Barang.jenisBarang', function ($sq) {
+                        $sq->where('kode', 'BB');
+                    })->with(['DetailInventory.Inventory.Barang.jenisBarang']);
+                }
+            ])
             ->latest('tanggal_produksi');
 
         // Filter Pencarian (Search)
@@ -93,18 +102,36 @@ class ProduksiController extends Controller
         $activeTab = $request->get('tab', 'bb');
 
         // Load data sesuai tab aktif (opsional: bisa load semua, tapi pagination akan butuh appends)
-        $bahanBaku = DetailInventory::where('id_produksi', $id)
-            ->whereHas('Inventory.Barang.jenisBarang', fn($q) => $q->where('kode', 'BB'))
-            ->paginate(10, ['*'], 'page_bb')->appends(['tab' => 'bb']);
+        $bahanBaku = BarangKeluar::where('id_produksi', $id)
+            ->whereHas('DetailInventory.Inventory.Barang', function ($q) {
+                $q->where('jenis', 'Utama')
+                    ->whereHas('jenisBarang', function ($sq) {
+                        $sq->where('kode', 'BB');
+                    });
+            })
+            ->paginate(10, ['*'], 'page_bb')
+            ->appends(['tab' => 'bb']);
 
-        $barangPenolong = DetailInventory::where('id_produksi', $id)
-            ->whereHas('Inventory.Barang.jenisBarang', fn($q) => $q->where('kode', 'BP'))
-            ->paginate(10, ['*'], 'page_bp')->appends(['tab' => 'bp']);
+        // Di Controller
+        $bahanBakuMasuk = $produksi->detailProduksi()->with('barang')->get();
 
-        $barangKeluar = BarangKeluar::where('id_produksi', $id)
-            ->paginate(10, ['*'], 'page_bk')->appends(['tab' => 'bk']);
+        $barangPenolong = BarangKeluar::where('id_produksi', $id)
+            ->whereHas('DetailInventory.Inventory.Barang.jenisBarang', function ($q) {
+                $q->where('kode', 'BP');
+            })
+            ->with(['DetailInventory.Inventory.Barang.jenisBarang'])
+            ->paginate(10, ['*'], 'page_bp')
+            ->appends(['tab' => 'bp']);
 
-        return view('pages.produksi.show', compact('produksi', 'bahanBaku', 'barangPenolong', 'barangKeluar', 'activeTab'));
+        $barangKeluar = DetailInventory::where('id_produksi', $id)
+            ->whereDoesntHave('Inventory.Barang.jenisBarang', function ($q) {
+                $q->whereIn('kode', ['BB', 'BP']);
+            })
+            ->with(['Inventory.Barang.jenisBarang'])
+            ->paginate(10, ['*'], 'page_bk')
+            ->appends(['tab' => 'bk']);
+
+        return view('pages.produksi.show', compact('produksi', 'bahanBaku', 'barangPenolong', 'barangKeluar', 'activeTab', 'bahanBakuMasuk'));
     }
 
     /**
@@ -144,6 +171,10 @@ class ProduksiController extends Controller
         try {
             // 2. Cari data detail produksi berdasarkan ID
             $detail = DetailProduksi::findOrFail($id);
+            $user = auth()->user();
+            if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $detail->Produksi->id_perusahaan) {
+                abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+            }
 
             // 3. Update data
             $detail->update([

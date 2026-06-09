@@ -15,10 +15,12 @@
                 </a>
                 <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight mt-2">Pengeluaran <span
                         class="text-orange-600">Administrasi</span></h1>
-                <p class="text-sm text-gray-500 font-medium italic">*Gunakan kategori ini untuk pengeluaran dibagian administrasi kantor.</p>
+                <p class="text-sm text-gray-500 font-medium italic">*Gunakan kategori ini untuk pengeluaran dibagian
+                    administrasi kantor.</p>
             </div>
 
-            <form action="{{ route('pengeluaran.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('pengeluaran.store') }}" method="POST" enctype="multipart/form-data"
+                class="form-prevent-multiple-submits">
                 @csrf
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 md:px-0">
@@ -34,8 +36,7 @@
                                 <div class="md:col-span-2 text-left">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Nama
                                         Pengeluaran</label>
-                                    <input type="text" name="nama_pengeluaran"
-                                        placeholder="Contoh: Biaya sertifikat"
+                                    <input type="text" name="nama_pengeluaran" placeholder="Contoh: Biaya sertifikat"
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                                         required>
                                 </div>
@@ -55,16 +56,33 @@
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                                 </div>
 
-                                <div class="md:col-span-2 text-left">
+                                <div class="md:col-span-2 text-left" x-data="{
+                                    rawNominal: '{{ $pengeluaran->jumlah_pengeluaran ?? '' }}',
+                                    formatRupiah(val) {
+                                        if (!val) return '';
+                                        return new Intl.NumberFormat('id-ID').format(val);
+                                    }
+                                }">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">Total Nominal
                                         (Rp)</label>
                                     <div class="relative">
                                         <span
                                             class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-gray-400">Rp</span>
-                                        <input type="number" name="jumlah_pengeluaran" placeholder="0"
+
+                                        <input type="text" x-ref="displayInput" :value="formatRupiah(rawNominal)"
+                                            @input="
+                                                let val = $event.target.value.replace(/\D/g, '');
+                                                rawNominal = val;
+                                                $nextTick(() => { $event.target.value = formatRupiah(val) });
+                                            "
+                                            placeholder="0"
                                             class="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 focus:bg-white focus:border-blue-500 focus:ring-0 outline-none text-2xl font-bold transition-all uppercase"
                                             required>
+
+                                        <input type="hidden" name="jumlah_pengeluaran" :value="rawNominal">
                                     </div>
+                                    <p class="text-[10px] text-gray-500 mt-1 italic">*Input otomatis memformat ribuan
+                                        (contoh: 1.000.000)</p>
                                 </div>
                             </div>
                         </div>
@@ -120,12 +138,70 @@
                                                 class="text-sm font-bold text-gray-700 peer-checked:text-gray-900">Non-HPP</span>
                                             <div
                                                 class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-gray-500 flex items-center justify-center">
-                                                <div class="w-2 h-2 rounded-full bg-gray-600 hidden peer-checked:block">
+                                                <div
+                                                    class="w-2 h-2 rounded-full bg-gray-600 hidden peer-checked:block">
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak di bebankan ke
+                                        <p class="text-[10px] text-gray-500 mt-1">Biaya pengeluaran tidak di bebankan
+                                            ke
                                             HPP</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- METODE ALOKASI BIAYA --}}
+                        <div class="md:col-span-2 bg-amber-50/50 rounded-xl p-4 border border-amber-100">
+                            <label class="block text-sm font-bold text-amber-900 mb-3 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                                Metode Alokasi Biaya
+                            </label>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="flex-1 cursor-pointer group">
+                                    <input type="radio" name="metode_alokasi" value="FIXED" id="radio_fixed"
+                                        class="peer hidden" checked>
+                                    <div
+                                        class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-amber-500 peer-checked:bg-amber-50 transition-all group-hover:border-amber-300">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm font-bold text-gray-700 peer-checked:text-amber-700">
+                                                Beban Harian
+                                            </span>
+                                            <div
+                                                class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-amber-500 flex items-center justify-center">
+                                                <div
+                                                    class="w-2 h-2 rounded-full bg-amber-500 hidden peer-checked:block">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-[10px] text-gray-500 mt-1">
+                                            Biaya dibebankan penuh pada tanggal pengeluaran (Harian).
+                                        </p>
+                                    </div>
+                                </label>
+
+                                <label class="flex-1 cursor-pointer group">
+                                    <input type="radio" name="metode_alokasi" value="SPREAD" id="radio_spread"
+                                        class="peer hidden">
+                                    <div
+                                        class="p-3 bg-white border-2 border-gray-200 rounded-xl peer-checked:border-red-500 peer-checked:bg-red-50 transition-all group-hover:border-red-300">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm font-bold text-gray-700 peer-checked:text-red-700">
+                                                Beban Bulanan
+                                            </span>
+                                            <div
+                                                class="w-4 h-4 rounded-full border-2 border-gray-300 peer-checked:border-red-500 flex items-center justify-center">
+                                                <div class="w-2 h-2 rounded-full bg-red-500 hidden peer-checked:block">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p class="text-[10px] text-gray-500 mt-1">
+                                            Biaya dibagi rata/proporsional selama satu periode (Bulanan).
+                                        </p>
                                     </div>
                                 </label>
                             </div>
@@ -186,14 +262,22 @@
                         {{-- ACTION BUTTONS --}}
                         <div class="flex flex-col gap-3 pt-4">
                             <button type="submit"
-                                class="w-full bg-orange-700 hover:bg-orange-800 text-white font-bold py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2">
+                                class="btn-submit w-full bg-orange-700 hover:bg-orange-800 text-white font-bold py-4 rounded-xl shadow-lg transition-all flex justify-center items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Simpan Pengeluaran
+                                <span class="btn-text">Simpan Pengeluaran</span>
+                                <svg class="btn-spinner hidden animate-spin ml-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                        stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
                             </button>
-                            <a href="{{ url()->previous() }}"
+                            <a href="{{ route('pengeluaran.index') }}"
                                 class="w-full bg-white border border-gray-200 text-gray-600 text-center py-4 rounded-xl font-semibold hover:bg-gray-50 transition-all">
                                 Batal
                             </a>

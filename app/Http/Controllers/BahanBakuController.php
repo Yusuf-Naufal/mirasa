@@ -160,7 +160,7 @@ class BahanBakuController extends Controller
             $totalHarga   = $subtotal - $potongan;
 
             // 3. Simpan Riwayat ke Detail Inventory
-            $detail = DetailInventory::create([
+            DetailInventory::create([
                 'id_inventory'    => $inventory->id,
                 'id_supplier'     => $request->id_supplier,
                 'id_produksi'     => $produksi->id,
@@ -206,8 +206,11 @@ class BahanBakuController extends Controller
     public function edit($id)
     {
         $user = auth()->user();
-
         $bahanBaku = DetailInventory::findOrFail($id);
+
+        if (!$user->hasRole('Super Admin') && $user->id_perusahaan !== $bahanBaku->Inventory->id_perusahaan) {
+            abort(403, 'Anda tidak memiliki izin untuk mengedit data ini.');
+        }
 
         $barang = Barang::where('id_perusahaan', $user->id_perusahaan)
             ->whereHas('jenisBarang', function ($query) {
@@ -238,9 +241,14 @@ class BahanBakuController extends Controller
         ]);
 
         try {
-            DB::beginTransaction();
-
             $bahanBaku = DetailInventory::findOrFail($id);
+
+            // --- PROTEKSI UTAMA ---
+            if ($bahanBaku->BarangKeluar()->exists()) {
+                return redirect()->back()->with('error', 'Gagal! Data tidak dapat diubah karena stok dari batch ini sudah ada yang keluar/terpakai.');
+            }
+
+            DB::beginTransaction();
 
             // 0. Ambil informasi barang BARU untuk pengecekan jenis
             $barangBaru = Barang::with('JenisBarang')->findOrFail($request->id_barang);

@@ -17,12 +17,16 @@
                         dalam satu pintu.</p>
                 </div>
                 <div class="flex gap-3">
-                    <a href="{{ route('user.create') }}"
-                        class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all">+
-                        User</a>
-                    <a href="{{ route('perusahaan.create') }}"
-                        class="px-5 py-2.5 bg-blue-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">+
-                        Perusahaan</a>
+                    @can('user.create')
+                        <a href="{{ route('user.create') }}"
+                            class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-2xl font-bold text-sm hover:bg-gray-200 transition-all">+
+                            User</a>
+                    @endcan
+                    @can('perusahaan.create')
+                        <a href="{{ route('perusahaan.create') }}"
+                            class="px-5 py-2.5 bg-blue-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">+
+                            Perusahaan</a>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -122,9 +126,9 @@
                                     ({{ $perusahaan->kota }})
                                 </h3>
                             </div>
-                            <a href="#"
+                            {{-- <a href="#"
                                 class="text-blue-600 text-[11px] font-black uppercase tracking-wider hover:underline">Lihat
-                                Semua</a>
+                                Semua</a> --}}
                         </div>
 
                         {{-- Slider Container --}}

@@ -5,24 +5,28 @@
 
             <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:justify-between">
                 <div class="flex gap-2">
-                    {{-- Tombol Tambah --}}
-                    <a type="button" href="{{ route('supplier.create') }}"
-                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
-                        </svg>
-                        <span class="hidden md:block md:ml-2">Tambah Supplier</span>
-                    </a>
+                    @can('supplier.create')
+                        {{-- Tombol Tambah --}}
+                        <a type="button" href="{{ route('supplier.create') }}"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition-all shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10S17.523 2 12 2m5 11h-4v4h-2v-4H7v-2h4V7h2v4h4z" />
+                            </svg>
+                            <span class="hidden md:block md:ml-2">Tambah Supplier</span>
+                        </a>
+                    @endcan
 
-                    <button onclick="openModal('importModal')"
-                        class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-green-600 transition-all shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
-                            <path fill="currentColor"
-                                d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3V11h2v3h3v2zm-3-7V3.5L18.5 9H13z" />
-                        </svg>
-                        <span class="hidden md:block md:ml-2">Import Excel</span>
-                    </button>
+                    @can('supplier.import')
+                        <button onclick="openModal('importModal')"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-green-600 transition-all shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24">
+                                <path fill="currentColor"
+                                    d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 14h-3v3h-2v-3H8v-2h3V11h2v3h3v2zm-3-7V3.5L18.5 9H13z" />
+                            </svg>
+                            <span class="hidden md:block md:ml-2">Import Excel</span>
+                        </button>
+                    @endcan
 
                     {{-- Tombol Filter --}}
                     <button onclick="openModal('filterModal')"
@@ -181,9 +185,9 @@
                     </div>
 
                     <form action="{{ route('supplier.import') }}" method="POST" enctype="multipart/form-data"
-                        class="space-y-6">
+                        class="form-prevent-multiple-submits space-y-6">
                         @csrf
-                        <div class="relative group">
+                        <div class="form-prevent-multiple-submits relative group">
                             <input type="file" name="file" id="fileImport" class="hidden" required
                                 onchange="document.getElementById('file-label').textContent = this.files[0].name">
                             <label for="fileImport" id="file-label"
@@ -207,8 +211,16 @@
                                 Template
                             </a>
                             <button type="submit"
-                                class="flex-[2] inline-flex items-center justify-center px-4 py-3 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all">
-                                Unggah & Proses Data
+                                class="btn-submit flex-[2] inline-flex items-center justify-center px-4 py-3 text-sm font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all">
+                                <span class="btn-text">Unggah & Proses Data</span>
+                                <svg class="btn-spinner hidden animate-spin ml-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                        stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
                             </button>
                         </div>
                     </form>

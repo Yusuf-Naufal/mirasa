@@ -24,7 +24,7 @@
 
             <div class="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
                 <form id="inventoryForm" action="{{ route('barang-masuk.store-produksi') }}" method="POST"
-                    class="p-6 md:p-10">
+                    class="form-prevent-multiple-submits p-6 md:p-10">
                     @csrf
                     <input type="hidden" name="id_perusahaan" value="{{ auth()->user()->id_perusahaan }}">
 
@@ -215,7 +215,8 @@
                                             placeholder="Contoh: Rak A1, Gudang Dingin B, dsb.">
                                     </div>
                                     <div class="md:col-span-2 space-y-1.5">
-                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Nomor Batch</label>
+                                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Nomor
+                                            Batch</label>
                                         <input type="text" name="nomor_batch"
                                             class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                             placeholder="Contoh: 25 11 2025 A, A1073-A2096">
@@ -241,12 +242,29 @@
                                 <input type="hidden" name="total_harga" id="hiddenTotal" value="0">
                             </div>
 
-                            <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                                <button type="submit"
-                                    class="flex-1 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-green-200 transition-all hover:scale-[1.02] active:scale-95">
-                                    Konfirmasi & Simpan
-                                </button>
-                            </div>
+                            <button type="submit"
+                                class="btn-submit w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-green-200 transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">
+
+                                <div class="flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                        fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+
+                                    <span class="btn-text">Simpan Barang</span>
+
+                                    <svg class="btn-spinner hidden animate-spin h-4 w-4 text-white"
+                                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                            stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                </div>
+                            </button>
                         </div>
                     </div>
                 </form>

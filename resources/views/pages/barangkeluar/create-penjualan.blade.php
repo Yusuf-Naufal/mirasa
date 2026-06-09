@@ -8,6 +8,26 @@
         selectedSatuan: '-',
         jumlah: 0,
         jenisKeluar: 'PENJUALAN',
+        withCustomer: true,
+        openCustomer: false,
+        searchCustomer: '',
+        selectedCustomerId: '',
+        selectedCustomerName: '',
+    
+        // Data customer dari server
+        customerRaw: {{ $costumer->map(fn($k) => ['id' => $k->id, 'nama' => $k->nama_costumer])->toJson() }},
+    
+        get filteredCustomer() {
+            return this.customerRaw.filter(c =>
+                c.nama.toLowerCase().includes(this.searchCustomer.toLowerCase())
+            );
+        },
+    
+        selectCustomer(c) {
+            this.selectedCustomerId = c.id;
+            this.selectedCustomerName = c.nama;
+            this.openCustomer = false;
+        },
     
         {{-- Data mentah dari Server (Dikelompokkan per Barang untuk FIFO) --}}
         inventoryRaw: {{ $inventory->map(
@@ -96,7 +116,7 @@
             {{-- Header --}}
             <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <a href="{{ route('barang-keluar.index') }}"
+                    <a href="{{ route('barang-keluar.index', ['tab' => 'PENJUALAN']) }}"
                         class="group inline-flex items-center text-emerald-600 hover:text-emerald-700 text-sm font-semibold mb-2">
                         <svg class="h-4 w-4 mr-1 transform group-hover:-translate-x-1 transition-all" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
@@ -113,7 +133,7 @@
                 </div>
             </div>
 
-            <form action="{{ route('barang-keluar.store') }}" method="POST">
+            <form action="{{ route('barang-keluar.store') }}" method="POST" class="form-prevent-multiple-submits">
                 @csrf
                 <input type="hidden" name="jenis_keluar" :value="jenisKeluar">
 
@@ -124,20 +144,22 @@
 
                         {{-- Pilih Tipe Transaksi --}}
                         <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-                            <label
-                                class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-4">Langkah
-                                1: Tipe Transaksi</label>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-4">
+                                Langkah 1: Tipe Penjualan
+                            </label>
                             <div class="flex p-1 bg-gray-100 rounded-2xl">
-                                <button type="button" @click="jenisKeluar = 'PENJUALAN'"
-                                    :class="jenisKeluar === 'PENJUALAN' ? 'bg-white shadow-sm text-emerald-600' :
-                                        'text-gray-500'"
+                                <button type="button" @click="withCustomer = true"
+                                    :class="withCustomer ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-500'"
                                     class="flex-1 py-3 rounded-xl text-sm font-bold transition-all">
-                                    Penjualan
+                                    Dengan Customer
                                 </button>
-                                <button type="button" @click="jenisKeluar = 'TRANSFER'" disabled
-                                    :class="jenisKeluar === 'TRANSFER' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'"
-                                    class="flex-1 py-3 rounded-xl text-sm font-bold transition-all cursor-not-allowed">
-                                    Transfer
+
+                                {{-- Jika Tanpa Customer diklik, bersihkan juga data customer yang mungkin sempat terpilih --}}
+                                <button type="button"
+                                    @click="withCustomer = false; selectedCustomerId = ''; selectedCustomerName = '';"
+                                    :class="!withCustomer ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-500'"
+                                    class="flex-1 py-3 rounded-xl text-sm font-bold transition-all">
+                                    Tanpa Customer
                                 </button>
                             </div>
                         </div>
@@ -234,31 +256,58 @@
                                 3: Detail Pengiriman</label>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {{-- Tujuan Dinamis --}}
-                                <div class="md:col-span-2 space-y-1.5">
-                                    <label class="text-xs font-bold text-gray-500 uppercase ml-1"
-                                        x-text="jenisKeluar === 'PENJUALAN' ? 'Customer / Pelanggan' : 'Perusahaan Tujuan (Transfer)'"></label>
+                                {{-- Tujuan Dinamis (Hanya Muncul Jika Dengan Customer) --}}
+                                <div class="md:col-span-2 space-y-1.5" x-show="withCustomer" x-cloak x-transition>
+                                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Customer /
+                                        Pelanggan</label>
 
-                                    <div x-show="jenisKeluar === 'PENJUALAN'">
-                                        <select name="id_costumer" :required="jenisKeluar === 'PENJUALAN'"
-                                            class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none">
-                                            <option value="">-- Pilih Customer --</option>
-                                            @foreach ($costumer as $k)
-                                                <option value="{{ $k->id }}">{{ $k->nama_costumer }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                    <div class="relative">
+                                        {{-- Input Hidden untuk Form Submit. Hanya wajib (required) jika withCustomer true --}}
+                                        <input type="hidden" name="id_costumer" :value="selectedCustomerId"
+                                            :required="withCustomer">
 
-                                    <div x-show="jenisKeluar === 'TRANSFER'">
-                                        <select name="id_tujuan" :required="jenisKeluar === 'TRANSFER'"
-                                            class="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none">
-                                            <option value="">-- Pilih Perusahaan Tujuan --</option>
-                                            @foreach ($perusahaan as $p)
-                                                <option value="{{ $p->id }}">{{ $p->nama_perusahaan }}
-                                                    ({{ $p->kota }})
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        {{-- Tombol Dropdown --}}
+                                        <button type="button" @click="openCustomer = !openCustomer"
+                                            class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-left flex justify-between items-center focus:ring-2 focus:ring-emerald-500 transition-all mt-1.5">
+                                            <span x-text="selectedCustomerName || '-- Pilih Customer --'"
+                                                :class="selectedCustomerName ? 'text-gray-800 font-bold' : 'text-gray-400'"></span>
+                                            <svg class="w-5 h-5 text-gray-400 transition-transform"
+                                                :class="openCustomer ? 'rotate-180' : ''" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+
+                                        {{-- Menu Dropdown --}}
+                                        <div x-show="openCustomer" @click.away="openCustomer = false" x-cloak
+                                            class="absolute z-[60] w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
+                                            <input type="text" x-model="searchCustomer"
+                                                placeholder="Cari nama pelanggan..."
+                                                class="w-full px-4 py-3 border-b outline-none focus:bg-emerald-50/30 text-sm">
+
+                                            <div class="max-h-60 overflow-y-auto">
+                                                <template x-for="c in filteredCustomer" :key="c.id">
+                                                    <button type="button" @click="selectCustomer(c)"
+                                                        class="w-full px-5 py-3 text-left hover:bg-emerald-50 border-b border-gray-50 flex justify-between items-center transition-colors">
+                                                        <span class="font-bold text-gray-700 text-sm"
+                                                            x-text="c.nama"></span>
+                                                        <svg x-show="selectedCustomerId === c.id"
+                                                            class="w-4 h-4 text-emerald-500" fill="currentColor"
+                                                            viewBox="0 0 20 20">
+                                                            <path
+                                                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                                                        </svg>
+                                                    </button>
+                                                </template>
+
+                                                {{-- State jika tidak ada data --}}
+                                                <template x-if="filteredCustomer.length === 0">
+                                                    <div class="px-5 py-4 text-center text-gray-400 text-xs italic">
+                                                        Pelanggan tidak ditemukan...
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -321,14 +370,22 @@
                             <button type="submit" :disabled="jumlah > maxStok || jumlah <= 0 || !selectedInventoryId"
                                 :class="jenisKeluar === 'PENJUALAN' ? 'bg-emerald-600 shadow-emerald-200' :
                                     'bg-blue-600 shadow-blue-200'"
-                                class="w-full mt-10 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:cursor-not-allowed text-white py-5 rounded-3xl font-black uppercase tracking-widest shadow-xl transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-3">
+                                class="btn-submit w-full mt-10 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:cursor-not-allowed text-white py-5 rounded-3xl font-black uppercase tracking-widest shadow-xl transition-all hover:scale-[1.01] active:scale-95 flex items-center justify-center gap-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
                                         d="M5 13l4 4L19 7" />
                                 </svg>
-                                <span
+                                <span class="btn-text"
                                     x-text="jenisKeluar === 'PENJUALAN' ? 'Konfirmasi Penjualan' : 'Konfirmasi Transfer'"></span>
+                                <svg class="btn-spinner hidden animate-spin ml-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                        stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
                             </button>
                         </div>
                     </div>

@@ -79,8 +79,8 @@
                                     <thead>
                                         <tr
                                             class="text-[9px] font-black text-emerald-600 uppercase tracking-widest border-b border-emerald-100">
-                                            <th class="py-2 text-left">Tujuan</th>
-                                            <th class="py-2 text-center">No Batch</th>
+                                            <th class="py-2 text-left">Keluar dari</th>
+                                            <th class="py-2 text-center">Supplier</th>
                                             <th class="py-2 text-right">Qty</th>
                                             <th class="py-2 text-right">Subtotal</th>
                                             <th class="py-2 text-right w-20">Aksi</th>
@@ -93,7 +93,7 @@
                                                     {{ $item->jenis_keluar === 'PENJUALAN' ? $item->Costumer->nama_costumer ?? 'Umum' : $item->Perusahaan->nama_perusahaan ?? 'Cabang' }}
                                                 </td>
                                                 <td class="py-3 text-center font-mono text-[10px] text-gray-400">
-                                                    {{ $item->DetailInventory->nomor_batch ?? 'Batch-' . $item->id_detail_inventory }}
+                                                    {{ $item->DetailInventory->Supplier->nama_supplier ?? 'Lainnya' }}
                                                 </td>
                                                 <td class="py-3 text-right text-xs font-bold text-gray-700">
                                                     {{ number_format($item->jumlah_keluar, 0) }}
@@ -103,40 +103,44 @@
                                                 </td>
                                                 <td class="py-3 text-right items-end justify-end flex">
                                                     {{-- Edit Item (Per Batch) --}}
-                                                    <button
-                                                        @click="editOpen = true; editData = {
-                                                        id: '{{ $item->id }}', 
-                                                        nama: '{{ $barang->nama_barang }}',
-                                                        jenis: '{{ $item->jenis_keluar }}',
-                                                        tanggal: '{{ $item->tanggal_keluar }}',
-                                                        jumlah: '{{ $item->jumlah_keluar }}',
-                                                        maxStok: {{ $item->DetailInventory->stok + $item->jumlah_keluar }}
-                                                    }"
-                                                        class="p-1.5 text-yellow-400 hover:bg-yellow-100 rounded-lg transition-colors">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                        </svg>
-                                                    </button>
-
-                                                    {{-- Tombol Delete --}}
-                                                    <form action="{{ route('barang-keluar.destroy', $item->id) }}"
-                                                        method="POST"
-                                                        onsubmit="return confirm('Hapus data batch ini? Stok akan dikembalikan.')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit"
-                                                            class="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors">
+                                                    @can('barang-keluar.edit')
+                                                        <button
+                                                            @click="editOpen = true; editData = {
+                                                                id: '{{ $item->id }}', 
+                                                                nama: '{{ $barang->nama_barang }}',
+                                                                jenis: '{{ $item->jenis_keluar }}',
+                                                                tanggal: '{{ $item->tanggal_keluar }}',
+                                                                jumlah: '{{ $item->jumlah_keluar }}',
+                                                                maxStok: {{ $item->DetailInventory->stok + $item->jumlah_keluar }}
+                                                            }"
+                                                            class="p-1.5 text-yellow-400 hover:bg-yellow-100 rounded-lg transition-colors">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                                 viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                                     stroke-width="2"
-                                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                             </svg>
                                                         </button>
-                                                    </form>
+                                                    @endcan
+
+                                                    @can('barang-keluar.delete')
+                                                        {{-- Tombol Delete --}}
+                                                        <form action="{{ route('barang-keluar.destroy', $item->id) }}"
+                                                            method="POST"
+                                                            onsubmit="return confirm('Hapus data batch ini? Stok akan dikembalikan.')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                    viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        stroke-width="2"
+                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                </svg>
+                                                            </button>
+                                                        </form>
+                                                    @endcan
                                                 </td>
                                             </tr>
                                         @endforeach

@@ -51,37 +51,34 @@
         </div>
 
         <div>
-            {{-- Tombol Menuju Halaman Create --}}
-            <a href="{{ route('inventory.create-produksi') }}"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-200 transition-all active:scale-95 group">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4 transform group-hover:rotate-90 transition-transform duration-300" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-                </svg>
-                <span class="hidden md:block">Tambah Stok</span>
-            </a>
+            @can('inventory.create-produksi')
+                {{-- Tombol Menuju Halaman Create --}}
+                <a href="{{ route('inventory.create-produksi') }}"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-200 transition-all active:scale-95 group">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 transform group-hover:rotate-90 transition-transform duration-300" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span class="hidden md:block">Tambah Stok</span>
+                </a>
+            @endcan
         </div>
     </div>
 
     <div class="overflow-x-auto">
-        <table class="w-full text-left">
+        <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50/50 text-slate-400">
-                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center w-16">
-                        No</th>
+                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center w-16">No</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider">Tgl Masuk</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider">Tgl Expired</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider">No Batch</th>
                     <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider">Tempat</th>
-                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-right">Stok
-                    </th>
-                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-right">Jumlah Diterima
-                    </th>
-                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-right">Harga
-                        Satuan</th>
-                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center">Aksi
-                    </th>
+                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-right">Stok</th>
+                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-right">Jumlah Diterima</th>
+                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-right">Harga Satuan</th>
+                    <th class="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -114,73 +111,151 @@
                         <td class="px-6 py-4 text-right text-sm text-slate-600">
                             Rp{{ number_format($i->harga, 0, ',', '.') }}
                         </td>
+
                         <td class="px-6 py-4 text-center">
-                            @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
+                            <div x-data="{ open: false, top: '0px', left: '0px' }" class="relative inline-block text-left">
+
                                 <button type="button"
-                                    @click="openEdit({ 
-                                    id: '{{ $i->id }}', 
-                                    stok: '{{ $i->stok }}', 
-                                    diterima: '{{ $i->jumlah_diterima }}', 
-                                    harga: '{{ $i->harga }}', 
-                                    tgl_masuk: '{{ $i->tanggal_masuk }}', 
-                                    no_batch: '{{ $i->nomor_batch }}', 
-                                    tempat: '{{ $i->tempat_penyimpanan }}', 
-                                    tgl_exp: '{{ $i->tanggal_exp }}' 
-                                })"
-                                    class="p-2 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-transparent hover:border-slate-100 transition-all">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    @click="
+                                        let rect = $event.currentTarget.getBoundingClientRect();
+                                        top = (rect.bottom + 4) + 'px';
+                                        left = (rect.right - 192) + 'px';
+                                        open = !open;
+                                    "
+                                    @click.away="open = false"
+                                    class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all outline-none focus:ring-2 focus:ring-blue-100">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                     </svg>
                                 </button>
-                            @else
-                                <div class="flex items-center justify-center gap-1">
 
-                                    <button type="button" @click="openAddQty('{{ $i->id }}')"
-                                        class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg border border-emerald-100 transition-colors"
-                                        title="Tambah Stok">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4v16m8-8H4" />
-                                        </svg>
-                                    </button>
+                                <template x-teleport="body">
 
-                                    <button type="button" @click="openReduceQty('{{ $i->id }}')"
-                                        class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-rose-100 transition-colors"
-                                        title="Kurangi Stok (Manual)">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M20 12H4" />
-                                        </svg>
-                                    </button>
+                                    <div x-show="open" :style="`top: ${top}; left: ${left};`"
+                                        @scroll.window="open = false"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="transform opacity-0 scale-95"
+                                        x-transition:enter-end="transform opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="transform opacity-100 scale-100"
+                                        x-transition:leave-end="transform opacity-0 scale-95"
+                                        class="fixed w-48 bg-white rounded-xl shadow-lg ring-1 ring-slate-900/5 divide-y divide-slate-100 overflow-hidden z-[9999]"
+                                        style="display: none;">
 
-                                    <button type="button"
-                                        @click="openEditPrice({ id: '{{ $i->id }}', harga: '{{ $i->harga }}' })"
-                                        class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg border border-amber-100 transition-colors"
-                                        title="Ubah Harga">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </button>
+                                        <div class="py-1">
+                                            @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
+                                                @can('inventory.detail-edit')
+                                                    <button type="button"
+                                                        @click="openEdit({ 
+                                                                id: '{{ $i->id }}', stok: '{{ $i->stok }}', diterima: '{{ $i->jumlah_diterima }}', harga: '{{ $i->harga }}', tgl_masuk: '{{ $i->tanggal_masuk }}', no_batch: '{{ $i->nomor_batch }}', tempat: '{{ $i->tempat_penyimpanan }}', tgl_exp: '{{ $i->tanggal_exp }}' 
+                                                            }); open = false"
+                                                        class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-blue-500"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                        Edit Data
+                                                    </button>
+                                                @endcan
 
-                                </div>
-                            @endif
+                                                @can('inventory.delete')
+                                                    <div class="py-1">
+                                                        <form action="{{ route('inventory.destroy', $i->id) }}"
+                                                            method="POST"
+                                                            onsubmit="return confirm('Hapus data ini? Rekapitulasi akan disesuaikan.')">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                                <svg class="mr-3 h-4 w-4 text-red-400 group-hover:text-red-600"
+                                                                    fill="none" stroke="currentColor"
+                                                                    viewBox="0 0 24 24">
+                                                                    <path
+                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                </svg>
+                                                                Hapus
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @endcan
+                                            @else
+                                                @can('inventory.quick-edit')
+                                                    <button type="button"
+                                                        @click="openAddQty('{{ $i->id }}'); open = false"
+                                                        class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-emerald-500"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M12 4v16m8-8H4" />
+                                                        </svg>
+                                                        Tambah Stok
+                                                    </button>
+
+                                                    <button type="button"
+                                                        @click="openReduceQty('{{ $i->id }}'); open = false"
+                                                        class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition-colors">
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-rose-500"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M20 12H4" />
+                                                        </svg>
+                                                        Kurangi Stok
+                                                    </button>
+
+                                                    <button type="button"
+                                                        @click="openEditPrice({ id: '{{ $i->id }}', harga: '{{ $i->harga }}' }); open = false"
+                                                        class="group flex w-full items-center px-4 py-2.5 text-sm text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors">
+                                                        <svg class="mr-3 h-4 w-4 text-slate-400 group-hover:text-amber-500"
+                                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        Ubah Harga
+                                                    </button>
+                                                @endcan
+                                            @endif
+
+                                            @can('inventory.afkir-ulang')
+                                                <div class="py-1">
+                                                    <a type="submit" href="{{ route('inventory.afkir-ulang', $i->id) }}"
+                                                        class="group flex w-full items-center px-4 py-2.5 text-sm text-yellow-600 hover:bg-yellow-50 transition-colors">
+                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                            class="mr-3 h-4 w-4 text-yellow-400 group-hover:text-yellow-600"
+                                                            viewBox="0 0 512 512">
+                                                            <path fill="currentColor" fill-rule="evenodd"
+                                                                d="M426.667 106.667v42.666L358 149.33c36.077 31.659 58.188 77.991 58.146 128.474c-.065 78.179-53.242 146.318-129.062 165.376s-154.896-15.838-191.92-84.695C58.141 289.63 72.637 204.42 130.347 151.68a85.33 85.33 0 0 0 33.28 30.507a124.59 124.59 0 0 0-46.294 97.066c1.05 69.942 58.051 126.088 128 126.08c64.072 1.056 118.71-46.195 126.906-109.749c6.124-47.483-15.135-92.74-52.236-118.947L320 256h-42.667V106.667zM202.667 64c23.564 0 42.666 19.103 42.666 42.667s-19.102 42.666-42.666 42.666S160 130.231 160 106.667S179.103 64 202.667 64" />
+                                                        </svg>
+                                                        Afkir Ulang
+                                                    </a>
+                                                </div>
+                                            @endcan
+                                        </div>
+                                    </div>
+
+                                </template>
+                            </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-16 text-center">
+                        <td colspan="9" class="px-6 py-20 text-center">
                             <div class="flex flex-col items-center">
                                 <div
-                                    class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300">
-                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 border border-slate-100 shadow-inner">
+                                    <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                             d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                     </svg>
                                 </div>
-                                <p class="text-slate-400 font-medium text-sm italic">Belum ada riwayat
-                                    transaksi.</p>
+                                <h4 class="text-slate-900 font-bold">Tidak ada riwayat</h4>
+                                <p class="text-slate-400 text-sm max-w-[240px] mt-1">Data riwayat transaksi barang
+                                    masuk
+                                    belum tersedia untuk produk ini.</p>
                             </div>
                         </td>
                     </tr>
@@ -221,7 +296,8 @@
                     <div class="grid grid-cols-2 gap-5 mb-8">
                         <div class="col-span-1">
                             <label
-                                class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Jumlah Diterima</label>
+                                class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Jumlah
+                                Diterima</label>
                             <input type="number" name="jumlah_diterima" x-model="editData.diterima"
                                 class="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none font-bold text-slate-700 transition-all">
                         </div>
@@ -280,7 +356,7 @@
 
                 <div
                     class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 relative z-10">
-                    <form :action="actionUrl" method="POST" class="p-8">
+                    <form :action="actionUrl" method="POST" class="form-prevent-multiple-submits p-8">
                         @csrf
                         @method('PATCH')
 
@@ -374,8 +450,19 @@
                             <button type="button" @click="showActionModal = false"
                                 class="flex-1 px-4 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-all">Batal</button>
                             <button type="submit"
-                                class="flex-1 px-4 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">Simpan
-                                Perubahan</button>
+                                class="btn-submit flex-1 inline-flex items-center justify-center px-4 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all disabled:opacity-70">
+
+                                <span class="btn-text">Simpan Perubahan</span>
+
+                                <svg class="btn-spinner hidden animate-spin ml-2 h-4 w-4 text-white"
+                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                        stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -383,3 +470,29 @@
         </div>
     </template>
 </div>
+
+<script>
+    // Gunakan event delegation agar bekerja pada elemen yang muncul dinamis (Alpine template)
+    document.addEventListener('submit', function(e) {
+        const form = e.target.closest('.form-prevent-multiple-submits');
+
+        if (form) {
+            // Cek validitas HTML5
+            if (form.checkValidity()) {
+                const btn = form.querySelector('.btn-submit');
+                const btnText = form.querySelector('.btn-text');
+                const btnSpinner = form.querySelector('.btn-spinner');
+
+                if (btn) {
+                    // Kunci tombol
+                    btn.disabled = true;
+                    btn.classList.add('opacity-70', 'cursor-not-allowed');
+
+                    // Update UI
+                    if (btnText) btnText.innerText = "Proses...";
+                    if (btnSpinner) btnSpinner.classList.remove('hidden');
+                }
+            }
+        }
+    });
+</script>

@@ -17,8 +17,10 @@ use App\Models\DetailProduksi;
 use App\Models\DetailInventory;
 use App\Models\KategoriPemakaian;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class GrafikController extends Controller
+class GrafikController extends Controller implements HasMiddleware
 {
     private function getCompanyId(Request $request)
     {
@@ -35,6 +37,41 @@ class GrafikController extends Controller
     private function getDaftarPerusahaan()
     {
         return auth()->user()->hasRole('Super Admin') ? Perusahaan::whereNull('deleted_at')->get() : null;
+    }
+
+    public function index()
+    {
+        $user = auth()->user();
+
+        // Definisikan daftar permission dan rute tujuannya secara berurutan
+        $accessMap = [
+            'grafik.bahan-baku' => 'grafik.bahan-baku',
+            'grafik.produksi'   => 'grafik.produksi',
+            'grafik.pemakaian'  => 'grafik.pemakaian',
+            'grafik.hpp'        => 'grafik.hpp',
+            'grafik.transaksi'  => 'grafik.transaksi',
+        ];
+
+        foreach ($accessMap as $permission => $routeName) {
+            if ($user->can($permission)) {
+                return redirect()->route($routeName);
+            }
+        }
+
+        // Jika user tidak memiliki satu pun permission di atas
+        abort(403, 'Anda tidak memiliki akses ke halaman grafik manapun.');
+    }
+
+    public static function middleware(): array
+    {
+        return [
+            // Pasang middleware permission untuk masing-masing method
+            new Middleware('permission:grafik.bahan-baku', only: ['grafikBahanBaku']),
+            new Middleware('permission:grafik.produksi', only: ['grafikProduksi']),
+            new Middleware('permission:grafik.pemakaian', only: ['grafikPemakaian']),
+            new Middleware('permission:grafik.hpp', only: ['grafikHpp']),
+            new Middleware('permission:grafik.transaksi', only: ['grafikTransaksi']),
+        ];
     }
 
     // --- BAHAN BAKU ---
@@ -206,6 +243,7 @@ class GrafikController extends Controller
     {
         $kategoriProduksi = ['FG', 'WIP', 'EC'];
 
+        // 1. Hitung Jumlah SKU per Kategori (Tetap)
         $countPerKategori = DB::table('detail_inventory')
             ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
             ->join('barang', 'inventory.id_barang', '=', 'barang.id')
@@ -219,7 +257,12 @@ class GrafikController extends Controller
             ->groupBy('jenis_barang.kode')
             ->pluck('total', 'kode');
 
-        $totalBerat = DetailInventory::query()
+        // ========================================================================
+        // 2. MENGHITUNG VOLUME PRODUKSI NETTO & TOP 5 PRODUK
+        // ========================================================================
+
+        // A. Ambil total penerimaan kotor per barang (Gross In)
+        $grossIn = DetailInventory::query()
             ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
             ->join('barang', 'inventory.id_barang', '=', 'barang.id')
             ->join('jenis_barang', 'barang.id_jenis', '=', 'jenis_barang.id')
@@ -227,20 +270,65 @@ class GrafikController extends Controller
             ->whereIn('jenis_barang.kode', $kategoriProduksi)
             ->whereYear('detail_inventory.tanggal_masuk', $year)
             ->when($filterType === 'month', fn($q) => $q->whereMonth('detail_inventory.tanggal_masuk', $month))
-            ->sum(DB::raw("detail_inventory.jumlah_diterima * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)"));
+            ->select(
+                'barang.id',
+                'barang.nama_barang',
+                'barang.satuan',
+                DB::raw("SUM(detail_inventory.jumlah_diterima * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)) as total_in")
+            )
+            ->groupBy('barang.id', 'barang.nama_barang', 'barang.satuan')
+            ->get()
+            ->keyBy('id');
 
-        $topProduk = DetailInventory::query()
+        // B. Ambil total pengeluaran KHUSUS yang didaur ulang (Afkir Retur & Afkir Gudang)
+        $afkirOut = BarangKeluar::query()
+            ->join('detail_inventory', 'barang_keluar.id_detail_inventory', '=', 'detail_inventory.id')
             ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
             ->join('barang', 'inventory.id_barang', '=', 'barang.id')
             ->join('jenis_barang', 'barang.id_jenis', '=', 'jenis_barang.id')
-            ->when($id_perusahaan, fn($q) => $q->where('inventory.id_perusahaan', $id_perusahaan))
+            ->when($id_perusahaan, fn($q) => $q->where('barang_keluar.id_perusahaan', $id_perusahaan))
             ->whereIn('jenis_barang.kode', $kategoriProduksi)
-            ->whereYear('detail_inventory.tanggal_masuk', $year)
-            ->when($filterType === 'month', fn($q) => $q->whereMonth('detail_inventory.tanggal_masuk', $month))
-            ->select('barang.nama_barang', 'barang.satuan', DB::raw("SUM(detail_inventory.jumlah_diterima * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)) as total_qty"))
-            ->groupBy('barang.nama_barang', 'barang.satuan')
-            ->orderByDesc('total_qty')->take(5)->get();
+            ->where(function ($q) {
+                $q->where('barang_keluar.jumlah_dikonversi', '>', 0)
+                    ->orWhere('barang_keluar.jenis_keluar', 'AFKIR ULANG');
+            })
+            ->whereYear('barang_keluar.tanggal_keluar', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('barang_keluar.tanggal_keluar', $month))
+            ->select(
+                'barang.id',
+                DB::raw("SUM(
+                    (CASE 
+                        WHEN barang_keluar.jenis_keluar = 'AFKIR ULANG' THEN barang_keluar.jumlah_keluar 
+                        ELSE COALESCE(barang_keluar.jumlah_dikonversi, 0) 
+                    END) * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)
+                ) as total_out")
+            )
+            ->groupBy('barang.id')
+            ->pluck('total_out', 'id');
 
+        // C. Hitung Netto Total Berat Keseluruhan Produksi
+        $totalGrossIn = $grossIn->sum('total_in');
+        $totalAfkirOut = $afkirOut->sum();
+        // Total Berat = Masuk - Keluar (Jika minus, set 0)
+        $totalBerat = max(0, $totalGrossIn - $totalAfkirOut);
+
+        // D. Hitung Netto Per Produk untuk Ranking Top 5
+        $topProduk = $grossIn->map(function ($item, $id) use ($afkirOut) {
+            $out = $afkirOut->get($id, 0); // Ambil jumlah keluarnya jika ada
+            return (object)[
+                'nama_barang' => $item->nama_barang,
+                'satuan'      => $item->satuan,
+                'total_qty'   => max(0, $item->total_in - $out) // Kurangi gross dengan afkir
+            ];
+        })->filter(function ($item) {
+            return $item->total_qty > 0; // Sembunyikan barang yang stok volumenya habis karena diafkir semua
+        })->sortByDesc('total_qty')
+            ->take(5)
+            ->values(); // Reset key array
+
+        // ========================================================================
+        // 3. DATA BAHAN BAKU & GRADING (Tetap Sama)
+        // ========================================================================
         $bbKeluar = BarangKeluar::when($id_perusahaan, fn($q) => $q->where('barang_keluar.id_perusahaan', $id_perusahaan))
             ->whereHas('DetailInventory.Inventory.Barang', function ($q) {
                 $q->where('jenis', 'Utama')->whereHas('JenisBarang', fn($q2) => $q2->where('kode', 'BB'));
@@ -265,16 +353,16 @@ class GrafikController extends Controller
         $persentaseLoss = $bbKeluar > 0 ? ($totalPenyusutan / $bbKeluar) * 100 : 0;
 
         return [
-            'countPerKategori' => $countPerKategori,
-            'totalBerat' => $totalBerat,
-            'topProduk' => $topProduk,
-            'bbKeluar' => $bbKeluar,
-            'hasilGrading' => $hasilGrading,
-            'grading' => (object)['total_kupas' => $hasilGrading->sum('total_kupas'), 'total_a' => $hasilGrading->sum('total_a'), 'total_s' => $hasilGrading->sum('total_s'), 'total_j' => $hasilGrading->sum('total_j')],
-            'totalPenyusutan' => $totalPenyusutan,
+            'countPerKategori'   => $countPerKategori,
+            'totalBerat'         => $totalBerat,
+            'topProduk'          => $topProduk,
+            'bbKeluar'           => $bbKeluar,
+            'hasilGrading'       => $hasilGrading,
+            'grading'            => (object)['total_kupas' => $hasilGrading->sum('total_kupas'), 'total_a' => $hasilGrading->sum('total_a'), 'total_s' => $hasilGrading->sum('total_s'), 'total_j' => $hasilGrading->sum('total_j')],
+            'totalPenyusutan'    => $totalPenyusutan,
             'persentaseRendemen' => $persentaseRendemen,
-            'persentaseLoss' => $persentaseLoss,
-            'comparisonData' => ['labels' => ['Bahan Baku (Input)', 'Hasil Produksi (Output)', 'Loss'], 'values' => [(float)$bbKeluar, (float)$totalBerat, (float)$totalPenyusutan]]
+            'persentaseLoss'     => $persentaseLoss,
+            'comparisonData'     => ['labels' => ['Bahan Baku (Input)', 'Hasil Produksi (Output)', 'Loss'], 'values' => [(float)$bbKeluar, (float)$totalBerat, (float)$totalPenyusutan]]
         ];
     }
 
@@ -289,7 +377,8 @@ class GrafikController extends Controller
 
         $datasetsProduksi = [];
         foreach ($daftarBarang as $barang) {
-            $data = DetailInventory::where('id_inventory', function ($query) use ($barang) {
+            // 1. AMBIL BARANG MASUK (Produksi Kotor)
+            $dataMasuk = DetailInventory::where('id_inventory', function ($query) use ($barang) {
                 $query->select('id')->from('inventory')->where('id_barang', $barang->id);
             })
                 ->whereYear('tanggal_masuk', $year)
@@ -297,16 +386,45 @@ class GrafikController extends Controller
                 ->select(DB::raw("TO_CHAR(tanggal_masuk, '$format') as period"), DB::raw("SUM(jumlah_diterima) as total"))
                 ->groupBy('period')->pluck('total', 'period');
 
+            // 2. AMBIL BARANG KELUAR (Khusus Afkir Gudang & Retur Daur Ulang)
+            $dataAfkir = BarangKeluar::whereHas('DetailInventory.Inventory', fn($q) => $q->where('id_barang', $barang->id))
+                ->where(function ($q) {
+                    $q->where('jumlah_dikonversi', '>', 0)
+                        ->orWhere('jenis_keluar', 'AFKIR ULANG');
+                })
+                ->when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
+                ->whereYear('tanggal_keluar', $year)
+                ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $month))
+                ->select(
+                    DB::raw("TO_CHAR(tanggal_keluar, '$format') as period"),
+                    DB::raw("SUM(CASE WHEN jenis_keluar = 'AFKIR ULANG' THEN jumlah_keluar ELSE COALESCE(jumlah_dikonversi, 0) END) as total_afkir")
+                )
+                ->groupBy('period')->pluck('total_afkir', 'period');
+
+            // 3. GABUNGKAN MENJADI PRODUKSI NETTO HARIAN/BULANAN
             $dailyData = [];
             foreach ($range as $r) {
                 $key = str_pad($r, 2, '0', STR_PAD_LEFT);
-                $dailyData[] = (float)($data[$key] ?? 0);
+
+                $masuk = (float)($dataMasuk[$key] ?? 0);
+                $afkir = (float)($dataAfkir[$key] ?? 0);
+
+                // Produksi Bersih = Masuk Kotor - Afkir
+                $dailyData[] = $masuk - $afkir;
             }
 
-            if (array_sum($dailyData) > 0) {
-                $datasetsProduksi[] = ['label' => $barang->nama_barang, 'data' => $dailyData, 'satuan' => $barang->satuan, 'borderColor' => $this->getRandomColor($barang->id, 'in'), 'backgroundColor' => 'transparent'];
+            // Validasi: Tampilkan di grafik jika ada pergerakan (masuk/keluar)
+            if (array_sum(array_map('abs', $dailyData)) > 0) {
+                $datasetsProduksi[] = [
+                    'label' => $barang->nama_barang,
+                    'data' => $dailyData,
+                    'satuan' => $barang->satuan,
+                    'borderColor' => $this->getRandomColor($barang->id, 'in'),
+                    'backgroundColor' => 'transparent'
+                ];
             }
         }
+
         return ['labels' => $range, 'datasetsProduksi' => $datasetsProduksi];
     }
 
@@ -357,35 +475,86 @@ class GrafikController extends Controller
 
     private function getChartPemakaianData($id_perusahaan, $filterType, $month, $year)
     {
+        // 1. Persiapkan format tanggal dan range (X-Axis)
         $format = ($filterType === 'month') ? 'DD' : 'MM';
-        $range = ($filterType === 'month') ? range(1, Carbon::create($year, $month)->daysInMonth) : range(1, 12);
+        $daysInMonth = Carbon::create($year, $month)->daysInMonth;
+        $range = ($filterType === 'month') ? range(1, $daysInMonth) : range(1, 12);
 
-        $categories = KategoriPemakaian::when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))->get();
+        // 2. Ambil semua kategori yang relevan
+        $categories = KategoriPemakaian::when($id_perusahaan, function ($q) use ($id_perusahaan) {
+            return $q->where('id_perusahaan', $id_perusahaan);
+        })->get();
+
         $dsBiaya = [];
         $dsJumlah = [];
 
+        // 3. Loop setiap kategori untuk mengambil data pemakaian
         foreach ($categories as $cat) {
-            $raw = Pemakaian::when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
-                ->where('id_kategori', $cat->id)->whereYear('tanggal_pemakaian', $year)
+            $raw = Pemakaian::when($id_perusahaan, function ($q) use ($id_perusahaan) {
+                return $q->where('id_perusahaan', $id_perusahaan);
+            })
+                ->where('id_kategori', $cat->id)
+                ->whereYear('tanggal_pemakaian', $year)
                 ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pemakaian', $month))
-                ->select(DB::raw("TO_CHAR(tanggal_pemakaian, '$format') as pd"), DB::raw("SUM(total_harga) as val"), DB::raw("SUM(jumlah) as qty"))
-                ->groupBy('pd')->get()->keyBy('pd');
+                ->select(
+                    DB::raw("TO_CHAR(tanggal_pemakaian, '$format') as pd"),
+                    DB::raw("SUM(total_harga) as val"),
+                    DB::raw("SUM(jumlah) as qty")
+                )
+                ->groupBy('pd')
+                ->get()
+                ->keyBy('pd');
 
             $valPoints = [];
             $qtyPoints = [];
+
+            // 4. Map data ke dalam range (mengisi 0 jika data tidak ada di tanggal tersebut)
             foreach ($range as $r) {
                 $key = str_pad($r, 2, '0', STR_PAD_LEFT);
                 $valPoints[] = (float)($raw[$key]->val ?? 0);
                 $qtyPoints[] = (float)($raw[$key]->qty ?? 0);
             }
 
-            if (array_sum($valPoints) > 0) {
+            /**
+             * PERBAIKAN LOGIKA: 
+             * Gunakan operator OR (||) agar jika salah satu array memiliki isi (> 0), 
+             * maka dataset akan tetap ditampilkan ke chart.
+             */
+            if (array_sum($valPoints) > 0 || array_sum($qtyPoints) > 0) {
                 $color = $this->getRandomColor($cat->id, 'in');
-                $dsBiaya[] = ['label' => $cat->nama_kategori, 'data' => $valPoints, 'borderColor' => $color, 'tension' => 0.4, 'pointRadius' => 2];
-                $dsJumlah[] = ['label' => $cat->nama_kategori, 'data' => $qtyPoints, 'satuan' => $cat->satuan, 'borderColor' => $color, 'tension' => 0.4, 'pointRadius' => 2];
+
+                // Dataset untuk Chart Biaya
+                $dsBiaya[] = [
+                    'label'       => $cat->nama_kategori,
+                    'data'        => $valPoints,
+                    'borderColor' => $color,
+                    'backgroundColor' => $color, // Opsional: untuk titik/fill
+                    'tension'     => 0.4,
+                    'pointRadius' => 2
+                ];
+
+                // Dataset untuk Chart Jumlah (Quantity)
+                $dsJumlah[] = [
+                    'label'       => $cat->nama_kategori,
+                    'data'        => $qtyPoints,
+                    'satuan'      => $cat->satuan ?? '-',
+                    'borderColor' => $color,
+                    'backgroundColor' => $color,
+                    'tension'     => 0.4,
+                    'pointRadius' => 2
+                ];
             }
         }
-        return ['labels' => ($filterType === 'month' ? $range : ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']), 'datasetsBiaya' => $dsBiaya, 'datasetsJumlah' => $dsJumlah];
+
+        // 5. Return hasil akhir untuk dikirim ke View/Frontend
+        return [
+            'labels' => ($filterType === 'month'
+                ? $range
+                : ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+            ),
+            'datasetsBiaya'  => $dsBiaya,
+            'datasetsJumlah' => $dsJumlah
+        ];
     }
 
     // --- HPP ---
@@ -410,54 +579,193 @@ class GrafikController extends Controller
     private function getTrendHppHarian($id_perusahaan, $filterType, $month, $year)
     {
         $format = ($filterType === 'month') ? 'DD' : 'MM';
-        $range = ($filterType === 'month') ? range(1, Carbon::create($year, $month)->daysInMonth) : range(1, 12);
+        $daysInMonth = Carbon::create($year, $month)->daysInMonth;
+        $range = ($filterType === 'month') ? range(1, $daysInMonth) : range(1, 12);
         $labels = ($filterType === 'month' ? $range : ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']);
+        $paddedMonth = str_pad($month, 2, '0', STR_PAD_LEFT);
 
-        $biayaBahan = BarangKeluar::whereIn('jenis_keluar', ['BAHAN BAKU', 'PRODUKSI'])
-            ->when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
-            ->whereYear('tanggal_keluar', $year)->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $month))
-            ->select(DB::raw("TO_CHAR(tanggal_keluar, '$format') as period"), DB::raw("SUM(total_harga) as total"))
-            ->groupBy('period')->pluck('total', 'period');
-
-        $biayaOpsHarian = Pengeluaran::when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
-            ->whereRaw('is_hpp = true')->where('kategori', '!=', 'OPERASIONAL')
-            ->whereYear('tanggal_pengeluaran', $year)->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pengeluaran', $month))
-            ->select(DB::raw("TO_CHAR(tanggal_pengeluaran, '$format') as period"), DB::raw("SUM(jumlah_pengeluaran) as total"))
-            ->groupBy('period')->pluck('total', 'period');
-
-        $totalOpsBulanan = Pengeluaran::when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
-            ->where('kategori', 'OPERASIONAL')->whereYear('tanggal_pengeluaran', $year)
-            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pengeluaran', $month))->sum('jumlah_pengeluaran');
-
-        $volumeProduksi = DetailInventory::whereHas('Inventory.Barang.JenisBarang', fn($q) => $q->whereIn('kode', ['FG', 'WIP', 'EC']))
-            ->whereHas('Inventory', fn($q) => $q->when($id_perusahaan, fn($query) => $query->where('id_perusahaan', $id_perusahaan)))
-            ->whereYear('tanggal_masuk', $year)->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_masuk', $month))
+        // --- A. BIAYA BAHAN BAKU (BB) & BIAYA PRODUKSI (BP) ---
+        $barangKeluar = BarangKeluar::join('detail_inventory', 'barang_keluar.id_detail_inventory', '=', 'detail_inventory.id')
             ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
             ->join('barang', 'inventory.id_barang', '=', 'barang.id')
-            ->select(DB::raw("TO_CHAR(detail_inventory.tanggal_masuk, '$format') as period"), DB::raw("SUM(detail_inventory.jumlah_diterima * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)) as vol"))
+            ->join('jenis_barang', 'barang.id_jenis', '=', 'jenis_barang.id')
+            ->when($id_perusahaan, fn($q) => $q->where('barang_keluar.id_perusahaan', $id_perusahaan))
+            ->whereYear('barang_keluar.tanggal_keluar', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('barang_keluar.tanggal_keluar', $month))
+            ->whereIn('jenis_barang.kode', ['BB', 'BP'])
+            ->select(
+                DB::raw("TO_CHAR(barang_keluar.tanggal_keluar, '$format') as period"),
+                DB::raw("SUM(CASE WHEN jenis_barang.kode = 'BB' THEN barang_keluar.total_harga ELSE 0 END) as biaya_bb"),
+                DB::raw("SUM(CASE WHEN jenis_barang.kode = 'BP' THEN barang_keluar.total_harga ELSE 0 END) as biaya_bp")
+            )
+            ->groupBy('period')->get()->keyBy('period');
+
+        // --- B. DATA PEMBANTU UNTUK ALOKASI (PEMAKAIAN) ---
+        $totalPemakaianPeriode = Pemakaian::join('kategori_pemakaian', 'pemakaian.id_kategori', '=', 'kategori_pemakaian.id')
+            ->when($id_perusahaan, fn($q) => $q->where('pemakaian.id_perusahaan', $id_perusahaan))
+            ->whereYear('pemakaian.tanggal_pemakaian', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('pemakaian.tanggal_pemakaian', $month))
+            ->select('kategori_pemakaian.nama_kategori', DB::raw("SUM(pemakaian.jumlah) as total_qty"))
+            ->groupBy('kategori_pemakaian.nama_kategori')->pluck('total_qty', 'nama_kategori');
+
+        $pemakaianHarian = Pemakaian::join('kategori_pemakaian', 'pemakaian.id_kategori', '=', 'kategori_pemakaian.id')
+            ->select(DB::raw("TO_CHAR(pemakaian.tanggal_pemakaian, '$format') as period"), 'kategori_pemakaian.nama_kategori', DB::raw("SUM(pemakaian.jumlah) as qty"))
+            ->whereYear('pemakaian.tanggal_pemakaian', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('pemakaian.tanggal_pemakaian', $month))
+            ->groupBy('period', 'kategori_pemakaian.nama_kategori')->get()->groupBy('nama_kategori');
+
+        // --- C. LOGIKA HARI KERJA (KECUALI MINGGU) ---
+        $hariKerjaBulanan = [];
+        if ($filterType === 'month') {
+            foreach ($range as $r) {
+                $date = Carbon::createFromDate($year, $month, $r);
+                if (!$date->isSunday()) {
+                    $hariKerjaBulanan[] = str_pad($r, 2, '0', STR_PAD_LEFT);
+                }
+            }
+        }
+
+        // --- D. BIAYA PENGELUARAN (OPERASIONAL & LAINNYA) ---
+        $biayaOpsDinamis = [];
+        $biayaHppLainDinamis = [];
+
+        $semuaPengeluaran = Pengeluaran::when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
+            ->whereRaw('is_hpp = true')
+            ->whereYear('tanggal_pengeluaran', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_pengeluaran', $month))
+            ->get();
+
+        foreach ($semuaPengeluaran as $p) {
+            $isOperasional = ($p->kategori === 'OPERASIONAL');
+            $targetArray = $isOperasional ? 'biayaOpsDinamis' : 'biayaHppLainDinamis';
+            $bulanInput = $p->tanggal_pengeluaran->format('m');
+            $tglInput = $p->tanggal_pengeluaran->format('d');
+
+            if ($p->metode_alokasi === 'SPREAD') {
+                if ($filterType === 'month') {
+                    // --- LOGIKA FILTER BULAN ---
+                    $totalQtyPakai = $totalPemakaianPeriode[$p->sub_kategori] ?? 0;
+
+                    if ($totalQtyPakai > 0) {
+                        // 1. SPREAD PROPORSIONAL (Berdasarkan Pemakaian misal Listrik/Gas)
+                        $rincianPakai = $pemakaianHarian[$p->sub_kategori] ?? [];
+                        foreach ($rincianPakai as $pakai) {
+                            $alokasi = ($pakai->qty / $totalQtyPakai) * $p->jumlah_pengeluaran;
+                            ${$targetArray}[$pakai->period] = (${$targetArray}[$pakai->period] ?? 0) + $alokasi;
+                        }
+                    } else {
+                        // 2. SPREAD FLAT (Bagi Rata ke Hari Kerja, misal Gaji/Sewa)
+                        $divisor = count($hariKerjaBulanan);
+                        $biayaPerHari = $divisor > 0 ? ($p->jumlah_pengeluaran / $divisor) : 0;
+                        foreach ($hariKerjaBulanan as $key) {
+                            ${$targetArray}[$key] = (${$targetArray}[$key] ?? 0) + $biayaPerHari;
+                        }
+                    }
+                } else {
+                    // --- LOGIKA FILTER TAHUN ---
+                    // Tetap di bulan transaksi tersebut
+                    ${$targetArray}[$bulanInput] = (${$targetArray}[$bulanInput] ?? 0) + $p->jumlah_pengeluaran;
+                }
+            } else {
+                // --- LOGIKA FIXED ---
+                $key = ($filterType === 'month') ? $tglInput : $bulanInput;
+                ${$targetArray}[$key] = (${$targetArray}[$key] ?? 0) + $p->jumlah_pengeluaran;
+            }
+        }
+
+        // --- E. VOLUME PRODUKSI (DENGAN PENYESUAIAN AFKIR) ---
+
+        // 1. Ambil Volume Masuk
+        $volumeMasuk = DetailInventory::join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
+            ->join('barang', 'inventory.id_barang', '=', 'barang.id')
+            ->join('jenis_barang', 'barang.id_jenis', '=', 'jenis_barang.id')
+            ->whereIn('jenis_barang.kode', ['FG', 'WIP', 'EC'])
+            ->when($id_perusahaan, fn($q) => $q->where('inventory.id_perusahaan', $id_perusahaan))
+            ->whereYear('detail_inventory.tanggal_masuk', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('detail_inventory.tanggal_masuk', $month))
+            ->select(
+                DB::raw("TO_CHAR(detail_inventory.tanggal_masuk, '$format') as period"),
+                DB::raw("SUM(detail_inventory.jumlah_diterima * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)) as vol")
+            )
             ->groupBy('period')->pluck('vol', 'period');
 
-        $totalVolPeriode = array_sum($volumeProduksi->toArray());
+        // 2. Ambil Volume Keluar (Khusus Afkir yang Didaur Ulang / Afkir Gudang)
+        $volumeKeluarAfkir = BarangKeluar::join('detail_inventory', 'barang_keluar.id_detail_inventory', '=', 'detail_inventory.id')
+            ->join('inventory', 'detail_inventory.id_inventory', '=', 'inventory.id')
+            ->join('barang', 'inventory.id_barang', '=', 'barang.id')
+            ->join('jenis_barang', 'barang.id_jenis', '=', 'jenis_barang.id')
+            ->whereIn('jenis_barang.kode', ['FG', 'WIP', 'EC'])
+            // PERBAIKAN: Tangkap keduanya
+            ->where(function ($q) {
+                $q->where('barang_keluar.jumlah_dikonversi', '>', 0)
+                    ->orWhere('barang_keluar.jenis_keluar', 'AFKIR ULANG');
+            })
+            ->when($id_perusahaan, fn($q) => $q->where('barang_keluar.id_perusahaan', $id_perusahaan))
+            ->whereYear('barang_keluar.tanggal_keluar', $year)
+            ->when($filterType === 'month', fn($q) => $q->whereMonth('barang_keluar.tanggal_keluar', $month))
+            ->select(
+                DB::raw("TO_CHAR(barang_keluar.tanggal_keluar, '$format') as period"),
+                // PERBAIKAN: Gunakan logika CASE WHEN
+                DB::raw("SUM(
+                    (CASE 
+                        WHEN barang_keluar.jumlah_dikonversi > 0 THEN barang_keluar.jumlah_dikonversi 
+                        ELSE barang_keluar.jumlah_keluar 
+                    END) * COALESCE(NULLIF(barang.nilai_konversi, '')::numeric, 1)
+                ) as vol")
+            )
+            ->groupBy('period')->pluck('vol', 'period');
+
+        // 3. Kalkulasi Netto
+        $volumeProduksi = [];
+        foreach ($range as $r) {
+            $key = str_pad($r, 2, '0', STR_PAD_LEFT);
+            $masuk = (float)($volumeMasuk[$key] ?? 0);
+            $keluarAfkir = (float)($volumeKeluarAfkir[$key] ?? 0);
+
+            // Netto = Masuk - Keluar Afkir
+            $volumeProduksi[$key] = $masuk - $keluarAfkir;
+        }
+
+        // --- F. PENGGABUNGAN DATA ---
+        $rincianHarian = [];
         $chartHpp = [];
         $chartVol = [];
-        $rincianHarian = [];
 
         foreach ($range as $index => $r) {
             $key = str_pad($r, 2, '0', STR_PAD_LEFT);
-            $vol = (float)($volumeProduksi[$key] ?? 0);
-            $opsAlokasi = ($totalOpsBulanan > 0) ? ($totalVolPeriode > 0 ? ($vol > 0 ? ($vol / $totalVolPeriode) * $totalOpsBulanan : $totalOpsBulanan / count($range)) : $totalOpsBulanan / count($range)) : 0;
 
-            $bahan = (float)($biayaBahan[$key] ?? 0);
-            $opsLain = (float)($biayaOpsHarian[$key] ?? 0);
-            $totalBiaya = $bahan + $opsLain + $opsAlokasi;
-            $hpp = $vol > 0 ? round($totalBiaya / $vol, 2) : $totalBiaya;
+            $vol     = (float)($volumeProduksi[$key] ?? 0);
+            $bb      = (float)($barangKeluar[$key]->biaya_bb ?? 0);
+            $bp      = (float)($barangKeluar[$key]->biaya_bp ?? 0);
+            $ops     = (float)($biayaOpsDinamis[$key] ?? 0);
+            $hppLain = (float)($biayaHppLainDinamis[$key] ?? 0);
+
+            $totalBiaya = $bb + $bp + $ops + $hppLain;
+            $hpp = $vol > 0 ? round($totalBiaya / $vol, 2) : 0;
 
             $chartHpp[] = $hpp;
             $chartVol[] = $vol;
-            $rincianHarian[] = ['label' => $labels[$index], 'biaya_bahan' => $bahan, 'biaya_ops' => ($opsLain + $opsAlokasi), 'total_biaya' => $totalBiaya, 'volume' => $vol, 'hpp' => $hpp];
+
+            $rincianHarian[] = [
+                'label'       => $labels[$index],
+                'tgl_raw'     => ($filterType === 'month') ? "$year-$paddedMonth-$key" : null,
+                'biaya_bb'    => $bb,
+                'biaya_bp'    => $bp,
+                'biaya_ops'   => $ops,
+                'biaya_lain'  => $hppLain,
+                'total_biaya' => $totalBiaya,
+                'volume'      => $vol,
+                'hpp'         => $hpp
+            ];
         }
 
-        return ['labels' => $labels, 'chartHpp' => $chartHpp, 'chartVol' => $chartVol, 'rincianHarian' => $rincianHarian, 'avgHpp' => count(array_filter($chartHpp)) > 0 ? array_sum($chartHpp) / count(array_filter($chartHpp)) : 0];
+        return [
+            'labels'        => $labels,
+            'chartHpp'      => $chartHpp,
+            'chartVol'      => $chartVol,
+            'rincianHarian' => $rincianHarian,
+            'avgHpp'        => count(array_filter($chartHpp)) > 0 ? array_sum($chartHpp) / count(array_filter($chartHpp)) : 0
+        ];
     }
 
     // --- TRANSAKSI ---
@@ -514,7 +822,11 @@ class GrafikController extends Controller
         $keluarHarian = BarangKeluar::whereYear('tanggal_keluar', $year)
             ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $month))
             ->when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
-            ->select(DB::raw("TO_CHAR(tanggal_keluar, '$format') as period"), DB::raw("SUM(total_harga) as total"))
+            // PERBAIKAN: Hitung Total Rupiah Netto ((Keluar - Retur) * Harga)
+            ->select(
+                DB::raw("TO_CHAR(tanggal_keluar, '$format') as period"),
+                DB::raw("SUM((jumlah_keluar - COALESCE(jumlah_dikonversi, 0)) * harga) as total")
+            )
             ->groupBy('period')->pluck('total', 'period');
 
         $chartMasuk = [];
@@ -578,6 +890,7 @@ class GrafikController extends Controller
         $range = ($filterType === 'year') ? range(1, 12) : range(1, Carbon::create($year, $month)->daysInMonth);
 
         $data = BarangKeluar::with(['DetailInventory.Inventory.Barang.JenisBarang', 'Costumer'])
+            ->where('jenis_keluar', 'PENJUALAN')
             ->whereYear('tanggal_keluar', $year)
             ->when($filterType === 'month', fn($q) => $q->whereMonth('tanggal_keluar', $month))
             ->when($id_perusahaan, fn($q) => $q->where('id_perusahaan', $id_perusahaan))
@@ -591,15 +904,17 @@ class GrafikController extends Controller
         $trend = $data->groupBy('id_costumer')->map(function ($items, $id) use ($range, $format) {
             $points = [];
             foreach ($range as $r) {
-                $points[] = (float)$items->filter(fn($i) => (int)Carbon::parse($i->tanggal_keluar)->format($format) === $r)->sum('jumlah_keluar');
+                // PERBAIKAN: Hitung titik grafik berdasarkan Netto (Keluar - Dikonversi)
+                $points[] = (float)$items->filter(fn($i) => (int)Carbon::parse($i->tanggal_keluar)->format($format) === $r)
+                    ->sum(fn($item) => $item->jumlah_keluar - ($item->jumlah_dikonversi ?? 0));
             }
 
-            // PERBAIKAN: Mengambil SEMUA rincian barang unik dalam satu costumer
+            // PERBAIKAN: Rincian barang unik dalam satu costumer (Netto)
             $barangRincian = $items->groupBy('DetailInventory.Inventory.id_barang')->map(function ($b) {
                 $brg = $b->first()->DetailInventory->Inventory->Barang;
                 return [
                     'nama' => $brg->nama_barang ?? 'Unknown',
-                    'total' => $b->sum('jumlah_keluar'),
+                    'total' => $b->sum('jumlah_keluar') - $b->sum('jumlah_dikonversi'), // NETTO
                     'satuan' => $brg->satuan ?? 'Unit'
                 ];
             })->values()->toArray();
@@ -607,11 +922,12 @@ class GrafikController extends Controller
             return [
                 'label' => optional($items->first()->Costumer)->nama_costumer ?? 'Tanpa Nama',
                 'data' => $points,
-                'total_volume' => $items->sum('jumlah_keluar'),
+                // PERBAIKAN: Total Keseluruhan Volume (Netto)
+                'total_volume' => $items->sum('jumlah_keluar') - $items->sum('jumlah_dikonversi'),
                 'barang' => $barangRincian,
                 'borderColor' => $this->getRandomColor($id, 'out')
             ];
-        })->filter(fn($item) => $item['total_volume'] > 0);
+        })->filter(fn($item) => $item['total_volume'] > 0); // Sembunyikan jika volume 0 karena di-retur semua
 
         return [
             'dsCostumerTrend' => $trend->values()->toArray(),
@@ -621,7 +937,8 @@ class GrafikController extends Controller
 
     private function getRandomColor($id, $type)
     {
-        $hue = ($id * 137.508) % 360;
+        $hue = (int) ((int) $id * 137.508) % 360;
+
         return $type === 'in' ? "hsla($hue, 70%, 50%, 1)" : "hsla($hue, 40%, 40%, 0.8)";
     }
 }

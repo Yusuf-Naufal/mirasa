@@ -7,8 +7,18 @@
     <style>
         /* Ukuran Kertas K4 PRS (Kuarto) */
         @page {
-            size: 210mm 140mm;
+            size: landscape;
             margin: 0;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            body {
+                padding: 0;
+            }
         }
 
         body {
@@ -145,16 +155,6 @@
             margin-top: 35px;
             font-weight: bold;
         }
-
-        @media print {
-            .no-print {
-                display: none;
-            }
-
-            body {
-                padding: 0;
-            }
-        }
     </style>
 </head>
 
@@ -168,7 +168,7 @@
         <table class="header-table">
             <tr>
                 <td class="logo-section">
-                    <img src="{{ $currentPerusahaan->logo ? asset('storage/' . $currentPerusahaan->logo) : asset('assets/logo/logo_pt_mirasa_food-removebg-preview.png') }}"
+                    <img src="{{ $currentPerusahaan->logo ? asset('storage/' . $currentPerusahaan->logo) : asset('assets/logo/Mirasa-logo.webp') }}"
                         style="width: 50px;">
                 </td>
                 <td class="company-info" style="padding-left: 10px;">
@@ -188,7 +188,7 @@
                         </tr>
                         <tr>
                             <td>Tgl. Terbit</td>
-                            <td>: 01-07-2022</td>
+                            <td>: {{ \Carbon\Carbon::today()->format('d-m-Y') }}</td>
                         </tr>
                         <tr>
                             <td>Hal</td>
@@ -225,7 +225,7 @@
                     </tr>
                     <tr>
                         <td style="font-weight: bold;">
-                            {{ $firstItem->Costumer->nama_costumer ?? ($firstItem->Perusahaan->nama_perusahaan ?? 'Pelanggan Umum') }}
+                            {{ $firstItem->Costumer->nama_costumer ?? 'Pelanggan Umum' }}
                         </td>
                     </tr>
                     <tr style="height: 5px;"></tr>
@@ -265,34 +265,53 @@
                 @foreach ($items as $index => $item)
                     @php
                         $satuan = strtoupper($item->DetailInventory->Inventory->Barang->satuan);
-                        // Logika pemetaan satuan: Karton masuk KTN, selain itu masuk KG
-                        $qtyKtn = ($satuan == 'KARTON' || $satuan == 'KTN') ? $item->jumlah_keluar : 0;
-                        $qtyKg = ($qtyKtn == 0) ? $item->jumlah_keluar : 0;
-                        
+                        $qAsli = $item->jumlah_keluar;
+                        $qAfkir = $item->jumlah_dikonversi ?? 0;
+                        $qNetto = $qAsli - $qAfkir;
+
+                        $nilaiKonversi = $item->DetailInventory->Inventory->Barang->nilai_konversi ?? 1;
+
+                        // Logika pemetaan dan konversi satuan
+                        if ($satuan != 'KG') {
+                            // Jika bukan KG (misal KARTON), isi kolom karton dan hitung konversi KG-nya
+                            $qtyKtn = ($satuan == 'KARTON' || $satuan == 'KTN') ? $qNetto : 0;
+                            $qtyKg = $qNetto * $nilaiKonversi; 
+                        } else {
+                            // Jika satuannya sudah KG, nilai KARTON kosong dan KG ambil dari netto
+                            $qtyKtn = 0;
+                            $qtyKg = $qNetto;
+                        }
+
                         $totalKtn += (float) $qtyKtn;
                         $totalKg += (float) $qtyKg;
                     @endphp
                     <tr style="height: 35px;">
                         <td>{{ $index + 1 }}</td>
                         <td style="text-align: left; padding-left: 5px;">
-                            {{ $item->DetailInventory->Inventory->Barang->nama_barang }}</td>
+                            {{ $item->DetailInventory->Inventory->Barang->nama_barang }}
+                        </td>
                         <td>{{ $qtyKtn > 0 ? number_format($qtyKtn, 0, ',', '.') : '-' }}</td>
-                        <td>{{ $qtyKg > 0 ? number_format($qtyKg, 0, ',', '.') : '-' }}</td>
+                        <td>{{ $qtyKg > 0 ? number_format($qtyKg, 2, ',', '.') : '-' }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->DetailInventory->tanggal_masuk)->format('d-M-y') }}</td>
                         <td>{{ $keterangan->varietas }}</td>
                     </tr>
                 @endforeach
-                
+
                 {{-- Baris Kosong Tambahan untuk estetika cetakan --}}
                 <tr style="height: 35px;">
-                    <td></td><td></td><td></td><td></td><td></td><td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr style="font-weight: bold; background: #eee;">
                     <td colspan="2">TOTAL</td>
                     <td>{{ $totalKtn > 0 ? number_format($totalKtn, 0, ',', '.') : '-' }}</td>
-                    <td>{{ $totalKg > 0 ? number_format($totalKg, 0, ',', '.') : '-' }}</td>
+                    <td>{{ $totalKg > 0 ? number_format($totalKg, 2, ',', '.') : '-' }}</td>
                     <td colspan="2"></td>
                 </tr>
             </tfoot>
