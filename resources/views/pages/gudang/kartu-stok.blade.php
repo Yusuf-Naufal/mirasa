@@ -247,28 +247,28 @@
 
                                 <td
                                     class="px-3 py-3 text-sm text-right font-bold border-l border-gray-100 {{ $isMasuk ? 'text-emerald-600 bg-emerald-50/10' : 'text-gray-300' }}">
-                                    {{ $isMasuk ? number_format($qtyAbs, 2, ',', '.') : '-' }}
+                                    {{ $isMasuk ? number_format($qtyAbs, 2, ',', '.') : '0' }}
                                 </td>
                                 <td
                                     class="px-3 py-3 text-xs text-right {{ $isMasuk ? 'text-gray-500 bg-emerald-50/10' : 'text-gray-300' }}">
-                                    {{ $isMasuk && $harga > 0 ? number_format($harga, 0, ',', '.') : '-' }}
+                                    {{ $isMasuk && $harga > 0 ? number_format($harga, 0, ',', '.') : '0' }}
                                 </td>
                                 <td
                                     class="px-3 py-3 text-xs text-right font-black {{ $isMasuk ? 'text-gray-800 bg-emerald-50/10' : 'text-gray-300' }}">
-                                    {{ $isMasuk && $totalTransaksi > 0 ? number_format($totalTransaksi, 0, ',', '.') : '-' }}
+                                    {{ $isMasuk && $totalTransaksi > 0 ? number_format($totalTransaksi, 0, ',', '.') : '0' }}
                                 </td>
 
                                 <td
                                     class="px-3 py-3 text-sm text-right font-bold border-l border-gray-100 {{ $isKeluar ? 'text-red-600 bg-red-50/10' : 'text-gray-300' }}">
-                                    {{ $isKeluar ? number_format($qtyAbs, 2, ',', '.') : '-' }}
+                                    {{ $isKeluar ? number_format($qtyAbs, 2, ',', '.') : '0' }}
                                 </td>
                                 <td
                                     class="px-3 py-3 text-xs text-right {{ $isKeluar ? 'text-gray-500 bg-red-50/10' : 'text-gray-300' }}">
-                                    {{ $isKeluar && $harga > 0 ? number_format($harga, 0, ',', '.') : '-' }}
+                                    {{ $isKeluar && $harga > 0 ? number_format($harga, 0, ',', '.') : '0' }}
                                 </td>
                                 <td
                                     class="px-3 py-3 text-xs text-right font-black {{ $isKeluar ? 'text-gray-800 bg-red-50/10' : 'text-gray-300' }}">
-                                    {{ $isKeluar && $totalTransaksi > 0 ? number_format($totalTransaksi, 0, ',', '.') : '-' }}
+                                    {{ $isKeluar && $totalTransaksi > 0 ? number_format($totalTransaksi, 0, ',', '.') : '0' }}
                                 </td>
 
                                 <td
@@ -278,12 +278,12 @@
                                 <td
                                     class="px-3 py-3 text-xs text-right font-medium text-gray-400 bg-blue-50/10 group-hover:text-gray-500 transition-colors">
                                     {{-- Menggunakan Variabel $hargaValuasi hasil pembagian --}}
-                                    {{ $hargaValuasi > 0 ? number_format($hargaValuasi, 0, ',', '.') : '-' }}
+                                    {{ $hargaValuasi > 0 ? number_format($hargaValuasi, 0, ',', '.') : '0' }}
                                 </td>
                                 <td
                                     class="px-3 py-3 text-xs text-right font-bold text-gray-600 bg-blue-50/10 group-hover:text-gray-800 transition-colors">
                                     {{-- Menggunakan Variabel $runningNilai --}}
-                                    {{ $runningNilai > 0 ? number_format($runningNilai, 0, ',', '.') : '-' }}
+                                    {{ $runningNilai > 0 ? number_format($runningNilai, 0, ',', '.') : '0' }}
                                 </td>
                             </tr>
                         @empty

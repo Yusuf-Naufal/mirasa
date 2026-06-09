@@ -156,6 +156,23 @@
                                     <div class="flex justify-between items-center border-b border-slate-50 pb-2">
                                         <span
                                             class="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5"xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 20 20">
+                                                <path d="M0 0h20v20H0z" fill="none" />
+                                                <path fill="currentColor"
+                                                    d="M5.673 0a.7.7 0 0 1 .7.7v1.309h7.517v-1.3a.7.7 0 0 1 1.4 0v1.3H18a2 2 0 0 1 2 1.999v13.993A2 2 0 0 1 18 20H2a2 2 0 0 1-2-1.999V4.008a2 2 0 0 1 2-1.999h2.973V.699a.7.7 0 0 1 .7-.699M1.4 7.742v10.259a.6.6 0 0 0 .6.6h16a.6.6 0 0 0 .6-.6V7.756zm5.267 6.877v1.666H5v-1.666zm4.166 0v1.666H9.167v-1.666zm4.167 0v1.666h-1.667v-1.666zm-8.333-3.977v1.666H5v-1.666zm4.166 0v1.666H9.167v-1.666zm4.167 0v1.666h-1.667v-1.666zM4.973 3.408H2a.6.6 0 0 0-.6.6v2.335l17.2.014V4.008a.6.6 0 0 0-.6-.6h-2.71v.929a.7.7 0 0 1-1.4 0v-.929H6.373v.92a.7.7 0 0 1-1.4 0z" />
+                                            </svg>
+                                            Tanggal Produksi
+                                        </span>
+                                        <span
+                                            class="text-[11px] font-black text-slate-700 bg-slate-100 px-2 py-0.5 rounded uppercase">
+                                            {{ \Carbon\Carbon::parse(optional($afkirAsal->DetailInventory)->tanggal_masuk ?? '-')->translatedFormat('d M Y') }}
+                                        </span>
+                                    </div>
+
+                                    <div class="flex justify-between items-center border-b border-slate-50 pb-2">
+                                        <span
+                                            class="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1.5">
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -188,13 +205,34 @@
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Total
-                                            Qty Dikeluarkan</p>
-                                        <p class="font-black text-rose-600 text-xl mt-1">
-                                            {{ number_format($afkirAsal->jumlah_keluar, 0, ',', '.') }}
-                                            <span
-                                                class="text-sm font-medium text-slate-500">{{ optional($afkirAsal->DetailInventory->Inventory->Barang)->satuan }}</span>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                                            Total Qty Dikeluarkan
                                         </p>
+
+                                        <div class="flex items-baseline gap-2 mt-1">
+                                            {{-- Jika jumlah keluar awal berbeda dengan sisa yang bisa dikonversi (artinya sudah ada yang diafkir), coret angka awalnya --}}
+                                            @if ($afkirAsal->jumlah_keluar != $sisaBisaDikonversi)
+                                                <span
+                                                    class="font-bold text-slate-400 text-sm line-through decoration-rose-500">
+                                                    {{ number_format($afkirAsal->jumlah_keluar, 0, ',', '.') }}
+                                                </span>
+                                            @endif
+
+                                            {{-- Tampilkan sisa stok maksimal yang bisa diafkir saat ini --}}
+                                            <p class="font-black text-rose-600 text-xl">
+                                                {{ number_format($sisaBisaDikonversi, 0, ',', '.') }}
+                                                <span class="text-sm font-medium text-slate-500">
+                                                    {{ optional($afkirAsal->DetailInventory->Inventory->Barang)->satuan }}
+                                                </span>
+                                            </p>
+                                        </div>
+
+                                        {{-- Keterangan tambahan opsional agar user lebih paham --}}
+                                        @if ($afkirAsal->jumlah_keluar != $sisaBisaDikonversi)
+                                            <p class="text-[10px] text-rose-500 mt-1 font-medium italic">
+                                                *Sisa stok maksimal saat ini
+                                            </p>
+                                        @endif
                                     </div>
                                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
                                         <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Harga
