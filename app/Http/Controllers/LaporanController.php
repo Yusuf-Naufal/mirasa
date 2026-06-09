@@ -194,7 +194,7 @@ class LaporanController extends Controller
 
         $idPerusahaan = $user->hasRole('Super Admin') ? $request->get('id_perusahaan') : $user->id_perusahaan;
 
-        // 2. Data Stok Global (Inventory) - Eager Loading untuk performa
+        // 2. Data Stok Global (Inventory)
         $stokRaw = Inventory::with(['Barang.jenisBarang', 'Perusahaan'])
             ->withSum(['DetailInventory as total_nilai_asset' => function ($query) {
                 $query->where('stok', '>', 0);
@@ -211,8 +211,7 @@ class LaporanController extends Controller
             return 'LAINNYA';
         });
 
-        // 3. Ringkasan (Summary) - Diambil dari tabel Inventory ($stokRaw)
-        // Kecuali Total Aset yang diambil dari DetailInventory karena info harga ada di sana
+        // 3. Ringkasan (Summary)
         $summary = [
             'total_asset' => DetailInventory::where('stok', '>', 0)
                 ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
@@ -220,7 +219,6 @@ class LaporanController extends Controller
                 })
                 ->sum(DB::raw('stok * harga')),
 
-            // Menghitung jumlah JENIS barang unik yang terdaftar di Inventory
             'count_produksi' => $stokRaw->filter(function ($item) {
                 $kode = optional(optional($item->Barang)->jenisBarang)->kode;
                 return in_array($kode, ['FG', 'WIP', 'EC']);
@@ -235,27 +233,28 @@ class LaporanController extends Controller
             })->count(),
         ];
 
-        // 4. Data Pergerakan (Log Masuk & Keluar) Berdasarkan Filter Tanggal
-        $stokDetail = DetailInventory::with(['Inventory.Barang'])
+        // 4. Siapkan BluePrint Query Pergerakan (Log Masuk & Keluar) - JANGAN langsung di-get()
+        $stokDetailQuery = DetailInventory::with(['Inventory.Barang'])
             ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
                 $q->whereHas('Inventory', fn($sq) => $sq->where('id_perusahaan', $idPerusahaan));
             })
-            ->whereBetween('tanggal_masuk', [$startDate, $endDate])
-            ->take(15)
-            ->get();
+            ->whereBetween('tanggal_masuk', [$startDate, $endDate]);
 
-        $barangKeluar = BarangKeluar::with(['DetailInventory.Inventory.Barang'])
+        $barangKeluarQuery = BarangKeluar::with(['DetailInventory.Inventory.Barang'])
             ->when($idPerusahaan, function ($q) use ($idPerusahaan) {
                 $q->where('id_perusahaan', $idPerusahaan);
             })
-            ->whereBetween('tanggal_keluar', [$startDate, $endDate])
-            ->take(15)
-            ->get();
+            ->whereBetween('tanggal_keluar', [$startDate, $endDate]);
 
-        $namaPerusahaan = $idPerusahaan ? Perusahaan::find($idPerusahaan)->nama_perusahaan : 'Semua Perusahaan';
 
-        // --- LOGIKA UNDUH PDF ---
+        // --- KONDISI KHUSUS CETAK PDF ATAU TAMPILAN WEB ---
         if ($request->action == 'pdf') {
+            // JIKA CETAK PDF: Ambil SEMUA data tanpa batas take(15)
+            $stokDetail = $stokDetailQuery->get();
+            $barangKeluar = $barangKeluarQuery->get();
+
+            $namaPerusahaan = $idPerusahaan ? Perusahaan::find($idPerusahaan)->nama_perusahaan : 'Semua Perusahaan';
+
             $pdfData = [
                 'stokGlobalGrouped' => $stokGlobalGrouped,
                 'summary' => $summary,
@@ -265,10 +264,14 @@ class LaporanController extends Controller
                 'barangKeluar' => $barangKeluar,
             ];
 
-            // Gunakan orientasi Landscape karena data gudang biasanya lebar
+            // Cetak menggunakan file cetak khusus (A4 Landscape)
             $pdf = Pdf::loadView('pages.laporan.cetak.gudang', $pdfData)->setPaper('a4', 'landscape');
             return $pdf->download('Laporan_Gudang_' . str_replace(' ', '_', $dateRange) . '.pdf');
         }
+
+        // JIKA TAMPILAN WEB BIASA: Batasi hanya 15 data menggunakan take(15)
+        $stokDetail = $stokDetailQuery->take(15)->get();
+        $barangKeluar = $barangKeluarQuery->take(15)->get();
 
         $perusahaan = Perusahaan::all();
 
@@ -694,6 +697,7 @@ class LaporanController extends Controller
                 'bebanKategoriHpp' => $bebanKategoriHpp,
                 'grandTotalBiayaHpp' => $grandTotalBiayaHpp,
                 'totalVolumeProduksi' => $totalVolumeProduksi,
+                'pengeluaranHpp' => $pengeluaranHpp,
                 'hppPerKg' => $hppPerKg,
                 'diffHppPct' => $diffHppPct,
                 'selectedMonth' => $selectedMonth,
