@@ -88,30 +88,34 @@
                 @endcan
             </div>
 
-            {{-- 2. ACTION BAR (SEARCH, FILTER) --}}
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8 flex flex-col gap-4">
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            {{-- 2. ACTION BAR (SEARCH, FILTER & ACTIONS) --}}
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8">
+                <div class="flex flex-col lg:flex-row justify-between items-center gap-4">
 
-                    {{-- FORM SEARCH & FILTER --}}
+                    {{-- KIRI: FORM SEARCH & FILTER --}}
                     <form action="{{ route('inventory.index') }}" method="GET"
-                        class="flex flex-col lg:flex-row gap-4 flex-1 w-full">
-                        <div class="relative flex-1">
+                        class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto flex-1">
+
+                        {{-- Input Search --}}
+                        <div class="relative flex-1 min-w-[200px]">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-                                <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none">
+                                <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
                                     <path
-                                        d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round"></path>
+                                        d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z">
+                                    </path>
                                 </svg>
                             </span>
                             <input type="text" name="search" value="{{ request('search') }}"
-                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-sm"
                                 placeholder="Cari nama barang atau kode...">
                         </div>
 
-                        <div class="flex flex-wrap md:flex-nowrap gap-3">
+                        {{-- Dropdown Jenis & Tombol Filter --}}
+                        <div class="flex gap-2">
                             <select name="id_jenis"
-                                class="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 outline-none min-w-[150px]">
+                                class="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 outline-none w-full sm:w-[150px] px-3 py-2.5 cursor-pointer">
                                 <option value="">Semua Jenis</option>
                                 @foreach ($jenisBarang as $j)
                                     <option value="{{ $j->id }}"
@@ -122,67 +126,39 @@
                             </select>
 
                             <button type="submit"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center justify-center">
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
                                 Filter
                             </button>
 
-                            <a href="{{ route('inventory.index') }}"
-                                class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-5 py-2.5 rounded-xl font-medium transition-colors flex items-center justify-center">
-                                Reset
-                            </a>
+                            {{-- Tombol Reset (Hanya muncul jika sedang mencari/memfilter) --}}
+                            @if (request()->anyFilled(['search', 'id_jenis']))
+                                <a href="{{ route('inventory.index') }}"
+                                    class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center"
+                                    title="Reset Pencarian">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </a>
+                            @endif
                         </div>
                     </form>
 
-                    {{-- BUTTON TAMBAH BARANG DENGAN DROPDOWN (Pemisahan) --}}
-                    @canany(['inventory.create-produksi, inventory.create-bahan-baku, inventory.create-bahan-penolong'])
-                        <div class="relative inline-block text-left w-full lg:w-auto" x-data="{ open: false }">
-                            <button @click="open = !open" @click.away="open = false" type="button"
-                                class="inline-flex justify-center items-center w-full lg:w-auto gap-x-1.5 rounded-xl bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-700 transition-all">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 4v16m8-8H4" />
-                                </svg>
-                                Barang Masuk
-                                <svg class="-mr-1 h-5 w-5 text-green-200" viewBox="0 0 20 20" fill="currentColor"
-                                    aria-hidden="true">
-                                    <path fill-rule="evenodd"
-                                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </button>
+                    {{-- KANAN: TOMBOL AKSI (RETURN & MASUK) --}}
+                    <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-center">
 
-                            {{-- MENU PILIHAN --}}
-                            <div x-show="open" x-transition:enter="transition ease-out duration-100"
-                                x-transition:enter-start="transform opacity-0 scale-95"
-                                x-transition:enter-end="transform opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-75"
-                                x-transition:leave-start="transform opacity-100 scale-100"
-                                x-transition:leave-end="transform opacity-0 scale-95"
-                                class="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
-                                <div class="py-1">
-                                    @can('inventory.create-produksi')
-                                        <a href="{{ route('inventory.create-produksi') }}"
-                                            class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
-                                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Produksi
-                                        </a>
-                                    @endcan
-                                    @can('inventory.create-bahan-baku')
-                                        <a href="{{ route('inventory.create-bb') }}"
-                                            class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2">
-                                            <span class="w-2 h-2 bg-purple-500 rounded-full"></span> Bahan Baku
-                                        </a>
-                                    @endcan
-                                    @can('inventory.create-bahan-penolong')
-                                        <a href="{{ route('inventory.create-bp') }}"
-                                            class="text-gray-700 block px-4 py-3 text-sm hover:bg-gray-50 border-b border-gray-50 flex items-center gap-2">
-                                            <span class="w-2 h-2 bg-yellow-500 rounded-full"></span> Bahan Penolong
-                                        </a>
-                                    @endcan
-                                </div>
-                            </div>
-                        </div>
-                    @endcanany
+                        {{-- Tombol Daftar Barang Return --}}
+                        <a href="{{ route('inventory.return-barang') }}"
+                            class="inline-flex justify-center items-center w-full sm:w-auto gap-2 rounded-xl bg-orange-50 border border-orange-200 px-5 py-2.5 text-sm font-bold text-orange-600 shadow-sm hover:bg-orange-100 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                            Daftar Return
+                        </a>
+                    </div>
                 </div>
             </div>
 

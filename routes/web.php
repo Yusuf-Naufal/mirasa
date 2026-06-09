@@ -49,7 +49,7 @@ Route::get('/api/monitoring-data', [MonitoringController::class, 'data']);
 
 // AUTH
 Route::get('/internal/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/internal/login', [AuthController::class, 'login']);
+Route::post('/internal/login', [AuthController::class, 'login'])->middleware('throttle:5,2');
 Route::get('/internal/autologin/{user}', [AuthController::class, 'autoLogin'])->name('login.auto');
 Route::post('/internal/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/internal/logout', [AuthController::class, 'logout'])->name('logout.get');
@@ -161,6 +161,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventory/kartu-stok/{id}', [InventoryController::class, 'kartuStok'])->name('inventory.kartu-stok')->middleware('permission:inventory.kartu-stok');
     Route::get('/inventory/kartu-stok/{id}/pdf', [InventoryController::class, 'exportPdf'])->name('inventory.kartu-stok.pdf')->middleware('permission:inventory.cetak-kartu-stok');
     Route::post('/inventory/afkir-ulang/gudang/{id}', [InventoryController::class, 'afkirUlangGudang'])->name('inventory.afkir-ulang.gudang')->middleware('permission:inventory.afkir-ulang');
+    Route::get('/return-barang', [InventoryController::class, 'daftarReturn'])->name('inventory.return-barang');
+    Route::patch('/return-barang/{id}/status', [InventoryController::class, 'updateStatus'])->name('inventory.return-barang.update-status');
+    Route::patch('/return-barang/bulk-status', [InventoryController::class, 'bulkUpdateStatus'])->name('inventory.return-barang.bulk-update');
 
     // CRUD BAHAN BAKU
     Route::get('/bahan-baku', [BahanBakuController::class, 'index'])->name('bahan-baku.index')->middleware('permission:bahan-baku.index');

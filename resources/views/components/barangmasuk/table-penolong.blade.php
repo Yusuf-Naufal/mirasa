@@ -107,6 +107,18 @@
                                                     <span
                                                         class="text-xs font-black text-gray-700">{{ $i->tempat_penyimpanan ?? '-' }}</span>
                                                 </div>
+                                                <div class="flex flex-col">
+                                                    <span
+                                                        class="text-[9px] font-bold text-red-500 uppercase tracking-widest italic">Rusak</span>
+                                                    <span
+                                                        class="text-xs font-black text-red-600">{{ number_format($i->jumlah_rusak ?? 0) }}</span>
+                                                </div>
+                                                <div class="flex flex-col">
+                                                    <span
+                                                        class="text-[9px] font-bold text-orange-500 uppercase tracking-widest italic">Return</span>
+                                                    <span
+                                                        class="text-xs font-black text-orange-600">{{ number_format($i->jumlah_return ?? 0) }}</span>
+                                                </div>
                                             </div>
 
                                             <div class="flex items-center gap-6">
@@ -119,7 +131,7 @@
 
                                                 <div class="flex items-center gap-2">
                                                     {{-- Tombol Edit --}}
-                                                    @if ($i->stok == $i->jumlah_diterima - $i->jumlah_rusak)
+                                                    @if ($i->BarangKeluar->where('jenis_keluar', 'PRODUKSI')->isEmpty())
                                                         @can('barang-masuk.edit-bahan-penolong')
                                                             <a href="{{ route('barang-masuk.edit-bp', $i->id) }}"
                                                                 class="inline-flex items-center justify-center w-9 h-9 text-slate-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-slate-200 hover:border-blue-200 transition-all duration-200 bg-slate-50/50">
