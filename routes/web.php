@@ -41,7 +41,6 @@ Route::get('/sj-biasa', function () {
 Route::get('/', [LandingController::class, 'index']);
 Route::get('/katalog', [LandingController::class, 'katalog'])->name('katalog');
 Route::get('/news', [LandingController::class, 'allBerita'])->name('allBerita');
-Route::get('/bb', [LandingController::class, 'allBerita'])->name('allBerita');
 Route::get('/product/{slug}', [LandingController::class, 'showProduk'])->name('produk.show');
 Route::get('/news/{slug}', [LandingController::class, 'showBerita'])->name('berita.show');
 
