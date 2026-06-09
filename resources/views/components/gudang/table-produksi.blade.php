@@ -100,7 +100,7 @@
                             {{ $i->tempat_penyimpanan }}
                         </td>
                         <td class="px-6 py-4 text-right font-bold text-slate-700">
-                            {{ number_format($i->stok, 0, ',', '.') }}
+                            {{ number_format($i->stok, 2, ',', '.') }}
                         </td>
                         <td class="px-6 py-4 text-right">
                             <span
