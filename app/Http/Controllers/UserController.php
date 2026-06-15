@@ -122,7 +122,7 @@ class UserController extends Controller
         // 1. Validasi Input
         $request->validate([
             'name'          => 'required|string|max:255',
-            'id_perusahaan' => 'nullable|exists:perusahaan,id',
+            'id_perusahaan' => 'nullable',
             'username'      => 'required|string|max:50|unique:users,username,' . $user->id,
             'password'      => 'nullable|string|min:8|confirmed',
             'role'          => 'required|exists:roles,name',
