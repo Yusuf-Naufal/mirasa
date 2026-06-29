@@ -185,7 +185,7 @@
                                     <span class="block text-[10px] text-gray-400">ID: #{{ $log->subject_id }}</span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    @if ($log->changes)
+                                    @if ($log->changes || !empty($log->properties))
                                         <div x-data="{ open: false }">
                                             <button @click="open = !open"
                                                 class="text-blue-500 hover:text-blue-700 font-bold flex items-center gap-1 uppercase text-[9px]">
@@ -198,22 +198,50 @@
 
                                             <div x-show="open" x-collapse
                                                 class="mt-2 bg-gray-900 text-gray-300 p-3 rounded-xl text-[10px] font-mono leading-relaxed max-w-xs overflow-x-auto">
-                                                @if (isset($log->changes['old']))
-                                                    <p class="text-rose-400 font-bold mb-1">// Data Lama</p>
-                                                    @foreach ($log->changes['old'] as $key => $val)
-                                                        <div class="ml-2 italic">{{ $key }}: <span
-                                                                class="text-white">"{{ $val }}"</span></div>
-                                                    @endforeach
-                                                    <hr class="my-2 border-white/10">
-                                                @endif
+                                                @if($log->log_name == 'attendance' || $log->subject_type == 'App\Models\Attendance')
+                        {{-- DEKODE DATA PROPERTIES JIKA BERBENTUK STRING JSON --}}
+                        @php 
+                            $properties = is_string($log->properties) ? json_decode($log->properties, true) : $log->properties; 
+                        @endphp
+                        
+                        <div class="space-y-1.5 text-left text-[10px]">
+                            @if($log->description == 'UPDATED' || $log->aktivitas == 'UPDATED')
+                                <p class="text-rose-400 font-bold uppercase tracking-wider mb-0.5">// Data Lama:</p>
+                                <div class="ml-2 italic"><span class="text-gray-400">nama:</span> <span class="text-white">"{{ $properties['old']['nama_karyawan'] ?? '-' }}"</span></div>
+                                <div class="ml-2 italic mb-1"><span class="text-gray-400">nominal_gaji:</span> <span class="text-white">"{{ $properties['old']['nominal_gaji'] ?? 0 }}"</span></div>
+                                
+                                <hr class="my-1.5 border-white/10">
+                                
+                                <p class="text-emerald-400 font-bold uppercase tracking-wider mb-0.5">// Data Baru:</p>
+                                <div class="ml-2 italic"><span class="text-gray-400">nama:</span> <span class="text-white">"{{ $properties['attributes']['nama_karyawan'] ?? '-' }}"</span></div>
+                                <div class="ml-2 italic"><span class="text-gray-400">nominal_gaji:</span> <span class="text-white">"{{ $properties['attributes']['nominal_gaji'] ?? 0 }}"</span></div>
+                            @elseif(isset($properties['nama_karyawan']))
+                                <p class="text-blue-400 font-bold uppercase tracking-wider mb-0.5">// Detail Data:</p>
+                                <div class="ml-2 italic"><span class="text-gray-400">nama:</span> <span class="text-white">"{{ $properties['nama_karyawan'] }}"</span></div>
+                                <div class="ml-2 italic"><span class="text-gray-400">id_karyawan:</span> <span class="text-white">"{{ $properties['id_karyawan'] ?? '-' }}"</span></div>
+                                <div class="ml-2 italic"><span class="text-gray-400">shift:</span> <span class="text-white">"{{ $properties['shift'] ?? '-' }}"</span></div>
+                                <div class="ml-2 italic"><span class="text-gray-400">nominal_gaji:</span> <span class="text-white">"{{ $properties['nominal_gaji'] ?? 0 }}"</span></div>
+                            @else
+                                <p class="text-indigo-400 italic">// {{ $properties['keterangan'] ?? 'Melakukan aktivitas log.' }}</p>
+                            @endif
+                        </div>
+                    @else
+                        {{-- KODE BAWAAN ASLI ANDA UNTUK LOG MODEL USER ATAU BARANG LAIN --}}
+                        @if (isset($log->changes['old']))
+                            <p class="text-rose-400 font-bold mb-1">// Data Lama:</p>
+                            @foreach ($log->changes['old'] as $key => $val)
+                                <div class="ml-2 italic"><span class="text-gray-400">{{ $key }}:</span> <span class="text-white">"{{ $val }}"</span></div>
+                            @endforeach
+                            <hr class="my-2 border-white/10">
+                        @endif
 
-                                                @if (isset($log->changes['attributes']))
-                                                    <p class="text-emerald-400 font-bold mb-1">// Data Baru</p>
-                                                    @foreach ($log->changes['attributes'] as $key => $val)
-                                                        <div class="ml-2 italic">{{ $key }}: <span
-                                                                class="text-white">"{{ $val }}"</span></div>
-                                                    @endforeach
-                                                @endif
+                        @if (isset($log->changes['attributes']))
+                            <p class="text-emerald-400 font-bold mb-1">// Data Baru:</p>
+                            @foreach ($log->changes['attributes'] as $key => $val)
+                                <div class="ml-2 italic"><span class="text-gray-400">{{ $key }}:</span> <span class="text-white">"{{ $val }}"</span></div>
+                            @endforeach
+                        @endif
+                    @endif
                                             </div>
                                         </div>
                                     @else

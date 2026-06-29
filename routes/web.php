@@ -28,6 +28,8 @@ use App\Http\Controllers\KategoriPemakaianController;
 use App\Http\Controllers\SuperAdminDashboardController;
 use App\Http\Controllers\AdminGudangDashboardController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\AttendanceController;
+
 
 
 Route::get('/sj-indofood', function () {
@@ -276,8 +278,18 @@ Route::middleware('auth')->group(function () {
         Route::get('grafik-transaksi', [GrafikController::class, 'grafikTransaksi'])
             ->name('grafik.transaksi')
             ->middleware('permission:grafik.transaksi');
+    
+    // Route Laporan Absen (Halaman Utama yang mengarahkan user)
+    Route::get('/attendance/print', [AttendanceController::class, 'printReport'])->name('attendance.print');
     });
 
     // LOG ACTIVITY
     Route::get('logs', [LogActivityController::class, 'index'])->name('logs.index')->middleware('permission:logs.index');
+    Route::resource('attendance', AttendanceController::class)->names([
+        'index' => 'attendance.index',
+        'store' => 'attendance.store',
+        'update' => 'attendance.update',
+        'destroy' => 'attendance.destroy',
+    ]);
+    Route::post('/attendance/import', [AttendanceController::class, 'import'])->name('attendance.import');
 });

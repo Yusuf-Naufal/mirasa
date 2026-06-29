@@ -81,6 +81,22 @@
                 </li>
             @endcan
 
+             @can('absensi.index')
+            <li>
+                <a href="{{ route('attendance.index') }}" 
+                   class="flex items-center p-3 text-gray-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 group/item transition-all whitespace-nowrap {{ request()->routeIs('attendance.*') ? 'bg-blue-50 text-blue-600 font-bold' : '' }}">
+                    <div class="min-w-[32px] flex justify-center">
+                        <svg class="w-6 h-6 text-gray-400 group-hover/item:text-blue-600 transition-colors {{ request()->routeIs('attendance.*') ? 'text-blue-600' : '' }}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://w3.org">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <td class="px-6 py-4">
+                            <span class="ms-4 font-semibold text-sm {{ request()->routeIs('attendance.*') ? 'text-blue-600' : 'text-gray-600' }}"> Absensi Karyawan </span>
+                    </td>
+                </a>
+            </li>
+            @endcan
+
             @canany(['laporan.produksi', 'laporan.gudang', 'laporan.pengeluaran', 'laporan.hpp', 'laporan.transaksi'])
                 <li x-data="{ open: false }">
                     {{-- Tombol Utama Laporan --}}
